@@ -132,7 +132,7 @@ const miTexto2 = new amsco(
   "456123"
 );
 
-const miTexto3 = new amsco(miTexto2.encode(), true, "456123");
+const miTexto3 = new amsco(miTexto2.encode(), true, "456a123");
 
 document.write(
   "Encoding: <br>",
