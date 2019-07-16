@@ -1,4 +1,4 @@
-# nigmaJS
+# NigmaJS
 
 This repository is focused on the implementation of many fantastic cryptographic techniques that have been generated over the last millenia.
 
