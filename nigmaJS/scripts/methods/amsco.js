@@ -29,7 +29,7 @@ class amsco extends BasicCipher {
     let pattern = /^\d+$/;
     //console.log(`Check for [0-9] chars only: ${pattern.test(this.key)} key analyzed : ${this.key}`);
     if (pattern.test(this.key)) {
-      console.log(`Numbers only Key: ${explodedKey} `);
+      //console.log(`Numbers only Key: ${explodedKey} `);
       let index = 0;
       do {
         const element = explodedKey[index];
@@ -43,7 +43,7 @@ class amsco extends BasicCipher {
         }
       } while (validated === true && index < explodedKey.length);
       if (validated) {
-        console.log("Key Validated");
+        //console.log("Key Validated");
       } else {
         console.log("Invalid Key sequence");
       }
@@ -56,30 +56,74 @@ class amsco extends BasicCipher {
     return validated;
   };
 
+  validateEncoded = () =>
+    this.encoded === true &&
+    typeof (this.message != null) &&
+    this.message != "" &&
+    this.validateKey();
+
   decode = () => {
     //To decode baconian i must take 5 letters at a tim and analyze them.
     let messageDecoded = [];
-    console.log(this.message);
-
     //In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
-    if (
-      this.encoded === true &&
-      typeof (this.message != null) &&
-      this.message != "" &&
-      this.validateKey()
-    ) {
-      //console.log("Decoding...", this.alphabet);
-      let tempAlphabet = this.alphabet;
-      //Process Key before we can decrypt, odd: 2 chars even 1 char only
-      console.log("Decoding... ", this.message, " processing key: ", this.key);
+    if (this.validateEncoded()) {
+      //Convert key values to array with index adjustment
+      let explodedKey = this.key.split("").map(myval => myval - 1);
+      let totalChars = this.message.length;
+      // Aux variables for processing
+      let index = 0;
+      let numChars = 1;
+      let extraChars = 1;
+      //Create subarrays based on key values
+      let decodingMatrix = [];
+      explodedKey.map(value => {
+        decodingMatrix.push(new Array());
+        messageDecoded.push([value]);
+      });
+      //Build decoding Matrix
+      do {
+        decodingMatrix.forEach(element => {
+          if (index < totalChars) {
+            if (totalChars - index > numChars) {
+              element.push(numChars);
+            } else {
+              element.push(totalChars - index);
+            }
+          } else {
+            element.push(0);
+          }
+          index += numChars;
+          numChars = numChars == 1 ? 2 : 1;
+        });
+        numChars = numChars == 1 ? 2 : 1;
+      } while (index < totalChars);
+      console.log(decodingMatrix);
+      //Using decoding matrix, extract all data into correct char chunks
+      index = 0;
+      console.log("Key: " + explodedKey);
 
+      let keys = 0;
+      do {
+        let subIndex = 0;
+        let key = explodedKey.indexOf(keys);
+        do {
+          extraChars = index + decodingMatrix[key][subIndex];
+          const element = this.message.slice(index, extraChars);
+          messageDecoded[key].push(element);
+          index = extraChars;
+          subIndex++;
+        } while (subIndex < decodingMatrix[key].length);
+        keys++;
+      } while (keys < decodingMatrix.length);
+      //Now all the text is ordered but in separate colums/rows
+
+      //messageDecoded.sort(this.sortFunction);
       console.log("Done decoding: ", messageDecoded);
     }
     return messageDecoded;
   };
 
   encode = () => {
-    console.log("Encoding...", this);
     let originalMessage = "";
     let encodedMessage = "";
     let encodingMatrix = [];
@@ -100,41 +144,41 @@ class amsco extends BasicCipher {
 
       do {
         let tempValue = originalMessage.slice(index, index + extraChars);
+        //if (subIndex === 0) console.log("----New line----");
+        /*console.log(
+          `-> ${tempValue} \t taken from originalMessage.index[${index},${index +
+            extraChars}] \t placed at -> encodingMatrix[${subIndex}]`
+        );*/
         encodingMatrix[subIndex].push(tempValue);
         index = index + extraChars;
         extraChars = extraChars == 1 ? 2 : 1; //Toggle between 1 and 0 extra chars
+        //Adjust new line
         if (subIndex === columns - 1) {
           subIndex = 0;
+          extraChars = extraChars == 1 ? 2 : 1;
         } else {
           subIndex++;
         }
       } while (index < limit);
+
       encodingMatrix.sort(this.sortFunction);
       //Now that the matrix is ready, time to make the final step... generate the message :)
-      //console.log("Sorted Matrix: ", encodingMatrix);
+
       encodingMatrix.forEach(element => {
         element.shift(); //Remove the first item since it contains key value
         encodedMessage += element.join("");
       });
     }
-    console.log(encodedMessage);
+
     return encodedMessage;
   };
 }
 
-const miTexto = new amsco(
-  "On the other side of the screen it all looks so easy",
-  false,
-  "4123"
-);
+const miTexto = new amsco("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false, "123");
 
-const miTexto2 = new amsco(
-  "On the other side of the screen it all looks so easy",
-  false,
-  "456123"
-);
+const miTexto2 = new amsco("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false, "4132");
 
-const miTexto3 = new amsco(miTexto2.encode(), true, "456a123");
+const miTexto3 = new amsco(miTexto2.encode(), true, "4132");
 
 document.write(
   "Encoding: <br>",
