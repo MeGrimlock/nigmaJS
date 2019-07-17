@@ -42,9 +42,7 @@ class amsco extends BasicCipher {
           console.log("Sequence not validated");
         }
       } while (validated === true && index < explodedKey.length);
-      if (validated) {
-        //console.log("Key Validated");
-      } else {
+      if (!validated) {
         console.log("Invalid Key sequence");
       }
       return validated;
@@ -97,12 +95,10 @@ class amsco extends BasicCipher {
         });
         numChars = numChars == 1 ? 2 : 1;
       } while (index < totalChars);
-      console.log(decodingMatrix);
       //Using decoding matrix, extract all data into correct char chunks
       index = 0;
-      console.log("Key: " + explodedKey);
-
       let keys = 0;
+
       do {
         let subIndex = 0;
         let key = explodedKey.indexOf(keys);
@@ -116,9 +112,12 @@ class amsco extends BasicCipher {
         keys++;
       } while (keys < decodingMatrix.length);
       //Now all the text is ordered but in separate colums/rows
-
+      messageDecoded = this.transposeMatrix(messageDecoded);
+      messageDecoded.shift();
+      messageDecoded = messageDecoded.map(row => row.join(""));
+      messageDecoded = messageDecoded.join("");
       //messageDecoded.sort(this.sortFunction);
-      console.log("Done decoding: ", messageDecoded);
+      //console.log("Done decoding: ", messageDecoded);
     }
     return messageDecoded;
   };
@@ -174,11 +173,12 @@ class amsco extends BasicCipher {
   };
 }
 
-const miTexto = new amsco("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false, "123");
+const mensaje =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
 
-const miTexto2 = new amsco("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false, "4132");
-
-const miTexto3 = new amsco(miTexto2.encode(), true, "4132");
+const miTexto = new amsco(mensaje, false, "4123");
+const miTexto2 = new amsco(mensaje, false, "5413627");
+const miTexto3 = new amsco(miTexto2.encode(), true, "5413627");
 
 document.write(
   "Encoding: <br>",

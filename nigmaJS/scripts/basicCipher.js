@@ -62,13 +62,6 @@ class BasicCipher {
 
   //Aux methods
 
-  test() {
-    return "NigmaJS enabled";
-  }
-
-  getKeyByValue = (object, value) =>
-    Object.keys(object).find(key => object[key] === value);
-
   sortColumns(a, b) {
     //Sort values based on the first item on the row
     if (a[0] === b[0]) {
@@ -77,4 +70,21 @@ class BasicCipher {
       return a[0] < b[0] ? -1 : 1;
     }
   }
+
+  transposeMatrix = array => array[0].map((col, i) => array.map(row => row[i]));
+
+  getKeyByValue = (object, value) =>
+    Object.keys(object).find(key => object[key] === value);
+
+  test = () => "NigmaJS enabled";
 }
+
+/*Original function for transpose:
+
+var newArray = array[0].map(function(col, i){
+    return array.map(function(row){
+        return row[i];
+    });
+});
+
+*/
