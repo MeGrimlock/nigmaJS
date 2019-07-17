@@ -21,12 +21,13 @@ class BasicCipher {
 
 	 */
 
-  constructor(message, encoded, method, key, alphabet) {
+  constructor(message, encoded, method, key, alphabet, debug) {
     this.message = message;
     this.encoded = encoded;
     this.method = method;
     this.key = key || "";
     this.alphabet = alphabet || [];
+    this.debug = debug;
   }
   //GETs
   getMsg = () => this.message;
@@ -62,6 +63,11 @@ class BasicCipher {
 
   //Aux methods
 
+  validateEncoded = () =>
+    this.encoded === true &&
+    typeof (this.message != null) &&
+    this.message != "";
+
   sortColumns(a, b) {
     //Sort values based on the first item on the row
     if (a[0] === b[0]) {
@@ -76,8 +82,15 @@ class BasicCipher {
   getKeyByValue = (object, value) =>
     Object.keys(object).find(key => object[key] === value);
 
+  logMessage = output => {
+    if (this.debug) {
+      console.log(output);
+    }
+  };
   test = () => "NigmaJS enabled";
 }
+
+// const mensaje =  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
 
 /*Original function for transpose:
 

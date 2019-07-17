@@ -6,7 +6,7 @@ Right now:
 
 - Morse: encoding / decoding is ready
 - Baconian: encoding / decoding is ready
-- AMSCO: encoding is ready
+- AMSCO: encoding / decoding is ready
 
 If you want to use this modules, know that basicCipher.js is the parent class where all other codes are based. Another intresting fact is that all aux methods are to be placed here. As more methods are implemented and code can be recycled, be sure that basicCipher is only going to get more powerfull.
 
