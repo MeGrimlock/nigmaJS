@@ -61,16 +61,12 @@ class amsco extends BasicCipher {
         this.logMessage(
           `Validating ... Char ${element} of type ${typeof element} at ${index}`
         );
-        if (element === (1 + index).toString()) {
-          index++;
-        } else {
-          validated = false;
-          this.logMessage("Sequence not validated");
-        }
+
+        element === (1 + index).toString()
+          ? index++
+          : ((validated = false), this.logMessage("Sequence not validated"));
       } while (validated === true && index < explodedKey.length);
-      if (!validated) {
-        this.logMessage("Invalid Key sequence");
-      }
+      validated ? console.log("") : this.logMessage("Invalid Key sequence");
     } else {
       this.logMessage("Invlaid key, Non numbers detected");
       validated = false;
@@ -94,11 +90,9 @@ class amsco extends BasicCipher {
     do {
       decodingMatrix.forEach(element => {
         if (index < totalChars) {
-          if (totalChars - index > numChars) {
-            element.push(numChars);
-          } else {
-            element.push(totalChars - index);
-          }
+          totalChars - index > numChars
+            ? element.push(numChars)
+            : element.push(totalChars - index);
         } else {
           element.push(0);
         }
@@ -186,11 +180,7 @@ class amsco extends BasicCipher {
             originalMessage.slice(textIndex, textIndex + column)
           );
           textIndex += column;
-          if (colIndex < row.length - 1) {
-            colIndex++;
-          } else {
-            colIndex = 0;
-          }
+          colIndex < row.length - 1 ? colIndex++ : (colIndex = 0);
         });
       });
 
