@@ -87,6 +87,7 @@ class BasicCipher {
       console.log(output);
     }
   };
+
   test = () => "NigmaJS enabled";
 }
 

@@ -164,7 +164,7 @@ class amsco extends BasicCipher {
     if (this.encoded === false && this.validateKey()) {
       //Eliminate non usable chars
       originalMessage = this.message.replace(/\s+/g, "").toLocaleUpperCase();
-      //Call the cosntructor
+      //Call the constructor
       let decodingAux = this.decodingConstructor(this.message, this.key); //Returns > [messageTemplate,matrix,splitKey]
       //Use the values from the constructor
       encodedMessage = decodingAux[0];
