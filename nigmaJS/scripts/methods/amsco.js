@@ -23,6 +23,26 @@ class amsco extends BasicCipher {
     //logMessage("constuctor",this);
   }
 
+  decodingConstructor = (message, key) => {
+    //Support method that generates both the template for the decoded message and the decoding matrix to be used.
+    //It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
+    let explodedKey = key.split("").map(myval => myval - 1);
+    let decodedMessageTemplate = [];
+
+    explodedKey.map(value => {
+      decodedMessageTemplate.push([value]);
+    });
+
+    let decodingMatrix = this.generateDecodingMatrix(
+      message.length,
+      explodedKey,
+      1,
+      2
+    );
+
+    return [decodedMessageTemplate, decodingMatrix, explodedKey];
+  };
+
   validateKey = () => {
     ///Aux method that verifies if no columns in [1,2...n] are present and if all 1-9 digits are there
     let validated = true;
@@ -58,57 +78,76 @@ class amsco extends BasicCipher {
     return validated;
   };
 
+  generateDecodingMatrix = (totalChars, splitKey, initChar, alternateChar) => {
+    let decodingMatrix = [];
+    let numChars = initChar || 1;
+    let alternate = alternateChar || 2;
+
+    let explodedKey = splitKey;
+    explodedKey.map(value => {
+      decodingMatrix.push(new Array());
+    });
+
+    //Build decoding Matrix
+    let index = 0;
+
+    do {
+      decodingMatrix.forEach(element => {
+        if (index < totalChars) {
+          if (totalChars - index > numChars) {
+            element.push(numChars);
+          } else {
+            element.push(totalChars - index);
+          }
+        } else {
+          element.push(0);
+        }
+        index += numChars;
+        numChars = numChars == initChar ? alternate : initChar;
+      });
+      numChars = numChars == initChar ? alternate : initChar;
+    } while (index < totalChars);
+
+    return decodingMatrix;
+  };
+
+  processMatrixDecoding = (message, matrix, splitKey) => {
+    //Using the key and matrix, the encoded text is processed into the matrix format.
+    let index = 0;
+    let extraChars = 1;
+    let keys = 0;
+
+    let messageDecoded = message;
+    let decodingMatrix = matrix;
+    let explodedKey = splitKey;
+
+    do {
+      let subIndex = 0;
+      let key = explodedKey.indexOf(keys);
+      do {
+        extraChars = index + decodingMatrix[key][subIndex];
+        const element = this.message.slice(index, extraChars);
+        messageDecoded[key].push(element);
+        index = extraChars;
+        subIndex++;
+      } while (subIndex < decodingMatrix[key].length);
+      keys++;
+    } while (keys < decodingMatrix.length);
+
+    return messageDecoded;
+  };
+
   decode = () => {
     //To decode baconian i must take 5 letters at a tim and analyze them.
     let messageDecoded = [];
     //In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
     if (this.validateEncoded() && this.validateKey()) {
-      //Convert key values to array with index adjustment
-      let explodedKey = this.key.split("").map(myval => myval - 1);
-      let totalChars = this.message.length;
-      // Aux variables for processing
-      let index = 0;
-      let numChars = 1;
-      let extraChars = 1;
-      //Create subarrays based on key values
-      let decodingMatrix = [];
-      explodedKey.map(value => {
-        decodingMatrix.push(new Array());
-        messageDecoded.push([value]);
-      });
-      //Build decoding Matrix
-      do {
-        decodingMatrix.forEach(element => {
-          if (index < totalChars) {
-            if (totalChars - index > numChars) {
-              element.push(numChars);
-            } else {
-              element.push(totalChars - index);
-            }
-          } else {
-            element.push(0);
-          }
-          index += numChars;
-          numChars = numChars == 1 ? 2 : 1;
-        });
-        numChars = numChars == 1 ? 2 : 1;
-      } while (index < totalChars);
-      //Using decoding matrix, extract all data into correct char chunks
-      index = 0;
-      let keys = 0;
-
-      do {
-        let subIndex = 0;
-        let key = explodedKey.indexOf(keys);
-        do {
-          extraChars = index + decodingMatrix[key][subIndex];
-          const element = this.message.slice(index, extraChars);
-          messageDecoded[key].push(element);
-          index = extraChars;
-          subIndex++;
-        } while (subIndex < decodingMatrix[key].length);
-        keys++;
-      } while (keys < decodingMatrix.length);
+      let decodingAux = this.decodingConstructor(this.message, this.key);
+      messageDecoded = this.processMatrixDecoding(
+        decodingAux[0],
+        decodingAux[1],
+        decodingAux[2]
+      );
       //Now all the text is ordered but in separate colums/rows
       messageDecoded = this.transposeMatrix(messageDecoded);
       messageDecoded.shift();
@@ -124,59 +163,54 @@ class amsco extends BasicCipher {
 
   encode = () => {
     let originalMessage = "";
-    let encodedMessage = "";
+    let encodedMessage = [];
     let encodingMatrix = [];
+    let output = "";
+
     if (this.encoded === false && this.validateKey()) {
-      //Analyze key
-      let keys = this.key.split("");
-      keys.forEach(element => {
-        encodingMatrix.push([element]);
-      });
       //Eliminate non usable chars
       originalMessage = this.message.replace(/\s+/g, "").toLocaleUpperCase();
-      let limit = originalMessage.length;
-      let index = 0;
-      let extraChars = 1;
-      let columns = this.key.length;
-      let subIndex = 0;
+      //Call the cosntructor
+      let decodingAux = this.decodingConstructor(this.message, this.key); //Returns > [messageTemplate,matrix,splitKey]
+      //Use the values from the constructor
+      encodedMessage = decodingAux[0];
+      encodingMatrix = this.transposeMatrix(decodingAux[1]);
 
-      do {
-        let tempValue = originalMessage.slice(index, index + extraChars);
-        //if (subIndex === 0) logMessage("----New line----");
-        this.logMessage(
-          `-> ${tempValue} \t taken from originalMessage.index[${index},${index +
-            extraChars}] \t placed at -> encodingMatrix[${subIndex}]`
-        );
-        encodingMatrix[subIndex].push(tempValue);
-        index = index + extraChars;
-        extraChars = extraChars == 1 ? 2 : 1; //Toggle between 1 and 0 extra chars
-        //Adjust new line
-        if (subIndex === columns - 1) {
-          subIndex = 0;
-          extraChars = extraChars == 1 ? 2 : 1;
-        } else {
-          subIndex++;
-        }
-      } while (index < limit);
+      //Using the matrix split the original message into chunks
+      let textIndex = 0;
+      let colIndex = 0;
 
-      encodingMatrix.sort(this.sortFunction);
-      encodingMatrix.forEach(element => {
+      encodingMatrix.forEach(row => {
+        row.forEach(column => {
+          encodedMessage[colIndex].push(
+            originalMessage.slice(textIndex, textIndex + column)
+          );
+          textIndex += column;
+          if (colIndex < row.length - 1) {
+            colIndex++;
+          } else {
+            colIndex = 0;
+          }
+        });
+      });
+
+      encodedMessage.sort(this.sortFunction);
+      encodedMessage.forEach(element => {
         element.shift(); //Remove the first item since it contains key value
-        encodedMessage += element.join("");
+        output += element.join("");
       });
     }
     //this.encoded = true;
-    return encodedMessage;
+    return output;
   };
 }
 
 //Class tests for debugging, should be removed for implementation in other programs
-const mensaje =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
+const mensaje = "abcdefghijklmnopqrstuvwxyz"; //"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
 
 const miTexto = new amsco(mensaje, "4123");
-const miTexto2 = new amsco(mensaje, "5413627");
-const miTexto3 = new amsco(miTexto2.encode(), "5413627", true);
+const miTexto2 = new amsco(mensaje, "4123");
+const miTexto3 = new amsco(miTexto2.encode(), "4123", true);
 
 document.write(
   "Encoding Text1: <br>",
