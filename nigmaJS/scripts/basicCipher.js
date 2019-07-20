@@ -26,7 +26,7 @@ class BasicCipher {
     this.encoded = encoded;
     this.method = method;
     this.key = key || "";
-    this.alphabet = alphabet || [];
+    this.alphabet = alphabet;
     this.debug = debug;
   }
   //GETs
@@ -61,7 +61,71 @@ class BasicCipher {
     return (this.alphabet = newAlphabet);
   }
 
-  //Aux methods
+  //----------------------------------------------------Usefull methods----------------------------------------------------
+
+  shiftCharacters = (str, amount) => {
+    //Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+    Math.abs(amount) > 26 ? (amount = amount % 26) : null;
+    amount < 0 ? (amount += 26) : amount;
+    var output = "";
+    for (var i = 0; i < str.length; i++) {
+      var c = str[i];
+      // If it's a letter...
+      if (c.match(/[a-z]/i)) {
+        var code = str.charCodeAt(i);
+        if (code >= 65 && code <= 90) {
+          // Uppercase letters
+          c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
+        } else if (code >= 97 && code <= 122) {
+          // Lowercase letters
+          c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
+        }
+      }
+      // Append
+      output += c;
+    }
+    return output;
+  };
+
+  //--------------------------------------------------Alphabet methods--------------------------------------------------
+
+  encodeAlphabet = (charSplit = "", wordSplit = "") => {
+    let originalMessage = "";
+    let encodedMessage = "";
+    if (this.encoded === false) {
+      //originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
+      originalMessage = this.message.toLowerCase();
+      let temp = originalMessage.split("");
+      temp.forEach(element => {
+        let encodedChar = this.getKeyByValue(this.alphabet, element);
+        encodedChar !== undefined
+          ? (encodedMessage += encodedChar + charSplit)
+          : (encodedMessage += charSplit);
+        //console.log("Conversion: ", element, encodedChar);
+      });
+      //encodedMessage = encodedMessage.slice(0, -1);
+    }
+    return encodedMessage;
+  };
+
+  decodeAlphabet = (charSplit, wordSplit) => {
+    let messageConverted = [];
+    if (this.encoded === true) {
+      console.log("Decoding...", this.message);
+      let tempAlphabet = this.alphabet;
+      this.message.split(wordSplit).map(function(word) {
+        word.split(charSplit).map(function(letter) {
+          messageConverted.push(tempAlphabet[letter]);
+          console.log(letter, tempAlphabet[letter]);
+        });
+        messageConverted.push("");
+      });
+      messageConverted = messageConverted.join("");
+    }
+    return messageConverted;
+  };
+
+  //--------------------------------------------------Aux methods--------------------------------------------------
 
   validateEncoded = () =>
     this.encoded === true &&
@@ -86,30 +150,6 @@ class BasicCipher {
     if (this.debug) {
       console.log(output);
     }
-  };
-
-  shiftCharacters = (str, amount) => {
-    //Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
-    Math.abs(amount) > 26 ? (amount = amount % 26) : null;
-    amount < 0 ? (amount += 26) : amount;
-    var output = "";
-    for (var i = 0; i < str.length; i++) {
-      var c = str[i];
-      // If it's a letter...
-      if (c.match(/[a-z]/i)) {
-        var code = str.charCodeAt(i);
-        if (code >= 65 && code <= 90) {
-          // Uppercase letters
-          c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
-        } else if (code >= 97 && code <= 122) {
-          // Lowercase letters
-          c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
-        }
-      }
-      // Append
-      output += c;
-    }
-    return output;
   };
 
   test = () => "NigmaJS enabled";
