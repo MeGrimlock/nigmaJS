@@ -45,45 +45,8 @@ class baconian extends BasicCipher {
     //logMessage("constuctor",this);
   }
 
-  decode = () => {
-    //To decode baconian i must take 5 letters at a time and analyze them.
-    let messageDecoded = [];
-    let n = 5;
-    if (this.encoded === true) {
-      //logMessage("Decoding...", this.alphabet);
-      let tempAlphabet = this.alphabet;
-      this.message.split("   ").map(function(word) {
-        let auxString = word.match(new RegExp(".{1," + n + "}", "g"));
-        //this.logMessage(auxString);
-        auxString.map(function(letter) {
-          messageDecoded.push(tempAlphabet[letter]);
-        });
-        messageDecoded.push(" ");
-      });
-      this.logMessage("Done decoding: ", messageDecoded);
-    }
-    return messageDecoded;
-  };
-
-  encode = () => {
-    //logMessage("Encoding...",this);
-    let originalMessage = "";
-    let encodedMessage = "";
-    if (this.encoded === false) {
-      //logMessage("ok");
-      originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
-      let temp = originalMessage.split("");
-      temp.forEach(element => {
-        let encodedChar = this.getKeyByValue(this.alphabet, element);
-        encodedMessage += encodedChar;
-        this.logMessage("Conversion: ", element, encodedChar);
-      });
-    }
-    return encodedMessage;
-  };
-
-  //encode = () => this.encodeAlphabet(" ", "");
-  //decode = () => this.decodeAlphabet("", " ");
+  encode = () => this.encodeAlphabet(" ", "   ");
+  decode = () => this.decodeAlphabet(" ", "   ");
 }
 
 const mensaje1 =
@@ -91,7 +54,7 @@ const mensaje1 =
 
 const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const miTexto = new baconian(mensaje2, false, true);
+const miTexto = new baconian(mensaje1, false, true);
 const miTexto2 = new baconian(miTexto.encode(), true, true);
 
 document.write(

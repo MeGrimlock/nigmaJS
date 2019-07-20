@@ -89,40 +89,51 @@ class BasicCipher {
 
   //--------------------------------------------------Alphabet methods--------------------------------------------------
 
-  encodeAlphabet = (charSplit = "", wordSplit = "") => {
+  encodeAlphabet = (charSplit, wordSplit) => {
+    /*
+    Steps: 
+
+    1st: filter all chars not included on alphabet
+    2nd: separate by word using the wordsplit separator
+    3nd: lookup for key coresponding to value
+    4th: after the convertion, add the char separator
+    5th: repeat for all chars steps 3 & 4
+    */
+
     let originalMessage = "";
     let encodedMessage = "";
+
     if (this.encoded === false) {
       //originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
       originalMessage = this.message.toLowerCase();
-      let temp = originalMessage.split("");
-      temp.forEach(element => {
-        let encodedChar = this.getKeyByValue(this.alphabet, element);
-        encodedChar !== undefined
-          ? (encodedMessage += encodedChar + charSplit)
-          : (encodedMessage += charSplit);
-        //console.log("Conversion: ", element, encodedChar);
+      originalMessage.split(" ").map(word => {
+        word.split("").map(letter => {
+          let encodedChar = this.getKeyByValue(this.alphabet, letter);
+          encodedChar !== undefined
+            ? (encodedMessage += encodedChar + charSplit)
+            : null;
+        });
+        encodedMessage = encodedMessage.slice(0, -charSplit.length);
+        encodedMessage += wordSplit;
       });
-      //encodedMessage = encodedMessage.slice(0, -1);
+      encodedMessage = encodedMessage.slice(0, -wordSplit.length);
     }
     return encodedMessage;
   };
 
   decodeAlphabet = (charSplit, wordSplit) => {
-    let messageConverted = [];
+    let messageDecoded = "";
     if (this.encoded === true) {
-      console.log("Decoding...", this.message);
-      let tempAlphabet = this.alphabet;
-      this.message.split(wordSplit).map(function(word) {
-        word.split(charSplit).map(function(letter) {
-          messageConverted.push(tempAlphabet[letter]);
-          console.log(letter, tempAlphabet[letter]);
+      this.message.split(wordSplit).map(word => {
+        word.split(charSplit).map(letter => {
+          let encodedChar = this.alphabet[letter];
+          encodedChar !== undefined ? (messageDecoded += encodedChar) : null;
         });
-        messageConverted.push("");
+        messageDecoded += wordSplit;
       });
-      messageConverted = messageConverted.join("");
+      messageDecoded = messageDecoded.slice(0, -wordSplit.length);
     }
-    return messageConverted;
+    return messageDecoded;
   };
 
   //--------------------------------------------------Aux methods--------------------------------------------------

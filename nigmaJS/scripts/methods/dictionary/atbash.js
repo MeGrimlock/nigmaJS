@@ -54,9 +54,9 @@ class atbash extends BasicCipher {
     //logMessage("constuctor",this);
   }
 
-  encode = () => this.encodeAlphabet("", "");
+  encode = () => this.encodeAlphabet(" ", " ");
 
-  decode = () => this.decodeAlphabet("", "");
+  decode = () => this.decodeAlphabet(" ", " ");
 }
 
 const mensaje1 =
