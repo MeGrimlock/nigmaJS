@@ -2,11 +2,20 @@
 
 This repository is focused on the implementation of many fantastic cryptographic techniques that have been generated over the last millenia.
 
-Right now:
+Right now this library supports:
 
-- Morse: encoding / decoding is ready
-- Baconian: encoding / decoding is ready
-- AMSCO: encoding / decoding is ready
+- **Morse**: encoding / decoding is ready
+- **Baconian**: encoding / decoding is ready
+- **AMSCO**: encoding / decoding is ready
+- **Caesar Shift**: encoding / decoding is ready
+
+The heart of it is the **basicCipher.js** since all methods extend this class. For simple use, all files follow the same format and method naming.
+
+As a reference:
+
+- All classes have a **constructor** method that extends basicCipher
+- All classes have a **decode** / **encode** method
+- All classes include a short **test** code
 
 If you want to use this modules, know that basicCipher.js is the parent class where all other codes are based. Another intresting fact is that all aux methods are to be placed here. As more methods are implemented and code can be recycled, be sure that basicCipher is only going to get more powerfull.
 
