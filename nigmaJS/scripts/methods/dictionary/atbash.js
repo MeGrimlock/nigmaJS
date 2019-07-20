@@ -55,7 +55,6 @@ class atbash extends BasicCipher {
   }
 
   encode = () => this.encodeAlphabet("", " ");
-
   decode = () => this.decodeAlphabet("", " ");
 }
 
@@ -80,3 +79,5 @@ document.write(
   "<br>-><br>",
   miTexto2.decode() + "<br>"
 );
+
+miTexto.frecuencyAnalysis();

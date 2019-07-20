@@ -119,7 +119,6 @@ class BasicCipher {
           : null;
         encodedMessage += wordSplit;
       });
-      console.log(encodedMessage, charSplit.length);
       wordSplit.length > 0
         ? (encodedMessage = encodedMessage.slice(0, -wordSplit.length))
         : null;
@@ -167,6 +166,23 @@ class BasicCipher {
     if (this.debug) {
       console.log(output);
     }
+  };
+
+  //--------------------------------------------------Analysis methods--------------------------------------------------
+  //All methods here are temprarily placed in this section fort esting purposes. Eventually this'll be moved down to Nigma.js
+  frecuencyAnalysis = () => {
+    let pseudoAlphabet = {};
+    let auxText = this.message.split("");
+
+    console.log("Frec. analysis");
+    auxText.forEach(charElement => {
+      if (charElement in pseudoAlphabet) {
+        pseudoAlphabet[charElement] = pseudoAlphabet[charElement] + 1;
+      } else {
+        pseudoAlphabet[charElement] = 1;
+      }
+    });
+    return pseudoAlphabet;
   };
 
   test = () => "NigmaJS enabled";

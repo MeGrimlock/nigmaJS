@@ -4,10 +4,21 @@ This repository is focused on the implementation of many fantastic cryptographic
 
 Right now this library supports:
 
+**Dictionary Ciphers**
+
 - **Morse**: encoding / decoding is ready
 - **Baconian**: encoding / decoding is ready
-- **AMSCO**: encoding / decoding is ready
+- **ATBASH**: encoding / decoding is ready
+- **Simple Substitution**: encoding / decoding is ready
+
+**Shift Ciphers**
+
 - **Caesar Shift**: encoding / decoding is ready
+- **Rot13 Shift**: encoding / decoding is ready
+
+**Other Methods**
+
+- **AMSCO**: encoding / decoding is ready
 
 The heart of it is the **basicCipher.js** since all methods extend this class. For simple use, all files follow the same format and method naming.
 
