@@ -196,11 +196,12 @@ class amsco extends BasicCipher {
 }
 
 //Class tests for debugging, should be removed for implementation in other programs
-const mensaje = "abcdefghijklmnopqrstuvwxyz"; //"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
+const mensaje =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
 
 const miTexto = new amsco(mensaje, "4123");
-const miTexto2 = new amsco(mensaje, "4123");
-const miTexto3 = new amsco(miTexto2.encode(), "4123", true);
+const miTexto2 = new amsco(mensaje, "6415237");
+const miTexto3 = new amsco(miTexto2.encode(), "6415237", true);
 
 document.write(
   "Encoding Text1: <br>",

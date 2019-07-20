@@ -88,6 +88,30 @@ class BasicCipher {
     }
   };
 
+  shiftCharacters = (str, amount) => {
+    //Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+    Math.abs(amount) > 26 ? (amount = amount % 26) : null;
+    amount < 0 ? (amount += 26) : amount;
+    var output = "";
+    for (var i = 0; i < str.length; i++) {
+      var c = str[i];
+      // If it's a letter...
+      if (c.match(/[a-z]/i)) {
+        var code = str.charCodeAt(i);
+        if (code >= 65 && code <= 90) {
+          // Uppercase letters
+          c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
+        } else if (code >= 97 && code <= 122) {
+          // Lowercase letters
+          c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
+        }
+      }
+      // Append
+      output += c;
+    }
+    return output;
+  };
+
   test = () => "NigmaJS enabled";
 }
 
