@@ -109,14 +109,20 @@ class BasicCipher {
       originalMessage.split(" ").map(word => {
         word.split("").map(letter => {
           let encodedChar = this.getKeyByValue(this.alphabet, letter);
+
           encodedChar !== undefined
             ? (encodedMessage += encodedChar + charSplit)
             : null;
         });
-        encodedMessage = encodedMessage.slice(0, -charSplit.length);
+        charSplit.length > 0
+          ? (encodedMessage = encodedMessage.slice(0, -charSplit.length))
+          : null;
         encodedMessage += wordSplit;
       });
-      encodedMessage = encodedMessage.slice(0, -wordSplit.length);
+      console.log(encodedMessage, charSplit.length);
+      wordSplit.length > 0
+        ? (encodedMessage = encodedMessage.slice(0, -wordSplit.length))
+        : null;
     }
     return encodedMessage;
   };
@@ -129,9 +135,9 @@ class BasicCipher {
           let encodedChar = this.alphabet[letter];
           encodedChar !== undefined ? (messageDecoded += encodedChar) : null;
         });
-        messageDecoded += wordSplit;
+        messageDecoded += " ";
       });
-      messageDecoded = messageDecoded.slice(0, -wordSplit.length);
+      messageDecoded = messageDecoded.slice(0, -1);
     }
     return messageDecoded;
   };

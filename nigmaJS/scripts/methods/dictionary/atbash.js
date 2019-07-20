@@ -54,9 +54,9 @@ class atbash extends BasicCipher {
     //logMessage("constuctor",this);
   }
 
-  encode = () => this.encodeAlphabet(" ", " ");
+  encode = () => this.encodeAlphabet("", " ");
 
-  decode = () => this.decodeAlphabet(" ", " ");
+  decode = () => this.decodeAlphabet("", " ");
 }
 
 const mensaje1 =
@@ -65,7 +65,6 @@ const mensaje1 =
 const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const miTexto = new atbash(mensaje1, false, true);
-const miTexto2 = new atbash(miTexto.encode(), true, true);
 
 document.write(
   "Encoding Text1: <br>",
@@ -74,6 +73,7 @@ document.write(
   miTexto.encode() + "<br>"
 );
 
+const miTexto2 = new atbash(miTexto.encode(), true, true);
 document.write(
   "<br>Decoding Text2: <br>",
   miTexto2.getMsg(),
