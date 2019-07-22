@@ -90,8 +90,12 @@ const mensaje1 =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
 
 const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const mensaje3 =
+  "Las dos jornadas tuvieron un denominador común: insistir, y mucho, en educar en temas financieros, a los efectos de que la gente tenga claro cuáles son las ventajas y riesgos a los que se enfrenta.";
+
 const myKey = "banana";
-const miTexto = new simpleSubstitution(mensaje1, myKey, false, true);
+const miTexto = new simpleSubstitution(mensaje3, myKey, false, true);
 
 document.write(
   "<h3>Encoding Text1: </h3>",
@@ -101,9 +105,15 @@ document.write(
 );
 
 const miTexto2 = new simpleSubstitution(miTexto.encode(), myKey, true, true);
+
 document.write(
   "<h3><br>Decoding Text2: </h3>",
   miTexto2.getMsg(),
   "<h4>-></h4>",
   miTexto2.decode() + "<br>"
 );
+
+//Compare frec. analysis for encoded/decoded
+console.log(miTexto.getSpanishLetterFrequencies());
+miTexto.frecuencyAnalysis();
+miTexto2.frecuencyAnalysis();
