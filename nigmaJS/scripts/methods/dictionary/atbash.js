@@ -49,13 +49,16 @@ class atbash extends BasicCipher {
     };
 
     super(message, encoded, "atbash", "", alphabet, debug);
+
+    this.wordSep = " ";
+    this.characterSep = "";
     //Parametros: message,encoded,method,key,alphabet
     // constructor(message, encoded, method, key, alphabet, debug)
     //logMessage("constuctor",this);
   }
 
-  encode = () => this.encodeAlphabet("", " ");
-  decode = () => this.decodeAlphabet("", " ");
+  encode = () => this.encodeAlphabet(this.characterSep, this.wordSep);
+  decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
 const mensaje1 =

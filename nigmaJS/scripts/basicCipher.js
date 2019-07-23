@@ -168,11 +168,6 @@ class BasicCipher {
 
   getAlphabet = () => this.alphabet;
 
-  getSpanishLetterFrequencies = () => spanishLetterFrequencies;
-  getSpanishBigramFrequencies = () => spanishBigramFrequencies;
-  getSpanishTrigramFrequencies = () => spanishTrigramFrequencies;
-  getSpanishQuadgramFrequencies = () => spanishQuadgramFrequencies;
-
   //SETs
   setMsg(newMessage) {
     return (this.message = newMessage);
@@ -299,30 +294,6 @@ class BasicCipher {
     if (this.debug) {
       console.log(output);
     }
-  };
-
-  //--------------------------------------------------Analysis methods--------------------------------------------------
-  //All methods here are temprarily placed in this section fort esting purposes. Eventually this'll be moved down to Nigma.js
-  frecuencyAnalysis = () => {
-    let pseudoAlphabet = {};
-    let auxText = this.message.split("");
-
-    console.log("Frec. analysis");
-    auxText.forEach(charElement => {
-      if (charElement in pseudoAlphabet) {
-        pseudoAlphabet[charElement] = pseudoAlphabet[charElement] + 1;
-      } else {
-        pseudoAlphabet[charElement] = 1;
-      }
-    });
-    let totalChars = auxText.length;
-
-    for (let [key, value] of Object.entries(pseudoAlphabet)) {
-      //Convert the number of repetitions into a %
-      pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
-    }
-    console.log(pseudoAlphabet);
-    return pseudoAlphabet;
   };
 
   test = () => "NigmaJS enabled";

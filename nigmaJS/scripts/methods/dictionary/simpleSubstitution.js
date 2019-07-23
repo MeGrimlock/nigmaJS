@@ -51,6 +51,9 @@ class simpleSubstitution extends BasicCipher {
 
     super(message, encoded, "simpleSubstitution", key, alphabet, debug);
     this.setAlphabet(this.alphabetConstructor(alphabet, key));
+
+    this.wordSep = " ";
+    this.characterSep = "";
     //Parametros: message,encoded,method,key,alphabet
     // constructor(message, encoded, method, key, alphabet, debug)
     //logMessage("constuctor",this);
@@ -82,8 +85,8 @@ class simpleSubstitution extends BasicCipher {
     return alphabet;
   };
 
-  encode = () => this.encodeAlphabet("", " ");
-  decode = () => this.decodeAlphabet("", " ");
+  encode = () => this.encodeAlphabet(this.characterSep, this.wordSep);
+  decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
 const mensaje1 =
@@ -113,7 +116,16 @@ document.write(
   miTexto2.decode() + "<br>"
 );
 
-//Compare frec. analysis for encoded/decoded
-console.log(miTexto.getSpanishLetterFrequencies());
-miTexto.frecuencyAnalysis();
-miTexto2.frecuencyAnalysis();
+let myNigma = new Nigma(miTexto2.getMsg());
+myNigma.setChar("m", "l");
+myNigma.setChar("b", "a");
+myNigma.setChar("s", "s");
+console.log(myNigma.processMessage());
+
+let a = myNigma.sortProperties(myNigma.getSLFreq());
+let b = myNigma.sortProperties(myNigma.freqAnalysis(miTexto.getMsg()));
+let c = myNigma.sortProperties(myNigma.freqAnalysis(miTexto2.getMsg()));
+
+/*console.table(a);
+console.table(b);
+console.table(c);*/

@@ -56,15 +56,16 @@ class morse extends BasicCipher {
       "--··--": ","
     };
     super(message, encoded, "morse", "", alphabet);
+    this.wordSep = "   ";
+    this.characterSep = " ";
     //Parametros: message,encoded,method,key,alphabet
     //WE have no key but we do have an alphabet
     //this.decode.bind(this);
     //console.log("constuctor",this);
   }
 
-  decode = () => this.decodeAlphabet(" ", "   ");
-
-  encode = () => this.encodeAlphabet(" ", "   ");
+  encode = () => this.encodeAlphabet(this.characterSep, this.wordSep);
+  decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
 const mensaje1 =

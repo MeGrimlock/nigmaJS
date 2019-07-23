@@ -1,5 +1,5 @@
-class Nigma extends BasicCipher {
-  constructor() {
+class Nigma {
+  constructor(message = "") {
     const spanishLetterFrequencies = {
       A: 12.5,
       K: 0.08,
@@ -157,5 +157,128 @@ class Nigma extends BasicCipher {
       J: 0.22,
       T: 8.94
     };
+
+    this.message = message;
+    this.alphabet = {
+      /* The alphabet works the following way: 
+
+        KEY: is the representation of the encrypted character.
+        VALUE: is the value of the unencrypted character and can be adjusted as we try to break the code.
+      
+        */
+      a: "",
+      b: "",
+      c: "",
+      d: "",
+      e: "",
+      f: "",
+      g: "",
+      h: "",
+      i: "",
+      j: "",
+      k: "",
+      l: "",
+      m: "",
+      n: "",
+      o: "",
+      p: "",
+      q: "",
+      r: "",
+      s: "",
+      t: "",
+      u: "",
+      v: "",
+      w: "",
+      x: "",
+      y: "",
+      z: "",
+      "0": "0",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      " ": " ",
+      ".": ".",
+      ",": ",",
+      "?": "?",
+      "!": "!"
+    };
   }
+
+  // -------------------------------------------Dictionary Methods -------------------------------------------
+
+  setChar = (cipheredChar, decodedChar) => {
+    this.alphabet[cipheredChar] = decodedChar;
+  };
+
+  setMsg = msg => (this.message = msg);
+
+  getMsg = () => this.message;
+
+  getChar = cipheredChar => {
+    this.alphabet[cipheredChar];
+  };
+
+  processMessage = () => {
+    //Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
+    let decodedMessage = "";
+    console.log(this.message);
+    let temp = this.message.split("");
+    temp.forEach(element => {
+      let decodedChar = this.alphabet[element];
+      decodedChar !== ""
+        ? (decodedMessage += decodedChar)
+        : (decodedMessage += "?");
+    });
+    return decodedMessage;
+  };
+  // ---------------------------------------Frequency Analysis Methods ---------------------------------------
+
+  getSLFreq = () => spanishLetterFrequencies;
+  getS2Freq = () => spanishBigramFrequencies;
+  getS3Freq = () => spanishTrigramFrequencies;
+  getS4req = () => spanishQuadgramFrequencies;
+
+  freqAnalysis = (message = "") => {
+    //Take all of the characters inside of a text and return an array with this characters as a % of the total
+    let pseudoAlphabet = {};
+    let auxText = message.split("");
+
+    //console.log("Frec. analysis");
+    auxText.forEach(charElement => {
+      if (charElement in pseudoAlphabet) {
+        pseudoAlphabet[charElement] = pseudoAlphabet[charElement] + 1;
+      } else {
+        pseudoAlphabet[charElement] = 1;
+      }
+    });
+    let totalChars = auxText.length;
+
+    for (let [key, value] of Object.entries(pseudoAlphabet)) {
+      //Convert the number of repetitions into a %
+      pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
+    }
+    //console.log(pseudoAlphabet);
+    return pseudoAlphabet;
+  };
+
+  // ---------------------------------------Auxiliary Analysis Methods ---------------------------------------
+
+  sortProperties = (myArray, order = "desc") => {
+    //Take an Object with Key:vlaue pairs and return an array ordered according to the order parameter
+    let sortable = [];
+    for (let element in myArray) {
+      sortable.push([element, myArray[element]]);
+    }
+
+    order === "asc"
+      ? sortable.sort((a, b) => a[1] - b[1])
+      : sortable.sort((a, b) => b[1] - a[1]);
+    return sortable;
+  };
 }

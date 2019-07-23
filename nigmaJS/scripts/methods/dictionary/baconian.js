@@ -43,10 +43,12 @@ class baconian extends BasicCipher {
     //WE have no key but we do have an alphabet
     //this.decode.bind(this);
     //logMessage("constuctor",this);
+    this.wordSep = "   ";
+    this.characterSep = " ";
   }
 
-  encode = () => this.encodeAlphabet(" ", "   ");
-  decode = () => this.decodeAlphabet(" ", "   ");
+  encode = () => this.encodeAlphabet(this.characterSep, this.wordSep);
+  decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
 const mensaje1 =
