@@ -1,5 +1,11 @@
 class Nigma {
   constructor(message = "") {
+    this.testMessages = [
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "Las dos jornadas tuvieron un denominador común: insistir, y mucho, en educar en temas financieros, a los efectos de que la gente tenga claro cuáles son las ventajas y riesgos a los que se enfrenta.",
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat"
+    ];
+
     const spanishLetterFrequencies = {
       A: 12.5,
       K: 0.08,
@@ -212,22 +218,50 @@ class Nigma {
 
   // -------------------------------------------Dictionary Methods -------------------------------------------
 
-  setChar = (cipheredChar, decodedChar) => {
-    this.alphabet[cipheredChar] = decodedChar;
-  };
+  getTestMessage = number => this.testMessages[number];
 
   setMsg = msg => (this.message = msg);
 
   getMsg = () => this.message;
 
-  getChar = cipheredChar => {
-    this.alphabet[cipheredChar];
+  getAlphabet = () => this.alphabet;
+
+  getChar = cipheredChar => this.alphabet[cipheredChar];
+
+  setChar = (cipheredChar, decodedChar) => {
+    this.alphabet[cipheredChar] = decodedChar;
+    return this.processMessage();
+  };
+
+  swapChar = (char1, char2) => {
+    //Receives 2 keys and swaps their values in the alphabet, since we are testing the script it also updates the text.
+    let tempChar = this.alphabet[char1];
+    this.alphabet[char1] = this.alphabet[char2];
+    this.alphabet[char2] = tempChar;
+    return this.processMessage();
+  };
+
+  setByFrequency = () => {
+    /*The method takes the analyzed text alphabet and compares it with the default language frequency reference. This way we have a start */
+    let sortedRefFreq = this.sortProperties(this.freqAnalysis(this.message));
+    let sortedMsgFreq = this.sortProperties(this.getSLFreq());
+
+    let index = 0;
+    do {
+      //sortedMsgFreq[index][0] = sortedRefFreq[index][0];
+      this.setChar(
+        String(sortedMsgFreq[index][0]).toLowerCase(),
+        String(sortedRefFreq[index][0]).toLowerCase()
+      );
+      index++;
+    } while (index < sortedRefFreq.length - 1);
+    //console.table(sortedMsgFreq);
+    return this.processMessage();
   };
 
   processMessage = () => {
     //Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
     let decodedMessage = "";
-    console.log(this.message);
     let temp = this.message.split("");
     temp.forEach(element => {
       let decodedChar = this.alphabet[element];
@@ -282,3 +316,45 @@ class Nigma {
     return sortable;
   };
 }
+
+let nigma = new Nigma();
+
+const myKey = "banana";
+
+const miTexto = new simpleSubstitution(
+  nigma.getTestMessage(1),
+  myKey,
+  false,
+  true
+);
+
+const miTexto2 = new simpleSubstitution(miTexto.encode(), myKey, true, true);
+
+document.write(
+  "<h3>Encoding Text1: </h3>",
+  miTexto.getMsg(),
+  "<h4> -></h4>",
+  miTexto.encode() + "<br>"
+);
+
+document.write(
+  "<h3><br>Decoding Text2: </h3>",
+  miTexto2.getMsg(),
+  "<h4>-></h4>",
+  miTexto2.decode() + "<br>"
+);
+
+nigma.setMsg(miTexto2.getMsg());
+//myNigma.setChar("m", "l");
+//myNigma.setChar("b", "a");
+//myNigma.setChar("s", "s");
+
+console.log(nigma.getMsg());
+console.log(nigma.setByFrequency());
+console.log(nigma.getTestMessage(1));
+//console.table(myNigma.getAlphabet());
+//console.log(miTexto.getMsg());
+
+/*let a = myNigma.sortProperties(myNigma.getSLFreq());
+let b = myNigma.sortProperties(myNigma.freqAnalysis(miTexto.getMsg()));
+let c = myNigma.sortProperties(myNigma.freqAnalysis(miTexto2.getMsg()));*/
