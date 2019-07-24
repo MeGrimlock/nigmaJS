@@ -3,7 +3,8 @@ class Nigma {
     this.testMessages = [
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
       "Las dos jornadas tuvieron un denominador común: insistir, y mucho, en educar en temas financieros, a los efectos de que la gente tenga claro cuáles son las ventajas y riesgos a los que se enfrenta.",
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat"
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat",
+      "La posición de Washington hacia las elecciones en Palestina ha sido coherente. Las elecciones fueron postergadas hasta la muerte de Yasser Arafat, que fue recibida como una oportunidad para la realización  "
     ];
 
     const spanishLetterFrequencies = {
@@ -230,6 +231,14 @@ class Nigma {
 
   setChar = (cipheredChar, decodedChar) => {
     this.alphabet[cipheredChar] = decodedChar;
+    console.log(
+      `Derypting "${cipheredChar}" as  "${decodedChar}" :\n ${this.processMessage()}\n`
+    );
+    return this.processMessage();
+  };
+
+  resetAlphabet = () => {
+    Object.keys(this.alphabet).map((key, index) => (this.alphabet[key] = key));
     return this.processMessage();
   };
 
@@ -242,7 +251,9 @@ class Nigma {
   };
 
   setByFrequency = () => {
-    /*The method takes the analyzed text alphabet and compares it with the default language frequency reference. This way we have a start */
+    /*The method takes the analyzed text alphabet and compares it with the default language frequency reference. 
+    This way we have a start but notice that it works in a very unefficient way */
+
     let sortedRefFreq = this.sortProperties(this.freqAnalysis(this.message));
     let sortedMsgFreq = this.sortProperties(this.getSLFreq());
 
@@ -319,17 +330,17 @@ class Nigma {
 
 let nigma = new Nigma();
 
-const myKey = "banana";
+const myKey = "Tyranosaurusrex";
 
 const miTexto = new simpleSubstitution(
-  nigma.getTestMessage(1),
+  nigma.getTestMessage(3),
   myKey,
   false,
   true
 );
 
 const miTexto2 = new simpleSubstitution(miTexto.encode(), myKey, true, true);
-
+/*
 document.write(
   "<h3>Encoding Text1: </h3>",
   miTexto.getMsg(),
@@ -342,19 +353,25 @@ document.write(
   miTexto2.getMsg(),
   "<h4>-></h4>",
   miTexto2.decode() + "<br>"
-);
+);*/
 
 nigma.setMsg(miTexto2.getMsg());
-//myNigma.setChar("m", "l");
-//myNigma.setChar("b", "a");
-//myNigma.setChar("s", "s");
 
-console.log(nigma.getMsg());
+console.log("Reset Alphabet");
+console.log(nigma.resetAlphabet());
+
+nigma.setChar("m", "l");
+nigma.setChar("b", "a");
+nigma.setChar("s", "s");
+nigma.setChar("e", "d");
+nigma.setChar("c", "n");
+nigma.setChar("f", "e");
+nigma.setChar("h", "g");
+nigma.setChar("d", "c");
+nigma.setChar("j", "i");
+nigma.setChar("k", "j");
+nigma.setChar("n", "m");
+nigma.setChar("g", "f");
+nigma.setChar("i", "h");
+
 console.log(nigma.setByFrequency());
-console.log(nigma.getTestMessage(1));
-//console.table(myNigma.getAlphabet());
-//console.log(miTexto.getMsg());
-
-/*let a = myNigma.sortProperties(myNigma.getSLFreq());
-let b = myNigma.sortProperties(myNigma.freqAnalysis(miTexto.getMsg()));
-let c = myNigma.sortProperties(myNigma.freqAnalysis(miTexto2.getMsg()));*/
