@@ -1,5 +1,4 @@
 import {
-  default as BasicCipher,
   spanishLetterFrequencies,
   spanishBigramFrequencies,
   spanishTrigramFrequencies,
@@ -10,7 +9,18 @@ import { default as Columnar } from "./methods/columnar/columnar.js";
 import { default as Dictionary } from "./methods/dictionary/dictionary.js";
 import { default as Shift } from "./methods/shift/shift.js";
 
-class Nigma {
+/*
+
+Nigma Imports everything so that it can any method can be called from here.
+
+As a way of simplifying the implementation, the different methods are all grouped in the corresponding JS files with the same name
+as the folder that contains them.
+
+Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
+
+*/
+
+export default class Nigma {
   constructor(message = "") {
     this.testMessages = [
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -340,55 +350,4 @@ class Nigma {
   };
 }
 
-let nigma = new Nigma();
-
-const myKey = "Tyranosaurusrex";
-
-const miTexto = new Dictionary.simpleSubstitution(
-  nigma.getTestMessage(3),
-  myKey,
-  false,
-  true
-);
-
-const miTexto2 = new Dictionary.simpleSubstitution(
-  miTexto.encode(),
-  myKey,
-  true,
-  true
-);
-/*
-document.write(
-  "<h3>Encoding Text1: </h3>",
-  miTexto.getMsg(),
-  "<h4> -></h4>",
-  miTexto.encode() + "<br>"
-);
-
-document.write(
-  "<h3><br>Decoding Text2: </h3>",
-  miTexto2.getMsg(),
-  "<h4>-></h4>",
-  miTexto2.decode() + "<br>"
-);*/
-
-nigma.setMsg(miTexto2.getMsg());
-
-console.log("Reset Alphabet");
-console.log(nigma.resetAlphabet());
-
-nigma.setChar("m", "l");
-nigma.setChar("b", "a");
-nigma.setChar("s", "s");
-nigma.setChar("e", "d");
-nigma.setChar("c", "n");
-nigma.setChar("f", "e");
-nigma.setChar("h", "g");
-nigma.setChar("d", "c");
-nigma.setChar("j", "i");
-nigma.setChar("k", "j");
-nigma.setChar("n", "m");
-nigma.setChar("g", "f");
-nigma.setChar("i", "h");
-
-console.log(nigma.setByFrequency());
+export { Columnar, Dictionary, Shift };
