@@ -1,4 +1,6 @@
-class baconian extends BasicCipher {
+import { default as BasicCipher } from "../../basicCipher.js";
+
+export default class baconian extends BasicCipher {
   /*
     https://en.wikipedia.org/wiki/Bacon%27s_cipher
 
@@ -51,24 +53,4 @@ class baconian extends BasicCipher {
   decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
-const mensaje1 =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
-
-const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-const miTexto = new baconian(mensaje1, false, true);
-const miTexto2 = new baconian(miTexto.encode(), true, true);
-
-document.write(
-  "Encoding Text1: <br>",
-  miTexto.getMsg(),
-  "<br>-><br>",
-  miTexto.encode() + "<br>"
-);
-
-document.write(
-  "<br>Decoding Text2: <br>",
-  miTexto2.getMsg(),
-  "<br>-><br>",
-  miTexto2.decode() + "<br>"
-);
+// export default baconian;

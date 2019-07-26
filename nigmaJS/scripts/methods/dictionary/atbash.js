@@ -1,4 +1,6 @@
-class atbash extends BasicCipher {
+import { default as BasicCipher } from "../../basicCipher.js";
+
+export default class atbash extends BasicCipher {
   constructor(message, encoded = false, debug = false) {
     /*console.log(
           `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
@@ -61,26 +63,4 @@ class atbash extends BasicCipher {
   decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
 
-const mensaje1 =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
-
-const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-const miTexto = new atbash(mensaje1, false, true);
-
-document.write(
-  "Encoding Text1: <br>",
-  miTexto.getMsg(),
-  "<br>-><br>",
-  miTexto.encode() + "<br>"
-);
-
-const miTexto2 = new atbash(miTexto.encode(), true, true);
-document.write(
-  "<br>Decoding Text2: <br>",
-  miTexto2.getMsg(),
-  "<br>-><br>",
-  miTexto2.decode() + "<br>"
-);
-
-miTexto.frecuencyAnalysis();
+// export default atbash;

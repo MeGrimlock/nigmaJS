@@ -1,3 +1,15 @@
+import {
+  default as BasicCipher,
+  spanishLetterFrequencies,
+  spanishBigramFrequencies,
+  spanishTrigramFrequencies,
+  spanishQuadgramFrequencies
+} from "./basicCipher.js";
+
+import { default as Columnar } from "./methods/columnar/columnar.js";
+import { default as Dictionary } from "./methods/dictionary/dictionary.js";
+import { default as Shift } from "./methods/shift/shift.js";
+
 class Nigma {
   constructor(message = "") {
     this.testMessages = [
@@ -332,14 +344,19 @@ let nigma = new Nigma();
 
 const myKey = "Tyranosaurusrex";
 
-const miTexto = new simpleSubstitution(
+const miTexto = new Dictionary.simpleSubstitution(
   nigma.getTestMessage(3),
   myKey,
   false,
   true
 );
 
-const miTexto2 = new simpleSubstitution(miTexto.encode(), myKey, true, true);
+const miTexto2 = new Dictionary.simpleSubstitution(
+  miTexto.encode(),
+  myKey,
+  true,
+  true
+);
 /*
 document.write(
   "<h3>Encoding Text1: </h3>",

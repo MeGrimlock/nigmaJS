@@ -1,4 +1,4 @@
-const spanishLetterFrequencies = {
+export const spanishLetterFrequencies = {
   A: 12.5,
   K: 0.08,
   T: 4.42,
@@ -28,7 +28,7 @@ const spanishLetterFrequencies = {
   S: 7.44
 };
 
-const spanishBigramFrequencies = {
+export const spanishBigramFrequencies = {
   DE: 2.57,
   AD: 1.43,
   TA: 1.09,
@@ -61,7 +61,7 @@ const spanishBigramFrequencies = {
   UN: 0.84
 };
 
-const spanishTrigramFrequencies = {
+export const spanishTrigramFrequencies = {
   DEL: 0.75,
   EST: 0.48,
   PAR: 0.32,
@@ -94,7 +94,7 @@ const spanishTrigramFrequencies = {
   NES: 0.27
 };
 
-const spanishQuadgramFrequencies = {
+export const spanishQuadgramFrequencies = {
   CION: 0.42,
   MENT: 0.16,
   NCIA: 0.14,
@@ -127,7 +127,7 @@ const spanishQuadgramFrequencies = {
   DELO: 0.12
 };
 
-class BasicCipher {
+export default class BasicCipher {
   /*
 	 
 	In cryptography, a cipher (or cypher) is an algorithm for performing encryption or decryption—a series of 
@@ -299,14 +299,4 @@ class BasicCipher {
   test = () => "NigmaJS enabled";
 }
 
-// const mensaje =  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
-
-/*Original function for transpose:
-
-var newArray = array[0].map(function(col, i){
-    return array.map(function(row){
-        return row[i];
-    });
-});
-
-*/
+// export default BasicCipher;

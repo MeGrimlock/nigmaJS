@@ -1,4 +1,6 @@
-class simpleSubstitution extends BasicCipher {
+import { default as BasicCipher } from "../../basicCipher.js";
+
+export default class simpleSubstitution extends BasicCipher {
   constructor(message, key, encoded = false, debug = false) {
     /*console.log(
             `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
@@ -88,3 +90,5 @@ class simpleSubstitution extends BasicCipher {
   encode = () => this.encodeAlphabet(this.characterSep, this.wordSep);
   decode = () => this.decodeAlphabet(this.characterSep, this.wordSep);
 }
+
+// export default simpleSubstitution;

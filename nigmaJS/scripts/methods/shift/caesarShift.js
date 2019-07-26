@@ -1,4 +1,6 @@
-class caesarShift extends BasicCipher {
+import { default as BasicCipher } from "../../basicCipher.js";
+
+export default class caesarShift extends BasicCipher {
   /*
    
    Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, 
@@ -37,26 +39,4 @@ class caesarShift extends BasicCipher {
   decode = () => this.shiftCharacters(this.message, -this.key);
 }
 
-const newKey = 50;
-
-const mensaje1 =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat";
-
-const mensaje2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-const miTexto = new caesarShift(mensaje2, newKey);
-const miTexto2 = new caesarShift(miTexto.encode(), newKey, true);
-
-document.write(
-  "Encoding Text1: <br>",
-  miTexto.getMsg(),
-  "<br>-><br>",
-  miTexto.encode() + "<br>"
-);
-
-document.write(
-  "<br>Decoding Text2: <br>",
-  miTexto2.getMsg(),
-  "<br>-><br>",
-  miTexto2.decode() + "<br>"
-);
+// export default caesarShift;
