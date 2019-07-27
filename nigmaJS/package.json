@@ -4,7 +4,8 @@
   "description": "Module for solving and creating ciphers and codes",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "build": "webpack /app/nigma.js /build/nimgajs.js"
   },
   "repository": {
     "type": "git",
@@ -21,5 +22,9 @@
     "atbash"
   ],
   "author": "MeGrimlock",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "webpack": "^4.38.0",
+    "webpack-cli": "^3.3.6"
+  }
 }
