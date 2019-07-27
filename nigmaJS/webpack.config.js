@@ -1,10 +1,11 @@
 var path = require("path");
 
 module.exports = {
-  entry: "./src/index.js",
+  entry: "./src/testNigmaSRC.js",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js"
+    filename: "bundle.js",
+    library: "nigma"
   },
   module: {
     rules: [

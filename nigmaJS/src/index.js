@@ -20,7 +20,7 @@ Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
 
 */
 
-export class Nigma {
+export default class Nigma {
   constructor(message = "") {
     this.testMessages = [
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -350,5 +350,4 @@ export class Nigma {
   };
 }
 
-var nigma = new Nigma();
-export default { nigma, Columnar, Dictionary, Shift };
+export { Columnar, Dictionary, Shift };
