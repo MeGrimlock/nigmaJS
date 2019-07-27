@@ -1,6 +1,6 @@
 {
   "name": "nigmajs",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Module for solving and creating ciphers and codes",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,14 @@
     "url": "https://github.com/MeGrimlock/nigmaJS/tree/master/nigmaJS/"
   },
   "keywords": [
-    "ciphers"
+    "ciphers",
+    "encryption",
+    "amsco",
+    "caesar",
+    "rot13",
+    "Baconian",
+    "morse",
+    "atbash"
   ],
   "author": "MeGrimlock",
   "license": "GPL-3.0"
