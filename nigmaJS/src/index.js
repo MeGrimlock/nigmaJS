@@ -3,11 +3,11 @@ import {
   spanishBigramFrequencies,
   spanishTrigramFrequencies,
   spanishQuadgramFrequencies
-} from "./basicCipher.js.js";
+} from "./basicCipher.js";
 
-import { default as Columnar } from "./methods/columnar/columnar.js.js";
-import { default as Dictionary } from "./methods/dictionary/dictionary.js.js";
-import { default as Shift } from "./methods/shift/shift.js.js";
+import { default as Columnar } from "./methods/columnar/columnar.js";
+import { default as Dictionary } from "./methods/dictionary/dictionary.js";
+import { default as Shift } from "./methods/shift/shift.js";
 
 /*
 
@@ -20,7 +20,7 @@ Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
 
 */
 
-export default class Nigma {
+export class Nigma {
   constructor(message = "") {
     this.testMessages = [
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -350,4 +350,5 @@ export default class Nigma {
   };
 }
 
-export { Columnar, Dictionary, Shift };
+var nigma = new Nigma();
+export default { nigma, Columnar, Dictionary, Shift };

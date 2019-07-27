@@ -1,12 +1,11 @@
 {
   "name": "nigmajs",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Module for solving and creating ciphers and codes",
   "main": "index.js",
   "scripts": {
-    "test": "test",
-    "build": "webpack",
-    "build-prod": "webpack -p"
+    "dev": "webpack --mode development --module-bind js=babel-loader",
+    "build": "webpack --mode production --module-bind js=babel-loader"
   },
   "repository": {
     "type": "git",
@@ -25,6 +24,8 @@
   "author": "MeGrimlock",
   "license": "GPL-3.0",
   "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "babel-core": "^6.26.3",
     "babel-loader": "^8.0.6",

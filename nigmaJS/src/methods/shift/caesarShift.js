@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js.js";
+import { default as BasicCipher } from "../../basicCipher.js";
 
 export default class caesarShift extends BasicCipher {
   /*

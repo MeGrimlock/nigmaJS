@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js.js";
+import { default as BasicCipher } from "../../basicCipher.js";
 
 export default class simpleSubstitution extends BasicCipher {
   constructor(message, key, encoded = false, debug = false) {

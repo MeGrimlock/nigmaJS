@@ -1,5 +1,5 @@
 //test script for parent and child documents.
-import { default as Nigma, Dictionary, Shift, Columnar } from "./index.js";
+import { default as Nigma, Dictionary, Shift, Columnar } from "./bundle.js";
 
 let nigma = new Nigma();
 
@@ -15,7 +15,7 @@ function output(decrypted, encrypted) {
   console.log("log:", decrypted, encrypted);
   let container = document.getElementById("messages");
   let content = document.createElement("span");
-  content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
+  content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -> </h4>${encrypted}<br>`;
   container.appendChild(content);
 }
 

@@ -5,14 +5,14 @@
       "name": "Launch localhost",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost/index.html",
+      "url": "http://localhost/dist/index.html",
       "webRoot": "${workspaceFolder}/wwwroot"
     },
     {
       "name": "Launch index.html",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceFolder}/index.html"
+      "file": "${workspaceFolder}/dist/index.html"
     }
   ]
 }
