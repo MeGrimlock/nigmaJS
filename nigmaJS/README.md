@@ -4,7 +4,7 @@ This repository is focused on the implementation of many fantastic cryptographic
 
 **Nigma**
 
-Nigma.js is the class that is currently being developed to include methods which can assist you perform basic criptoanalysis. 
+Nigma.js (now index.js in src folder) is the class that is currently being developed to include methods which can assist you perform basic criptoanalysis.
 
 So far the library includes:
 
