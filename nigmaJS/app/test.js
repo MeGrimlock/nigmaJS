@@ -1,5 +1,5 @@
 //test script for parent and child documents.
-import { default as Nigma, Dictionary, Shift, Columnar } from "./nigma.js";
+import { default as Nigma, Dictionary, Shift, Columnar } from "./nigma.js.js";
 
 let nigma = new Nigma();
 

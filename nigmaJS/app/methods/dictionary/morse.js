@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from "../../basicCipher.js.js";
 
 export default class morse extends BasicCipher {
   /*
