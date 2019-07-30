@@ -23,13 +23,5 @@
   ],
   "author": "MeGrimlock",
   "license": "GPL-3.0",
-  "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^8.0.6",
-    "webpack": "^4.38.0",
-    "webpack-cli": "^3.3.6"
-  }
+  "devDependencies": {}
 }

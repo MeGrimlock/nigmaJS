@@ -1,0 +1,53 @@
+{
+  "_from": "nigmajs",
+  "_id": "nigmajs@1.0.2",
+  "_inBundle": false,
+  "_integrity": "sha512-CFOxJC+4E7G7WlCE8oF1NJhV7B/zLtrwYsI3Yv3qxZzD0hWPB7xSe5Wi7aR7B6E25+9ZxN7Xr4cnvwwwIBHNFA==",
+  "_location": "/nigmajs",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "nigmajs",
+    "name": "nigmajs",
+    "escapedName": "nigmajs",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/nigmajs/-/nigmajs-1.0.2.tgz",
+  "_shasum": "fc9b987a23710ea0203653c1bf59e64b72b08c64",
+  "_spec": "nigmajs",
+  "_where": "C:\\Users\\gonza\\Documents\\Programas JS\\nigmaJS",
+  "author": {
+    "name": "MeGrimlock"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Module for solving and creating ciphers and codes",
+  "keywords": [
+    "ciphers",
+    "encryption",
+    "amsco",
+    "caesar",
+    "rot13",
+    "Baconian",
+    "morse",
+    "atbash"
+  ],
+  "license": "GPL-3.0",
+  "main": "index.js",
+  "name": "nigmajs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MeGrimlock/nigmaJS/tree/master/nigmaJS/"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "version": "1.0.2"
+}
