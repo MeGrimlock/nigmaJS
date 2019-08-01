@@ -4,7 +4,7 @@ This repository is focused on the implementation of many fantastic cryptographic
 
 **Nigma**
 
-Nigma.js is the class that is currently being developed to include methods which can assist you perform basic criptoanalysis. 
+Nigma.js is the class that is currently being developed to include methods which can assist you perform basic criptoanalysis.
 
 So far the library includes:
 
@@ -23,6 +23,17 @@ As a reference:
 - All classes have a **decode** / **encode** method
 
 If you want to use this modules, know that basicCipher.js is the parent class where all other codes are based. Another intresting fact is that all aux methods are to be placed here. As more methods are implemented and code can be recycled, be sure that basicCipher is only going to get more powerfull.
+
+# Mechanical Ciphers
+
+The **Enigma mahcine** from WWII used by germans has been included. This masterpiece was so tough to break that it took allied forces years of work to finally decipher it.
+
+Unlike all other methods currently supported my this library, en encode method is in fact the decode method. Weird, I know but that's just how it works. Be sure to check wikipedia link inside module to understand how the different configurations work as I'm not 100% sure I understand it.
+
+What's important to know is that in order to setup this machine there are many aspects to consider
+
+- rotors order and position
+- plug settings
 
 # Dictionary Ciphers
 
