@@ -3,12 +3,11 @@ import { default as BasicCipher } from "../../basicCipher.js";
 export default class Enigma extends BasicCipher {
   /* Enigma Machine - German WWII
     
-    https://en.wikipedia.org/wiki/Enigma_machine
+    ttps://en.wikipedia.org/wiki/Enigma_machine
 
     The Enigma machine is an encryption device developed and used in the early- to mid-20th century to protect commercial, 
-    diplomatic and military communication. It was employed extensively by Nazi Germany during World War II,
-     in all branches of the German military.
-
+    diplomatic and military communication. It was employed extensively by Nazi Germany during World War II, in all branches of the German military.
+    
     Enigma has an electromechanical rotor mechanism that scrambles the 26 letters of the alphabet. In typical use, 
     one person enters text on the Enigma’s keyboard and another person writes down which of 26 lights above the keyboard 
     lights up at each key press. If plain text is entered, the lit-up letters are the encoded ciphertext. 
@@ -17,7 +16,9 @@ export default class Enigma extends BasicCipher {
     The rotor mechanism changes the electrical connections between the keys and the lights with each keypress.
     The security of the system depends on Enigma machine settings that were changed daily, based on secret key lists distributed in advance, 
     and on other settings that change for each message. 
-
+    
+    Additional info on rotors: https://en.wikipedia.org/wiki/Enigma_rotor_details
+    
     The receiving station has to know and use the exact settings employed by the transmitting station to successfully decrypt a message.
     
     PS: One of the most famous encryption "methods" ever, it is my pleasure to enclude it in the module. 
@@ -189,8 +190,14 @@ export default class Enigma extends BasicCipher {
   simplesub = (ch, key) => key.charAt(this.code(ch));
 
   rotor = (ch, r, offset) => {
-    // The first eight strings represent the rotor substitutions I through VIII. The second 8 are the
-    //  inverse transformations
+    /* 
+    There are many versions of the rotors, in a future update I'll include this so that you can recreate other versions of enigma machines.
+    The first eight strings represent the rotor substitutions I through VIII (see wiki article for more info), what's instresting is that
+    once this class is reworked for better code recycling, you will be able to create your own rotors. 
+    
+    The second 8 are the inverse transformations 
+    
+    */
     let key = [
       "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
       "AJDKSIRUXBLHWTMCQGZNPYFVOE",
