@@ -102,7 +102,7 @@ export default class Enigma extends BasicCipher {
         } else {
           key = this.increment_settings(key, rotors);
           echr = this.enigma_char(ch, key, rotors, ring, plugboard);
-          console.log(ch, " -> ", echr);
+          //console.log(ch, " -> ", echr);
           ciphertext += echr;
         }
       }
@@ -216,7 +216,7 @@ export default class Enigma extends BasicCipher {
     */
     let chcode = (this.code(ch) + 26 + offset) % 26;
     let mapch = ((this.code(key[r].charAt(chcode)) + 26 - offset) % 26) + 65;
-    console.log("Rotor > char: ", ch, "->", mapch);
+    //console.log("Rotor > char: ", ch, "->", mapch);
     return String.fromCharCode(mapch);
   };
 

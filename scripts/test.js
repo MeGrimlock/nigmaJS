@@ -25,9 +25,8 @@ function output(decrypted, encrypted) {
   content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
   container.appendChild(content);
 }
-/*
+
 output(miTexto.getMsg(), miTexto.encode());
 output(miTexto2.getMsg(), miTexto2.encode());
-output(miTexto3.getMsg(), miTexto3.encode());*/
+output(miTexto3.getMsg(), miTexto3.encode());
 output(miTexto4.getMsg(), miTexto4.encode());
-console.log(miTexto4.getMsg());

@@ -37,7 +37,8 @@
     "rot13",
     "Baconian",
     "morse",
-    "atbash"
+    "atbash",
+    "enigma"
   ],
   "license": "GPL-3.0",
   "main": "index.js",
@@ -49,5 +50,5 @@
   "scripts": {
     "test": "test"
   },
-  "version": "1.0.2"
+  "version": "1.0.3"
 }
