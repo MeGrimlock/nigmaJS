@@ -1,5 +1,11 @@
 //test script for parent and child documents.
-import { default as Nigma, Dictionary, Shift, Columnar } from "./nigma.js";
+import {
+  default as Nigma,
+  Dictionary,
+  Shift,
+  Columnar,
+  Enigma
+} from "./nigma.js";
 
 let nigma = new Nigma();
 
@@ -10,6 +16,7 @@ const myKey = "Tyranosaurusrex";
 const miTexto = new Dictionary.morse(nigma.getTestMessage(3), false);
 const miTexto2 = new Shift.rot13(miTexto.getMsg(), key, false);
 const miTexto3 = new Columnar.amsco(miTexto.getMsg(), amscoKey, false);
+const miTexto4 = new Enigma(nigma.getTestMessage(3));
 
 function output(decrypted, encrypted) {
   console.log("log:", decrypted, encrypted);
@@ -18,29 +25,9 @@ function output(decrypted, encrypted) {
   content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
   container.appendChild(content);
 }
-
+/*
 output(miTexto.getMsg(), miTexto.encode());
 output(miTexto2.getMsg(), miTexto2.encode());
-output(miTexto3.getMsg(), miTexto3.encode());
-
-miTexto3.encode();
-//nigma.setMsg(miTexto2.getMsg());
-/*
-console.log("Reset Alphabet");
-console.log(nigma.resetAlphabet());
-
-nigma.setChar("m", "l");
-nigma.setChar("b", "a");
-nigma.setChar("s", "s");
-nigma.setChar("e", "d");
-nigma.setChar("c", "n");
-nigma.setChar("f", "e");
-nigma.setChar("h", "g");
-nigma.setChar("d", "c");
-nigma.setChar("j", "i");
-nigma.setChar("k", "j");
-nigma.setChar("n", "m");
-nigma.setChar("g", "f");
-nigma.setChar("i", "h");
-*/
-//console.log(nigma.setByFrequency());
+output(miTexto3.getMsg(), miTexto3.encode());*/
+output(miTexto4.getMsg(), miTexto4.encode());
+console.log(miTexto4.getMsg());
