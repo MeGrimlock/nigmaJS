@@ -31,14 +31,14 @@ export default class Rotors {
     //Default
     this.rotorSet4 = {
       // I - III Enigma I , IV & V M3 Army , VI - VIII M3 & M4 Naval.
-      1: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ"],
-      2: ["AJDKSIRUXBLHWTMCQGZNPYFVOE"],
-      3: ["BDFHJLCPRTXVZNYEIWGAKMUSQO"],
-      4: ["ESOVPZJAYQUIRHXLNFTGKDCMWB"],
-      5: ["VZBRGITYUPSDNHLXAWMJQOFECK"],
-      6: ["JPGVOUMFYQBENHZRDKASXLICTW"],
-      7: ["NZJHGRCXMYSWBOUFAIVLPEKQDT"],
-      8: ["FKQHTLXOCBJSPDZRAMEWNIUYGV"]
+      I: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ"],
+      II: ["AJDKSIRUXBLHWTMCQGZNPYFVOE"],
+      III: ["BDFHJLCPRTXVZNYEIWGAKMUSQO"],
+      IV: ["ESOVPZJAYQUIRHXLNFTGKDCMWB"],
+      V: ["VZBRGITYUPSDNHLXAWMJQOFECK"],
+      VI: ["JPGVOUMFYQBENHZRDKASXLICTW"],
+      VII: ["NZJHGRCXMYSWBOUFAIVLPEKQDT"],
+      VIII: ["FKQHTLXOCBJSPDZRAMEWNIUYGV"]
     };
     this.rotorSet5 = {
       BETA: ["LEYJVCNIXWPBQMDRTAKZGFUHOS"],
@@ -51,4 +51,10 @@ export default class Rotors {
       ETW: ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
     };
   }
+  inverse = rotor => {
+    /*This method takes the rotor and gives the inverse back.
+     Example: (RotorSet 4 rotor 3) turns A -> B and if we want to go back from B -> A we need the inverse rotor*/
+    let invertedRotor = [];
+    return invertedRotor;
+  };
 }

@@ -62,6 +62,7 @@ export default class Enigma extends BasicCipher {
   };
 
   selectRotors = () => {
+    //Needs to include the split for appropiate rotor selection, right now it takes the first 3 of the set
     let rotorOptions = new Rotors();
     switch (this.rotorSet) {
       case 1:
@@ -85,11 +86,11 @@ export default class Enigma extends BasicCipher {
     }
     let rotors = this.rotorSettings.split("");
     //Right (fast) rotor
-    rotors[0] = this.rotorSets[rotors[0]];
+    rotors[0] = this.rotorSets["I"].join();
     //MIddle rotor
-    rotors[1] = this.rotorSets[rotors[1]];
+    rotors[1] = this.rotorSets["II"].join();
     //Left (slow) rotor
-    rotors[2] = this.rotorSets[rotors[2]];
+    rotors[2] = this.rotorSets["III"].join();
     this.rotors = rotors;
     return rotors;
   };
@@ -159,12 +160,18 @@ export default class Enigma extends BasicCipher {
   getRotors = () => this.rotors;
   getRotorSets = () => this.rotorSets;
 
+  shiftRotor = (rotor, steps = 1) =>
+    rotor.slice(steps) + rotor.substr(0, steps);
+
   encode = () => {
     let ciphertext = "";
     let plaintext = this.message.replace(/[^A-Z]/g, "");
     this.initialize();
     if (this.validateSettings(plaintext)) {
       ciphertext = "Valid Settings";
+      this.rotors[0] = this.shiftRotor(this.rotors[0], 10);
+
+      console.log(this.rotors);
     }
     return ciphertext;
   };
