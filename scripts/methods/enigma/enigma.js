@@ -1,4 +1,5 @@
 import { default as BasicCipher } from "../../basicCipher.js";
+import { default as Rotors } from "./rotors.js";
 
 export default class Enigma extends BasicCipher {
   /* Enigma Machine - German WWII
@@ -46,10 +47,7 @@ export default class Enigma extends BasicCipher {
     this.rotorSettings = rotorSettings;
   }
 
-  encode = () => {
-    let ciphertext = "";
-    let plaintext = this.message.replace(/[^A-Z]/g, "");
-
+  initialize = () => {
     this.rotorsettings = this.rotorSettings.replace(/[^1-9]/g, "");
     this.keysettings = this.keySettings.toUpperCase().replace(/[^A-Z]/g, "");
     this.ringsettings = this.ringSettings.toUpperCase().replace(/[^A-Z]/g, "");
@@ -57,40 +55,58 @@ export default class Enigma extends BasicCipher {
     this.plugboardsettings = this.plugboardSettings
       .toUpperCase()
       .replace(/[^A-Z]/g, "");
+  };
 
+  setupPlugboard = () => {
+    let plugboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let parr = plugboard.split("");
+    for (let i = 0, j = 1; i < this.plugboardsettings.length; i += 2, j += 2) {
+      let ichar = plugboard.indexOf(this.plugboardsettings.charAt(i));
+      let jchar = plugboard.indexOf(this.plugboardsettings.charAt(j));
+      let temp = parr[jchar];
+      parr[jchar] = parr[ichar];
+      parr[ichar] = temp;
+    }
+    plugboard = parr.join("");
+    return plugboard;
+  };
+
+  setupKey = () => {
+    let key = this.keysettings.split("");
+    key[0] = this.code(key[0]);
+    key[1] = this.code(key[1]);
+    key[2] = this.code(key[2]);
+    return key;
+  };
+
+  setupCode = () => {
+    let ring = this.ringsettings.split("");
+    ring[0] = this.code(ring[0]);
+    ring[1] = this.code(ring[1]);
+    ring[2] = this.code(ring[2]);
+    return ring;
+  };
+
+  getRotors = () => {
+    let rotors = this.rotorsettings.split("");
+    rotors[0] = rotors[0].valueOf() - 1;
+    rotors[1] = rotors[1].valueOf() - 1;
+    rotors[2] = rotors[2].valueOf() - 1;
+    return rotors;
+  };
+
+  encode = () => {
+    let ciphertext = "";
+    let plaintext = this.message.replace(/[^A-Z]/g, "");
+    this.initialize();
     if (this.validateSettings(plaintext)) {
       // interpret the rotor settings (strings 1-8 to int 0-7)
-      let rotors = this.rotorsettings.split("");
-      rotors[0] = rotors[0].valueOf() - 1;
-      rotors[1] = rotors[1].valueOf() - 1;
-      rotors[2] = rotors[2].valueOf() - 1;
+      let rotors = this.getRotors();
       // parse plugboard settings, store as a simple substitution key
-      let plugboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      let parr = plugboard.split("");
-      for (
-        let i = 0, j = 1;
-        i < this.plugboardsettings.length;
-        i += 2, j += 2
-      ) {
-        let ichar = plugboard.indexOf(this.plugboardsettings.charAt(i));
-        let jchar = plugboard.indexOf(this.plugboardsettings.charAt(j));
-        let temp = parr[jchar];
-        parr[jchar] = parr[ichar];
-        parr[ichar] = temp;
-      }
-      plugboard = parr.join("");
-
+      let plugboard = this.setupPlugboard();
       // interpret key and ring settings (convert from letters to numbers 0-25)
-      let key = this.keysettings.split("");
-      key[0] = this.code(key[0]);
-      key[1] = this.code(key[1]);
-      key[2] = this.code(key[2]);
-
-      let ring = this.ringsettings.split("");
-      ring[0] = this.code(ring[0]);
-      ring[1] = this.code(ring[1]);
-      ring[2] = this.code(ring[2]);
-
+      let key = this.setupKey();
+      let ring = this.setupCode();
       // do the actual enigma enciphering
       let ch = "";
       let echr = "";
@@ -108,7 +124,6 @@ export default class Enigma extends BasicCipher {
         }
       }
     }
-
     return ciphertext;
   };
 
@@ -185,7 +200,6 @@ export default class Enigma extends BasicCipher {
     key[2] = (key[2] + 1) % 26;
     return key;
   };
-
   // perform a simple substitution cipher
   simplesub = (ch, key) => key.charAt(this.code(ch));
 
@@ -226,7 +240,6 @@ export default class Enigma extends BasicCipher {
     //console.log("Rotor > char: ", ch, "->", mapch);
     return String.fromCharCode(mapch);
   };
-
   // return the number 0-25 given a letter [A-Za-z]
   code = ch => ch.toUpperCase().charCodeAt(0) - 65;
 }

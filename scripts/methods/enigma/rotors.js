@@ -1,12 +1,12 @@
-export default class rotors {
+export default class Rotors {
   constructor() {
-    const rotorSet1 = {
+    this.rotorSet1 = {
       //Commercial Enigma A B 1924
       IC: ["DMTWSILRUYQNKFEJCAZBPGXOHV"],
       IIC: ["HQZGPJTMOBLNCIFDYAWVEUSRKX"],
       IIIC: ["UQNTLSZFMREHDPXKIBVYGJCWOA"]
     };
-    const rotorSet2 = {
+    this.rotorSet2 = {
       // German Railway (Rocket) 1941
       I: ["JGDQOXUSCAMIFRVTPNEWKBLZYH"],
       II: "[NTZPSFBOKMWRCJDIVLAEYUXHGQ]",
@@ -14,7 +14,7 @@ export default class rotors {
       UKV: ["QYHOGNECVPUZTFDJAXWMKISRBL"],
       ETW: ["QWERTZUIOASDFGHJKPYXCVBNML"]
     };
-    const rotorSet3 = {
+    this.rotorSet3 = {
       /* Swiss K 
         In 1941 it became known to the Swiss that some of their Enigma traffic was being read by the French. It was decided to make some design modifications.
         One of the modifications consisted in modifying the wheel stepping on the Swiss Army machine. The slow, left-hand wheel was made stationary during operation while the second wheel stepped with every key stroke.
@@ -28,18 +28,19 @@ export default class rotors {
       "UKV-K": ["IMETCGFRAYSQBZXWLHKDVUPOJN"],
       "ETW-K": ["QWERTZUIOASDFGHJKPYXCVBNML"]
     };
-    const rotorSet4 = {
-      // I - III Enigma I , IV & V M3 Army , VI - VIII M3 & M4 Naval
-      I: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ"],
-      II: ["AJDKSIRUXBLHWTMCQGZNPYFVOE"],
-      III: ["BDFHJLCPRTXVZNYEIWGAKMUSQO"],
-      IV: ["ESOVPZJAYQUIRHXLNFTGKDCMWB"],
-      V: ["VZBRGITYUPSDNHLXAWMJQOFECK"],
-      VI: ["JPGVOUMFYQBENHZRDKASXLICTW"],
-      VII: ["NZJHGRCXMYSWBOUFAIVLPEKQDT"],
-      VIII: ["FKQHTLXOCBJSPDZRAMEWNIUYGV"]
+    //Default
+    this.rotorSet4 = {
+      // I - III Enigma I , IV & V M3 Army , VI - VIII M3 & M4 Naval.
+      1: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ"],
+      2: ["AJDKSIRUXBLHWTMCQGZNPYFVOE"],
+      3: ["BDFHJLCPRTXVZNYEIWGAKMUSQO"],
+      4: ["ESOVPZJAYQUIRHXLNFTGKDCMWB"],
+      5: ["VZBRGITYUPSDNHLXAWMJQOFECK"],
+      6: ["JPGVOUMFYQBENHZRDKASXLICTW"],
+      7: ["NZJHGRCXMYSWBOUFAIVLPEKQDT"],
+      8: ["FKQHTLXOCBJSPDZRAMEWNIUYGV"]
     };
-    const rotorSet5 = {
+    this.rotorSet5 = {
       BETA: ["LEYJVCNIXWPBQMDRTAKZGFUHOS"],
       GAMMA: ["FSOKANUERHMBTIYCWLQPZXVGJD"],
       "Reflector A": ["EJMZALYXVBWFCRQUONTSPIKHGD"],

@@ -8,7 +8,7 @@ import {
 import { default as Columnar } from "./methods/columnar/columnar.js";
 import { default as Dictionary } from "./methods/dictionary/dictionary.js";
 import { default as Shift } from "./methods/shift/shift.js";
-import { default as Enigma } from "./methods/enigma/enigma.js";
+import { default as Enigma } from "./methods/enigma/newEnigma.js";
 /*
 
 Nigma Imports everything so that it can any method can be called from here.
