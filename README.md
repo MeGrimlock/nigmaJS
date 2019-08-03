@@ -1,3 +1,5 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 # NigmaJS
 
 This repository is focused on the implementation of many fantastic cryptographic techniques that have been generated over the last millenia.
