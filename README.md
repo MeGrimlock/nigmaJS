@@ -1,3 +1,4 @@
+![Programming Language JS-ES6](https://img.shields.io/badge/language-JS--ES6-yellow)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-green)
 
