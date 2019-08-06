@@ -1,6 +1,12 @@
 import { default as BasicCipher } from "../../basicCipher.js";
 import { default as Rotors } from "./rotors.js";
 
+/*
+
+This code is intended to further develop the enigma.js file while enhencing it's functionality and customization.
+Right now this is a Work in Progress and should not be used for actual coding / decoding
+*/
+
 export default class Enigma extends BasicCipher {
   /* Enigma Machine - German WWII
     
