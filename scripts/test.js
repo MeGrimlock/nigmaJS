@@ -29,6 +29,6 @@ function output(decrypted, encrypted) {
 //output(miTexto.getMsg(), miTexto.encode());
 //output(miTexto2.getMsg(), miTexto2.encode());
 //output(miTexto3.getMsg(), miTexto3.encode());
-//output(miTexto4.getMsg(), miTexto4.encode());
-
-console.log(miTexto4.encode());
+output(miTexto4.getMsg(), miTexto4.encode());
+console.log(miTexto4.text2block(miTexto4.getMsg(), 4));
+//console.log(miTexto4.encode());

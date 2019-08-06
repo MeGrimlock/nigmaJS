@@ -88,6 +88,20 @@ export default class BasicCipher {
     return output;
   };
 
+  text2block = (str, blockSize = 1) => {
+    //Transform a text into same sized character blocks.
+    //Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+    str = str.replace(/ /g, "");
+    let temp = str[0];
+    let index = 1;
+    do {
+      temp += str[index];
+      if (index % blockSize === 0) temp += " ";
+      index++;
+    } while (index < str.length - 1);
+    return temp;
+  };
+
   //--------------------------------------------------Alphabet methods--------------------------------------------------
 
   encodeAlphabet = (charSplit, wordSplit) => {

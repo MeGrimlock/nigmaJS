@@ -45,7 +45,9 @@ export default class Enigma extends BasicCipher {
     this.ringSettings = ringSettings;
     this.plugboardSettings = plugboardSettings;
     this.rotorSettings = rotorSettings;
-    this.rotorSet = rotorVersion;
+    this.notch1 = "";
+    this.notch2 = "";
+    this.notch3 = "";
     this.initialize();
     this.selectRotors();
   }
@@ -86,11 +88,15 @@ export default class Enigma extends BasicCipher {
     }
     let rotors = this.rotorSettings.split("");
     //Right (fast) rotor
-    rotors[0] = this.rotorSets["I"].join();
+    rotors[0] = this.rotorSets[rotors[0]].join();
+    this.notch1 = rotors[0][0];
     //MIddle rotor
-    rotors[1] = this.rotorSets["II"].join();
+    rotors[1] = this.rotorSets[rotors[1]].join();
+    this.notch1 = rotors[1][0];
     //Left (slow) rotor
-    rotors[2] = this.rotorSets["III"].join();
+    rotors[2] = this.rotorSets[rotors[2]].join();
+    this.notch1 = rotors[2][0];
+    //Pass rotors to the object
     this.rotors = rotors;
     return rotors;
   };
@@ -161,7 +167,22 @@ export default class Enigma extends BasicCipher {
   getRotorSets = () => this.rotorSets;
 
   shiftRotor = (rotor, steps = 1) =>
+    //Simply shift the rotor 1 space
     rotor.slice(steps) + rotor.substr(0, steps);
+
+  shiftRotors = () => {
+    /*
+      This method is used so that ALL rotors move after typing a character.
+      It simulates the actual steps of the rotors with their notchs.
+    */
+    this.rotors[0] = this.shiftRotor(this.rotors[0], 1);
+    if (this.rotors[0][0] === this.notch1) {
+      this.rotors[1] = this.shiftRotor(this.rotors[1], 1);
+      if (this.rotors[1][0] === this.notch2) {
+        this.rotors[2] = this.shiftRotor(this.rotors[2], 1);
+      }
+    }
+  };
 
   encode = () => {
     let ciphertext = "";
@@ -169,9 +190,21 @@ export default class Enigma extends BasicCipher {
     this.initialize();
     if (this.validateSettings(plaintext)) {
       ciphertext = "Valid Settings";
-      this.rotors[0] = this.shiftRotor(this.rotors[0], 10);
-
-      console.log(this.rotors);
+      //Encode text
+      plaintext.split("").forEach(c => {
+        console.log(c, this.rotors);
+        /*All thats's missing now is to process the simple substitition in order: 
+        1) Plugboard
+        2) First rotor
+        3) Second Rotor
+        4) third Rotor
+        5) reflector
+        6) third rotor
+        7) second rotor
+        8) first rotor
+        */
+        this.shiftRotors();
+      });
     }
     return ciphertext;
   };
