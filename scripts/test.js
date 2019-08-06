@@ -22,6 +22,7 @@ function output(decrypted, encrypted) {
   console.log("log:", decrypted, encrypted);
   let container = document.getElementById("messages");
   let content = document.createElement("span");
+  encrypted = miTexto4.text2block(encrypted, 5);
   content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
   container.appendChild(content);
 }
@@ -30,5 +31,5 @@ function output(decrypted, encrypted) {
 //output(miTexto2.getMsg(), miTexto2.encode());
 //output(miTexto3.getMsg(), miTexto3.encode());
 output(miTexto4.getMsg(), miTexto4.encode());
-console.log(miTexto4.text2block(miTexto4.getMsg(), 4));
+
 //console.log(miTexto4.encode());
