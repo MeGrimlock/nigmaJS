@@ -33,6 +33,7 @@
     "ciphers",
     "encryption",
     "amsco",
+    "autokey",
     "caesar",
     "rot13",
     "Baconian",
