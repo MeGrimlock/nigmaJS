@@ -72,12 +72,13 @@ What's important to know is that in order to setup this machine there are many a
 - **Morse**: encoding / decoding is ready
 - **Baconian**: encoding / decoding is ready
 - **ATBASH**: encoding / decoding is ready
+- **AUTOKEY**: encoding / decoding is ready
 - **Simple Substitution**: encoding / decoding is ready
 
 # Shift Ciphers
 
 - **Caesar Shift**: encoding / decoding is ready
-- **Rot13 Shift**: encoding / decoding is ready
+- **Rot5,Rot7,Rot13,Rot18 and Rot47 Shift**: encoding / decoding is ready
 
 # Other Methods
 
