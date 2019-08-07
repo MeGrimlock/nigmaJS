@@ -31,13 +31,20 @@ Another option is simply to download from github https://github.com/MeGrimlock/n
 
 # How to use
 
-There are 2 ways to use this files.
+There are 2 ways to use this files, for this guide I'll show you how to create an **Enigma machine**.
 
 1. Import only the class that you need, this can save resources and in most cases you don't need to have access to all methods.
 
-Example: If you want to use **morse** , `import { default as Dictionary } from "./methods/dictionary/morse.js";` will give you access to the library and all it's methods. The path to this import depends on where your test file is placed.
+   `import { default as Enigma } from "./methods/enigma/enigma.js";` will give you access to the library and all it's methods. The path to this import depends on where your test file is placed.
 
-2. Import nigma class, this gives you access to the whole library (see the `test.js` file )
+2. Import **nigma class**, this gives you access to the whole library (see the `./scripts/test.js` file )
+
+   ```
+   import { default as Nigma, Enigma } from "./nigma.js";
+
+   let nigma = new Nigma();
+   const newMachine = new Enigma("Encode this text");
+   ```
 
 # Features
 
