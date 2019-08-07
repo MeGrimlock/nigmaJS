@@ -29,7 +29,17 @@ Installation is done using the npm install command:
 
 Another option is simply to download from github https://github.com/MeGrimlock/nigmaJS/ and copy the srcipts file wherever you want to use it.
 
-#Features
+# How to use
+
+There are 2 ways to use this files.
+
+1. Import only the class that you need, this can save resources and in most cases you don't need to have access to all methods.
+
+Example: If you want to use **morse** , `import { default as Dictionary } from "./methods/dictionary/morse.js";` will give you access to the library and all it's methods. The path to this import depends on where your test file is placed.
+
+2. Import nigma class, this gives you access to the whole library (see the `test.js` file )
+
+# Features
 
 - ES6 Class oriented + modular programming for easy code recycling
 - Shift ciphers
