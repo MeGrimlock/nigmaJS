@@ -42,6 +42,8 @@ There are 2 ways to use this files, for this guide I'll show you how to create a
    ```
    import { default as Nigma, Enigma } from "./nigma.js";
    const newMachine = new Enigma("Encode this text");
+
+   console.log(newMachine.encode());
    ```
 
 # Features
