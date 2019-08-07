@@ -1,5 +1,5 @@
 //test script for parent and child documents.
-import { default as Nigma, Enigma } from "./nigma.js";
+import { default as Nigma, Enigma } from "./index.js";
 
 const newMachine = new Enigma("Encode this text please");
 

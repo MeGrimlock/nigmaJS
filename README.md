@@ -40,11 +40,13 @@ There are 2 ways to use this files, for this guide I'll show you how to create a
 2. Import **nigma class**, this gives you access to the whole library (see the `./scripts/test.js` file )
 
    ```
-   import { default as Nigma, Enigma } from "./nigma.js";
+   import { default as Nigma, Enigma } from "./index.js";
    const newMachine = new Enigma("Encode this text");
 
    console.log(newMachine.encode());
    ```
+
+   **WARNING**: Note that this code works if you are standing on the `src folder` same as the `test.js` file. If you want to call this from another folder, just check where you are standing before doing de import and adjust accordingly.
 
 # Features
 
