@@ -41,7 +41,7 @@ There are 2 ways to use this files, for this guide I'll show you how to create a
 
    `import { default as Enigma } from "./methods/enigma/enigma.js";` will give you access to the library and all it's methods. The path to this import depends on where your test file is placed.
 
-2. Import **nigma class**, this gives you access to the whole library (see the `./scripts/test.js` file )
+2. Import **nigma class**, this gives you access to the whole library (see the `./app.js` file )
 
    ```
    import { default as Nigma, Enigma } from "./index.js";
@@ -50,7 +50,7 @@ There are 2 ways to use this files, for this guide I'll show you how to create a
    console.log(newMachine.encode());
    ```
 
-   **WARNING**: Note that this code works if you are standing on the `src folder` same as the `test.js` file. If you want to call this from another folder, just check where you are standing before doing the import and adjust accordingly.
+   **WARNING**: Note that this code works if you are standing on the `src folder` file. If you want to call this from another folder, just check where you are standing before doing the import and adjust accordingly.
 
 # Features
 
