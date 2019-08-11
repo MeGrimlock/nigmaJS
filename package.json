@@ -51,7 +51,7 @@
   "scripts": {
     "build:prod": "webpack --mode production --progress",
     "build:dev": "webpack --mode development --progress",
-    "test": ""
+    "test": "jest"
   },
   "version": "1.0.5",
   "devDependencies": {
