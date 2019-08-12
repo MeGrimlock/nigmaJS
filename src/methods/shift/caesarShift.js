@@ -26,9 +26,8 @@ export default class caesarShift extends BasicCipher {
     /*console.log(
       `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
     );*/
-    key === parseInt(key)
-      ? super(message, encoded, "caesarShift", key, "", debug)
-      : console.log("invalid key");
+    super(message, encoded, "caesarShift", key, "", debug);
+
     //Parametros: message,encoded,method,key,alphabet
     //this.decode.bind(this);
     //logMessage("constuctor",this);

@@ -76,7 +76,7 @@ export default class BasicCipher {
           // Uppercase letters
           let temp = c;
           c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
-          console.log(temp, "->", c);
+          //console.log(temp, "->", c);
         } else if (code >= 97 && code <= 122) {
           // Lowercase letters
           c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
