@@ -10,7 +10,7 @@ export default class baconian extends BasicCipher {
     Suitable length: 25 characters maximum
 
     */
-  constructor(message, encoded, debug) {
+  constructor(message, encoded = false, debug = false) {
     const alphabet = {
       //In some versions UV or IJ are together, if needed this can be adjusted.
       aaaaa: "a",

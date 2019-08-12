@@ -42,7 +42,7 @@ export default class AutoKey extends BasicCipher {
     let key = this.key.toLowerCase().replace(/[^a-z]/g, "");
     let ciphertext = "";
     if (plaintext.length >= 1 && key.length > 1) {
-      for (i = 0; i < plaintext.length; i++) {
+      for (let i = 0; i < plaintext.length; i++) {
         if (i < key.length) {
           ciphertext += String.fromCharCode(
             ((plaintext.charCodeAt(i) - 97 + (key.charCodeAt(i) - 97) + 26) %
