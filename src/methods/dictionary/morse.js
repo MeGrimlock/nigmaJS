@@ -14,7 +14,7 @@ export default class morse extends BasicCipher {
   
   */
 
-  constructor(message, encoded) {
+  constructor(message, encoded = false) {
     const alphabet = {
       "-----": "0",
       ".----": "1",

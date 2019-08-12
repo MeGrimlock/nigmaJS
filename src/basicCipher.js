@@ -138,6 +138,7 @@ export default class BasicCipher {
         ? (encodedMessage = encodedMessage.slice(0, -wordSplit.length))
         : null;
     }
+    console.log("Alphabet encoded:", encodedMessage);
     return encodedMessage;
   };
 
