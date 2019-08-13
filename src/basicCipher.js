@@ -95,10 +95,11 @@ export default class BasicCipher {
     let temp = str[0];
     let index = 1;
     do {
-      temp += str[index];
       if (index % blockSize === 0) temp += " ";
+      temp += str[index];
       index++;
-    } while (index < str.length - 1);
+    } while (index < str.length);
+
     return temp;
   };
 

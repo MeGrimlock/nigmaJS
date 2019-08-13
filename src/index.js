@@ -1,4 +1,5 @@
 import {
+  default as BasicCipher,
   spanishLetterFrequencies,
   spanishBigramFrequencies,
   spanishTrigramFrequencies,
@@ -350,4 +351,4 @@ export default class Nigma {
   };
 }
 
-export { Columnar, Dictionary, Shift, Enigma };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma };
