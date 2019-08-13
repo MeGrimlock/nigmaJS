@@ -10,12 +10,12 @@ function cipherTest(cipherObject, message, encodedMessage) {
   });
 }
 */
-
-//-------------------------------------ENIGMA UNIT TEST-------------------------------------
-const method = "Enigma";
-const encoded = "FOKXHYXLOPZMLMHZOMEF";
-const generator = new nigma.Enigma(message);
-test(`Should Encode message Using ${method} module and return a perfect Match`, () => {
-  console.log(`Running test ${method}`);
-  expect(generator.encode(message)).toBe(encoded);
+describe("Test Enigma Methods", () => {
+	//-------------------------------------ENIGMA UNIT TEST-------------------------------------
+	const method = "Enigma";
+	const encoded = "FOKXHYXLOPZMLMHZOMEF";
+	const generator = new nigma.Enigma(message);
+	test(`Should Encode message Using ${method} module and return a perfect Match`, () => {
+		expect(generator.encode(message)).toBe(encoded);
+	});
 });

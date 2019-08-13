@@ -1,5 +1,11 @@
 //test script for parent and child documents.
-import { default as Nigma, Enigma, Dictionary } from "./src/index.js";
+import {
+	default as Nigma,
+	Enigma,
+	Dictionary,
+	Columnar,
+	Shift
+} from "./src/index.js";
 
 const sampleMessage = "Encode this text please";
 //Enigma sample code
@@ -18,10 +24,10 @@ newAtbash.setEncoded(true);
 console.log(newAtbash.decode());
 
 function output(decrypted, encrypted) {
-  console.log("log:", decrypted, encrypted);
-  let container = document.getElementById("messages");
-  let content = document.createElement("span");
-  encrypted = newMachine.text2block(encrypted, 5);
-  content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
-  container.appendChild(content);
+	console.log("log:", decrypted, encrypted);
+	let container = document.getElementById("messages");
+	let content = document.createElement("span");
+	encrypted = newMachine.text2block(encrypted, 5);
+	content.innerHTML = `<h3>Encoding Text: </h3> ${decrypted}<h4> -></h4>${encrypted}<br>`;
+	container.appendChild(content);
 }

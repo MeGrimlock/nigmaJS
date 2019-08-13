@@ -2,10 +2,10 @@
 
 const nigma = require("./src/index");
 const message = "Encode this text please";
-
-test(`Should return true if TEST runner is OK`, () => {
-  console.log(`Running tests`);
-  expect(1 + 1).toBe(2);
+describe("Test if JEST is working", () => {
+	test(`Should return true if TEST runner is OK`, () => {
+		expect(1 + 1).toBe(2);
+	});
 });
 
 /*
