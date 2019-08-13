@@ -1,70 +1,74 @@
 {
-  "_from": "nigmajs",
-  "_id": "nigmajs@1.0.2",
-  "_inBundle": false,
-  "_integrity": "sha512-CFOxJC+4E7G7WlCE8oF1NJhV7B/zLtrwYsI3Yv3qxZzD0hWPB7xSe5Wi7aR7B6E25+9ZxN7Xr4cnvwwwIBHNFA==",
-  "_location": "/nigmajs",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "nigmajs",
-    "name": "nigmajs",
-    "escapedName": "nigmajs",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/nigmajs/-/nigmajs-1.0.2.tgz",
-  "_shasum": "fc9b987a23710ea0203653c1bf59e64b72b08c64",
-  "_spec": "nigmajs",
-  "_where": "C:\\Users\\gonza\\Documents\\Programas JS\\nigmaJS",
-  "author": {
-    "name": "MeGrimlock"
-  },
-  "bundleDependencies": [],
-  "deprecated": false,
-  "description": "Module for solving and creating ciphers and codes",
-  "keywords": [
-    "ciphers",
-    "encryption",
-    "amsco",
-    "autokey",
-    "caesar",
-    "rot13",
-    "Baconian",
-    "morse",
-    "atbash",
-    "enigma"
-  ],
-  "license": "GPL-3.0",
-  "main": "nigma.js",
-  "name": "nigmajs",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MeGrimlock/nigmaJS/"
-  },
-  "scripts": {
-    "build:prod": "webpack --mode production --progress",
-    "build:dev": "webpack --mode development --progress",
-    "test": "jest"
-  },
-  "version": "1.0.6",
-  "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-transform-arrow-functions": "^7.2.0",
-    "@babel/preset-env": "^7.5.5",
-    "babel-loader": "^8.0.6",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "html-webpack-plugin": "^3.2.0",
-    "jest": "^24.8.0",
-    "webpack": "^4.39.1",
-    "webpack-cli": "^3.3.6",
-    "webpack-dev-server": "^3.7.2"
-  }
+	"_from": "nigmajs",
+	"_id": "nigmajs@1.0.2",
+	"_inBundle": false,
+	"_integrity": "sha512-CFOxJC+4E7G7WlCE8oF1NJhV7B/zLtrwYsI3Yv3qxZzD0hWPB7xSe5Wi7aR7B6E25+9ZxN7Xr4cnvwwwIBHNFA==",
+	"_location": "/nigmajs",
+	"_phantomChildren": {},
+	"_requested": {
+		"type": "tag",
+		"registry": true,
+		"raw": "nigmajs",
+		"name": "nigmajs",
+		"escapedName": "nigmajs",
+		"rawSpec": "",
+		"saveSpec": null,
+		"fetchSpec": "latest"
+	},
+	"_requiredBy": [
+		"#USER",
+		"/"
+	],
+	"_resolved": "https://registry.npmjs.org/nigmajs/-/nigmajs-1.0.2.tgz",
+	"_shasum": "fc9b987a23710ea0203653c1bf59e64b72b08c64",
+	"_spec": "nigmajs",
+	"_where": "C:\\Users\\gonza\\Documents\\Programas JS\\nigmaJS",
+	"author": {
+		"name": "MeGrimlock"
+	},
+	"bundleDependencies": [],
+	"deprecated": false,
+	"description": "Module for solving and creating ciphers and codes",
+	"keywords": [
+		"ciphers",
+		"encryption",
+		"amsco",
+		"autokey",
+		"caesar",
+		"rot13",
+		"Baconian",
+		"morse",
+		"atbash",
+		"enigma"
+	],
+	"license": "GPL-3.0",
+	"main": "app.js",
+	"name": "nigmajs",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/MeGrimlock/nigmaJS/"
+	},
+	"files": [
+		"./src",
+		"./build"
+	],
+	"scripts": {
+		"build:prod": "webpack --mode production --progress",
+		"build:dev": "webpack --mode development --progress",
+		"test": "jest"
+	},
+	"version": "1.0.6",
+	"devDependencies": {
+		"@babel/cli": "^7.5.5",
+		"@babel/core": "^7.5.5",
+		"@babel/plugin-transform-arrow-functions": "^7.2.0",
+		"@babel/preset-env": "^7.5.5",
+		"babel-loader": "^8.0.6",
+		"babel-plugin-transform-class-properties": "^6.24.1",
+		"html-webpack-plugin": "^3.2.0",
+		"jest": "^24.8.0",
+		"webpack": "^4.39.1",
+		"webpack-cli": "^3.3.6",
+		"webpack-dev-server": "^3.7.2"
+	}
 }
