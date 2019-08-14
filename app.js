@@ -16,6 +16,14 @@ output(newMachine.getMsg(), newMachine.encode());
 const newMorse = new Dictionary.morse(sampleMessage);
 output(newMorse.getMsg(), newMorse.encode());
 
+//New Bazeries
+const newBazeries = new Dictionary.bazeries(
+	sampleMessage,
+	"threethousandfiftytwo"
+);
+output(newBazeries.getMsg(), newBazeries.encode());
+console.log(newBazeries.getAlphabet());
+
 //morse sample code
 const newAtbash = new Dictionary.atbash(sampleMessage);
 output(newAtbash.getMsg(), newAtbash.encode());

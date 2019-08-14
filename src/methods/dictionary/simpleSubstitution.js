@@ -1,11 +1,14 @@
 import { default as BasicCipher } from "../../basicCipher.js";
 
 export default class simpleSubstitution extends BasicCipher {
-	constructor(message, key, encoded = false, debug = false) {
-		/*console.log(
-            `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-          );*/
-
+	constructor(
+		message,
+		key,
+		ij = false,
+		uv = false,
+		encoded = false,
+		debug = false
+	) {
 		const alphabet = {
 			// The keyword is what modifies the key of this alphabet by using the corresponding constructor
 			a: "",
@@ -52,38 +55,65 @@ export default class simpleSubstitution extends BasicCipher {
 		};
 
 		super(message, encoded, "simpleSubstitution", key, alphabet, debug);
+
+		this.i = ij;
+		this.v = uv;
+
 		this.setAlphabet(this.alphabetConstructor(alphabet, key));
 
 		this.wordSep = " ";
 		this.characterSep = "";
-		//Parametros: message,encoded,method,key,alphabet
-		// constructor(message, encoded, method, key, alphabet, debug)
-		//logMessage("constuctor",this);
 	}
 
+	getI = () => this.i;
+	getV = () => this.v;
+
+	validateRemovedChars = (index, i = this.i, v = this.v) =>
+		(i === true && index == 106) || (v === true && index == 108);
+
 	alphabetConstructor = (alphabet, keyWord) => {
-		let usedLetters = [];
-		let keyIndex = 97; //lower case "a"
+		let i = this.i;
+		let v = this.v;
+
+		let usedLetters = []; //letters already used from keyword
+
+		let alphabetKey = 97; //lower case "a"
+
 		keyWord.split("").forEach(keyWordChar => {
 			//Filter repetitions of letters
 			if (!usedLetters.includes(keyWordChar)) {
-				alphabet[String.fromCharCode(keyIndex)] = keyWordChar;
+				//Store at albhabet "keyIndex" / char the keyWordChar
+				if (this.validateRemovedChars(alphabetKey, i, v)) {
+					console.log("J or V found", alphabetKey, i, v, keyWordChar);
+					//Remove from alphabet the key
+					delete alphabet[String.fromCharCode(alphabetKey)];
+					//alphabet[String.fromCharCode(alphabetIndex++)] = keyWordChar;
+				} else {
+					alphabet[String.fromCharCode(alphabetKey)] = keyWordChar;
+				}
+				//Make sure that the keyWordChar used is not used again in case of repettitions.
 				usedLetters.push(keyWordChar);
-				keyIndex++;
+				console.log(keyWordChar, alphabetKey, keyWord);
+				alphabetKey++;
 			}
 		});
 		//continue assigning letters until lower case "z" 122d
-		let letterIndex = 97;
+		let letterIndex = 97; //restart with "a"
 		let letter = "";
 		do {
 			letter = String.fromCharCode(letterIndex);
 			if (usedLetters.includes(letter)) {
 			} else {
-				alphabet[String.fromCharCode(keyIndex)] = letter;
-				keyIndex++;
+				if (this.validateRemovedChars(alphabetKey, i, v)) {
+					delete alphabet[String.fromCharCode(alphabetKey)];
+					alphabetKey++;
+				} else {
+					alphabet[String.fromCharCode(alphabetKey)] = letter;
+					alphabetKey++;
+				}
 			}
 			letterIndex++;
-		} while (keyIndex < 123);
+		} while (alphabetKey < 123);
 		return alphabet;
 	};
 
