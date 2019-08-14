@@ -69,7 +69,7 @@ export default class simpleSubstitution extends BasicCipher {
 	getV = () => this.v;
 
 	validateRemovedChars = (index, i = this.i, v = this.v) =>
-		(i === true && index == 106) || (v === true && index == 108);
+		(i === true && index == 106) || (v === true && index == 118);
 
 	alphabetConstructor = (alphabet, keyWord) => {
 		let i = this.i;
@@ -84,16 +84,12 @@ export default class simpleSubstitution extends BasicCipher {
 			if (!usedLetters.includes(keyWordChar)) {
 				//Store at albhabet "keyIndex" / char the keyWordChar
 				if (this.validateRemovedChars(alphabetKey, i, v)) {
-					console.log("J or V found", alphabetKey, i, v, keyWordChar);
-					//Remove from alphabet the key
 					delete alphabet[String.fromCharCode(alphabetKey)];
-					//alphabet[String.fromCharCode(alphabetIndex++)] = keyWordChar;
-				} else {
-					alphabet[String.fromCharCode(alphabetKey)] = keyWordChar;
+					alphabetKey++;
 				}
+				alphabet[String.fromCharCode(alphabetKey)] = keyWordChar;
 				//Make sure that the keyWordChar used is not used again in case of repettitions.
 				usedLetters.push(keyWordChar);
-				console.log(keyWordChar, alphabetKey, keyWord);
 				alphabetKey++;
 			}
 		});
@@ -102,15 +98,13 @@ export default class simpleSubstitution extends BasicCipher {
 		let letter = "";
 		do {
 			letter = String.fromCharCode(letterIndex);
-			if (usedLetters.includes(letter)) {
-			} else {
+			if (!usedLetters.includes(letter)) {
 				if (this.validateRemovedChars(alphabetKey, i, v)) {
 					delete alphabet[String.fromCharCode(alphabetKey)];
 					alphabetKey++;
-				} else {
-					alphabet[String.fromCharCode(alphabetKey)] = letter;
-					alphabetKey++;
 				}
+				alphabet[String.fromCharCode(alphabetKey)] = letter;
+				alphabetKey++;
 			}
 			letterIndex++;
 		} while (alphabetKey < 123);
