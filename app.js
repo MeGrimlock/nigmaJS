@@ -18,7 +18,7 @@ output(newMorse.getMsg(), newMorse.encode());
 
 //New Bazeries
 const newBazeries = new Dictionary.bazeries(
-	sampleMessage,
+	"simple substitution plus transposition",
 	"threethousandfiftytwo"
 );
 output(newBazeries.getMsg(), newBazeries.encode());
