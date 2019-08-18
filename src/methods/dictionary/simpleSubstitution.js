@@ -71,41 +71,49 @@ export default class simpleSubstitution extends BasicCipher {
 	validateRemovedChars = (index, i = this.i, v = this.v) =>
 		(i === true && index == 106) || (v === true && index == 118);
 
-	alphabetConstructor = (alphabet, keyWord) => {
-		let i = this.i;
-		let v = this.v;
-
-		let usedLetters = []; //letters already used from keyword
-
-		let alphabetKey = 97; //lower case "a"
-
-		keyWord.split("").forEach(keyWordChar => {
-			//Filter repetitions of letters
-			if (!usedLetters.includes(keyWordChar)) {
-				//Store at albhabet "keyIndex" / char the keyWordChar
-				if (this.validateRemovedChars(alphabetKey, i, v)) {
-					delete alphabet[String.fromCharCode(alphabetKey)];
-					alphabetKey++;
-				}
-				alphabet[String.fromCharCode(alphabetKey)] = keyWordChar;
-				//Make sure that the keyWordChar used is not used again in case of repettitions.
-				usedLetters.push(keyWordChar);
+	putLetter2Alphabet = (letter, usedLetters, alphabet, alphabetKey) => {
+		if (!usedLetters.includes(letter)) {
+			if (this.validateRemovedChars(alphabetKey, this.i, this.v)) {
+				delete alphabet[String.fromCharCode(alphabetKey)];
 				alphabetKey++;
 			}
+			alphabet[String.fromCharCode(alphabetKey)] = letter;
+			//Make sure that the keyWordChar used is not used again in case of repettitions.
+			usedLetters.push(letter);
+			alphabetKey++;
+		}
+		return [letter, usedLetters, alphabet, alphabetKey];
+	};
+
+	alphabetConstructor = (alphabet, keyWord) => {
+		let usedLetters = []; //letters already used from keyword
+		let alphabetKey = 97; //lower case "a"
+
+		//Filter repetitions of letters
+		keyWord.split("").forEach(keyWordChar => {
+			[
+				keyWordChar,
+				usedLetters,
+				alphabet,
+				alphabetKey
+			] = this.putLetter2Alphabet(
+				keyWordChar,
+				usedLetters,
+				alphabet,
+				alphabetKey
+			);
 		});
 		//continue assigning letters until lower case "z" 122d
 		let letterIndex = 97; //restart with "a"
 		let letter = "";
 		do {
 			letter = String.fromCharCode(letterIndex);
-			if (!usedLetters.includes(letter)) {
-				if (this.validateRemovedChars(alphabetKey, i, v)) {
-					delete alphabet[String.fromCharCode(alphabetKey)];
-					alphabetKey++;
-				}
-				alphabet[String.fromCharCode(alphabetKey)] = letter;
-				alphabetKey++;
-			}
+			[letter, usedLetters, alphabet, alphabetKey] = this.putLetter2Alphabet(
+				letter,
+				usedLetters,
+				alphabet,
+				alphabetKey
+			);
 			letterIndex++;
 		} while (alphabetKey < 123);
 		return alphabet;

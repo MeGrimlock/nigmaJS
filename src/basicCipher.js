@@ -28,7 +28,7 @@ export default class BasicCipher {
 		this.alphabet = alphabet;
 		this.debug = debug;
 	}
-	//GETs
+	//--------------------------------------------------GETs--------------------------------------------------
 	getMsg = () => this.message;
 
 	getEncoded = () => this.encoded;
@@ -38,8 +38,7 @@ export default class BasicCipher {
 	getKey = () => this.key;
 
 	getAlphabet = () => this.alphabet;
-
-	//SETs
+	//--------------------------------------------------SETs--------------------------------------------------
 	setMsg(newMessage) {
 		return (this.message = newMessage);
 	}
@@ -59,7 +58,6 @@ export default class BasicCipher {
 	setAlphabet(newAlphabet) {
 		return (this.alphabet = newAlphabet);
 	}
-
 	//----------------------------------------------------Usefull methods----------------------------------------------------
 
 	shiftCharacters = (str, amount = 1) => {
@@ -102,9 +100,7 @@ export default class BasicCipher {
 
 		return temp;
 	};
-
 	//--------------------------------------------------Alphabet methods--------------------------------------------------
-
 	encodeAlphabet = (
 		message = this.message,
 		charSplit = "",
@@ -163,7 +159,6 @@ export default class BasicCipher {
 
 		return messageDecoded;
 	};
-
 	//--------------------------------------------------Aux methods--------------------------------------------------
 
 	validateEncoded = () =>
