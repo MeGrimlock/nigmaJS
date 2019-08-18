@@ -1,15 +1,17 @@
+import { default as BasicCipher } from "./basicCipher.js";
+
 import {
-	default as BasicCipher,
 	spanishLetterFrequencies,
 	spanishBigramFrequencies,
 	spanishTrigramFrequencies,
 	spanishQuadgramFrequencies
-} from "./basicCipher.js";
+} from "./languageAnalysis/analysis.js";
 
 import { default as Columnar } from "./methods/columnar/columnar.js";
 import { default as Dictionary } from "./methods/dictionary/dictionary.js";
 import { default as Shift } from "./methods/shift/shift.js";
 import { default as Enigma } from "./methods/enigma/enigma.js";
+
 /*
 
 Nigma Imports everything so that it can any method can be called from here.
