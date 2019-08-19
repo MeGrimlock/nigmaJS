@@ -46,7 +46,7 @@ describe("Test Disctionary Methods", () => {
 	//-------------------------------------SIMPLE SUBSTITUTION UNIT TEST-------------------------------------
 	const method6 = "Simple Substitution";
 	const key6 = "Tyranosaurus";
-	const encoded6 = "lejfkl wopg wlzw usldgl";
+	const encoded6 = "lejfkl aopg alya usldgl";
 
 	const generator6 = new nigma.Dictionary.simpleSubstitution(message, key6);
 	test(`Should Encode message Using ${method6} module and return a perfect Match`, () => {
