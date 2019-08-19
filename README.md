@@ -23,15 +23,18 @@ This is a Node.js module available through the npm registry.
 
 Before installing, download and install Node.js. Node.js 0.10 or higher is required.
 
-Installation is done using the **npm** install command:
+**NPM** install command:
 
 `npm install nigmajs`
 
-Or **yarn**
+**YARN**
 
 `yarn add nigmajs`
 
+**GIT CLONE**
 Another option is simply to download from github https://github.com/MeGrimlock/nigmaJS/ and copy the srcipts file wherever you want to use it.
+
+`git clone https://github.com/MeGrimlock/nigmaJS/`
 
 # How to use
 
