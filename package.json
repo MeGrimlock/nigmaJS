@@ -9,16 +9,18 @@
 		"test": "jest"
 	},
 	"keywords": [
-		"ciphers",
-		"encryption",
-		"amsco",
-		"autokey",
+		"Ciphers",
+		"Encryption",
+		"Amsco",
+		"Autokey",
 		"caesar",
-		"rot13",
+		"Rot13",
 		"Baconian",
-		"morse",
-		"atbash",
-		"enigma"
+		"Morse",
+		"Atbash",
+		"Enigma",
+		"Bazeries",
+		"Simple Substitution"
 	],
 	"author": {
 		"name": "MeGrimlock"
