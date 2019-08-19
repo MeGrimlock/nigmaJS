@@ -22,7 +22,6 @@ const newBazeries = new Dictionary.bazeries(
 	"threethousandfiftytwo"
 );
 output(newBazeries.getMsg(), newBazeries.encode());
-console.log(newBazeries.getAlphabet());
 
 //morse sample code
 const newAtbash = new Dictionary.atbash(sampleMessage);

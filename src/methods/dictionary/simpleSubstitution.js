@@ -115,7 +115,7 @@ export default class simpleSubstitution extends BasicCipher {
 				alphabetKey
 			);
 			letterIndex++;
-		} while (alphabetKey < 123);
+		} while (alphabetKey < 123); //ASCII for lower case z
 		return alphabet;
 	};
 
