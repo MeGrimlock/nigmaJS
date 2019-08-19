@@ -59,7 +59,8 @@ export default class simpleSubstitution extends BasicCipher {
 		this.i = ij;
 		this.v = uv;
 
-		this.setAlphabet(this.alphabetConstructor(alphabet, key));
+		this.key = this.validateKey(key);
+		this.setAlphabet(this.alphabetConstructor(alphabet, this.key));
 
 		this.wordSep = " ";
 		this.characterSep = "";
@@ -68,11 +69,19 @@ export default class simpleSubstitution extends BasicCipher {
 	getI = () => this.i;
 	getV = () => this.v;
 
+	validateKey = key => {
+		let parsedKey = key.replace(/\s/g, "");
+		parsedKey = parsedKey.toLowerCase();
+		return parsedKey;
+	};
 	validateRemovedChars = (index, i = this.i, v = this.v) =>
 		(i === true && index == 106) || (v === true && index == 118);
 
 	putLetter2Alphabet = (letter, usedLetters, alphabet, alphabetKey) => {
-		if (!usedLetters.includes(letter)) {
+		if (
+			!usedLetters.includes(letter) &&
+			!this.validateRemovedChars(letter.charCodeAt(0))
+		) {
 			if (this.validateRemovedChars(alphabetKey, this.i, this.v)) {
 				delete alphabet[String.fromCharCode(alphabetKey)];
 				alphabetKey++;

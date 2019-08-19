@@ -25,6 +25,7 @@ export default class Bazeries extends simpleSubstitution {
 	deleteCharacters = () => {
 		delete alphabet[String.fromCharCode(alphabetKey)];
 	};
+
 	transpositionAlphabet = (rows, columns) => {
 		/*
 		Bazeries is a 5x5 substitution matrix, the simple substitution must be transpositioned before it can be used.
@@ -50,18 +51,14 @@ export default class Bazeries extends simpleSubstitution {
 		});
 		//Transpose
 		alphabetMatrix = this.transposeMatrix(alphabetMatrix);
-		console.log(alphabetMatrix);
 		//Merge into 1 array
 		alphabetMatrix = alphabetMatrix.join();
-		console.log(alphabetMatrix);
 		//Put values back into the alphabet as {key:value}
 		let asciiCode = 97;
 		alphabetMatrix.split(",").forEach(letter => {
 			rotatedAlphabet[String.fromCharCode(asciiCode)] = letter;
 			asciiCode++;
 		});
-
-		console.log(rotatedAlphabet);
 
 		this.setAlphabet(rotatedAlphabet);
 	};

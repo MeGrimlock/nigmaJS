@@ -19,7 +19,7 @@ output(newMorse.getMsg(), newMorse.encode());
 //New Bazeries
 const newBazeries = new Dictionary.bazeries(
 	"simple substitution plus transposition",
-	"threethousandfiftytwo"
+	"Eighty one thousand two hundred fifty seven"
 );
 output(newBazeries.getMsg(), newBazeries.encode());
 
@@ -28,7 +28,6 @@ const newAtbash = new Dictionary.atbash(sampleMessage);
 output(newAtbash.getMsg(), newAtbash.encode());
 newAtbash.setMsg("0r2q10 lxwm l0hl  pt04m0");
 newAtbash.setEncoded(true);
-console.log(newAtbash.decode());
 
 function output(decrypted, encrypted) {
 	console.log("log:", decrypted, encrypted);
