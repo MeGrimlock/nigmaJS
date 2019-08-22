@@ -1,4 +1,5 @@
 ![Programming Language JS-ES6](https://img.shields.io/badge/language-JS--ES6-yellow)
+![NPM Version](https://img.shields.io/badge/npm-v2.0.0-blue)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-green)
 ![NPM Version](https://img.shields.io/badge/npm-2.0.0-green)
@@ -28,12 +29,11 @@ Before installing, download and install Node.js. Node.js 0.10 or higher is requi
 
 `npm install nigmajs`
 
-**YARN**
+**YARN** install command:
 
 `yarn add nigmajs`
 
-**GIT CLONE**
-Another option is simply to download from github https://github.com/MeGrimlock/nigmaJS/ and copy the srcipts file wherever you want to use it.
+**GIT CLONE** Clone the srcipts wherever you want to use it.
 
 `git clone https://github.com/MeGrimlock/nigmaJS/`
 
@@ -101,6 +101,7 @@ What's important to know is that in order to setup this machine there are many a
 - **ATBASH**: encoding / decoding is ready
 - **AUTOKEY**: encoding / decoding is ready
 - **Simple Substitution**: encoding / decoding is ready
+- **Bazeries**: encoding / decoding is ready
 
 # Shift Ciphers
 
@@ -110,6 +111,7 @@ What's important to know is that in order to setup this machine there are many a
 # Other Methods
 
 - **AMSCO**: encoding / decoding is ready
+- **ENIGMA**: encoding / decoding is ready
 
 # Disclaimer
 
