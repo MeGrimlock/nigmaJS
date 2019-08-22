@@ -1,6 +1,7 @@
-//test script for parent and child documents.
+// test script for parent and child documents.
 
 const nigma = require("./src/index");
+
 const message = "Encode this text please";
 describe("Test if JEST is working", () => {
 	test(`Should return true if TEST runner is OK`, () => {
@@ -18,7 +19,7 @@ function cipherTest(cipherObject, message, encodedMessage) {
 }
 */
 
-//-------------------------------------ENIGMA UNIT TEST-------------------------------------
+// -------------------------------------ENIGMA UNIT TEST-------------------------------------
 
 /*
 const method = "Enigma";

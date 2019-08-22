@@ -1,7 +1,7 @@
 import { default as BasicCipher } from "../../basicCipher.js";
 
-export default class caesarShift extends BasicCipher {
-  /*
+export default class CaesarShift extends BasicCipher {
+	/*
    
    Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, 
    is one of the simplest and most widely known encryption techniques. 
@@ -22,20 +22,20 @@ export default class caesarShift extends BasicCipher {
    Note: Since this is a really basic encryption method, it is included in basicCipher class
    */
 
-  constructor(message, key, encoded = false, debug = false) {
-    /*console.log(
+	constructor(message, key, encoded = false, debug = false) {
+		/* console.log(
       `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-    );*/
-    super(message, encoded, "caesarShift", key, "", debug);
+    ); */
+		super(message, encoded, "caesarShift", key, "", debug);
 
-    //Parametros: message,encoded,method,key,alphabet
-    //this.decode.bind(this);
-    //logMessage("constuctor",this);
-  }
+		// Parametros: message,encoded,method,key,alphabet
+		// this.decode.bind(this);
+		// logMessage("constuctor",this);
+	}
 
-  encode = () => this.shiftCharacters(this.message, this.key);
+	encode = () => this.shiftCharacters(this.message, this.key);
 
-  decode = () => this.shiftCharacters(this.message, -this.key);
+	decode = () => this.shiftCharacters(this.message, -this.key);
 }
 
 // export default caesarShift;

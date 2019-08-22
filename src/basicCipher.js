@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-return-assign */
 export default class BasicCipher {
 	/*
 	 
@@ -28,7 +30,8 @@ export default class BasicCipher {
 		this.alphabet = alphabet;
 		this.debug = debug;
 	}
-	//--------------------------------------------------GETs--------------------------------------------------
+
+	// --------------------------------------------------GETs--------------------------------------------------
 	getMsg = () => this.message;
 
 	getEncoded = () => this.encoded;
@@ -38,7 +41,8 @@ export default class BasicCipher {
 	getKey = () => this.key;
 
 	getAlphabet = () => this.alphabet;
-	//--------------------------------------------------SETs--------------------------------------------------
+
+	// --------------------------------------------------SETs--------------------------------------------------
 	setMsg(newMessage) {
 		return (this.message = newMessage);
 	}
@@ -58,23 +62,24 @@ export default class BasicCipher {
 	setAlphabet(newAlphabet) {
 		return (this.alphabet = newAlphabet);
 	}
-	//----------------------------------------------------Usefull methods----------------------------------------------------
+	// ----------------------------------------------------Usefull methods----------------------------------------------------
 
-	shiftCharacters = (str, amount = 1) => {
-		//Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
-		Math.abs(amount) > 26 ? (amount = amount % 26) : null;
+	shiftCharacters = (str, shift = 1) => {
+		// Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+		let amount = shift;
+		Math.abs(amount) > 26 ? (amount %= 26) : null;
 		amount < 0 ? (amount += 26) : amount;
-		var output = "";
-		for (var i = 0; i < str.length; i++) {
-			var c = str[i];
+		let output = "";
+		for (let i = 0; i < str.length; i += 1) {
+			let c = str[i];
 			// If it's a letter...
 			if (c.match(/[a-z]/i)) {
-				var code = str.charCodeAt(i);
+				const code = str.charCodeAt(i);
 				if (code >= 65 && code <= 90) {
 					// Uppercase letters
-					let temp = c;
+					const temp = c;
 					c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
-					//console.log(temp, "->", c);
+					// console.log(temp, "->", c);
 				} else if (code >= 97 && code <= 122) {
 					// Lowercase letters
 					c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
@@ -86,21 +91,23 @@ export default class BasicCipher {
 		return output;
 	};
 
-	text2block = (str, blockSize = 1) => {
-		//Transform a text into same sized character blocks.
-		//Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+	text2block = (text, blockSize = 1) => {
+		// Transform a text into same sized character blocks.
+		// Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+		let str = text;
 		str = str.replace(/ /g, "");
 		let temp = str[0];
 		let index = 1;
 		do {
 			if (index % blockSize === 0) temp += " ";
 			temp += str[index];
-			index++;
+			index += 1;
 		} while (index < str.length);
 
 		return temp;
 	};
-	//--------------------------------------------------Alphabet methods--------------------------------------------------
+
+	// --------------------------------------------------Alphabet methods--------------------------------------------------
 	encodeAlphabet = (
 		message = this.message,
 		charSplit = "",
@@ -119,11 +126,11 @@ export default class BasicCipher {
 		let originalMessage = "";
 		let encodedMessage = "";
 
-		//originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
+		// originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
 		originalMessage = message.toLowerCase();
 		originalMessage.split(" ").map(word => {
 			word.split("").map(letter => {
-				let encodedChar = this.getKeyByValue(this.alphabet, letter);
+				const encodedChar = this.getKeyByValue(this.alphabet, letter);
 
 				encodedChar !== undefined
 					? (encodedMessage += encodedChar + charSplit)
@@ -150,7 +157,7 @@ export default class BasicCipher {
 
 		message.split(wordSplit).map(word => {
 			word.split(charSplit).map(letter => {
-				let encodedChar = this.alphabet[letter];
+				const encodedChar = this.alphabet[letter];
 				encodedChar !== undefined ? (messageDecoded += encodedChar) : null;
 			});
 			messageDecoded += " ";
@@ -159,20 +166,19 @@ export default class BasicCipher {
 
 		return messageDecoded;
 	};
-	//--------------------------------------------------Aux methods--------------------------------------------------
+	// --------------------------------------------------Aux methods--------------------------------------------------
 
 	validateEncoded = () =>
 		this.encoded === true &&
 		typeof (this.message != null) &&
-		this.message != "";
+		this.message !== "";
 
 	sortColumns(a, b) {
-		//Sort values based on the first item on the row
+		// Sort values based on the first item on the row
 		if (a[0] === b[0]) {
 			return 0;
-		} else {
-			return a[0] < b[0] ? -1 : 1;
 		}
+		return a[0] < b[0] ? -1 : 1;
 	}
 
 	transposeMatrix = array => array[0].map((col, i) => array.map(row => row[i]));

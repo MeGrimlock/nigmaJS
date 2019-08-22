@@ -67,6 +67,7 @@ export default class simpleSubstitution extends BasicCipher {
 	}
 
 	getI = () => this.i;
+
 	getV = () => this.v;
 
 	validateKey = key => {
@@ -74,31 +75,34 @@ export default class simpleSubstitution extends BasicCipher {
 		parsedKey = parsedKey.toLowerCase();
 		return parsedKey;
 	};
-	validateRemovedChars = (index, i = this.i, v = this.v) =>
-		(i === true && index == 106) || (v === true && index == 118);
 
-	putLetter2Alphabet = (letter, usedLetters, alphabet, alphabetKey) => {
+	validateRemovedChars = (index, i = this.i, v = this.v) =>
+		(i === true && index === 106) || (v === true && index === 118);
+
+	putLetter2Alphabet = (letter, usedLetters, refAlphabet, refAlphabetKey) => {
+		const alphabet = refAlphabet;
+		let alphabetKey = refAlphabetKey;
 		if (
 			!usedLetters.includes(letter) &&
 			!this.validateRemovedChars(letter.charCodeAt(0))
 		) {
 			if (this.validateRemovedChars(alphabetKey, this.i, this.v)) {
 				delete alphabet[String.fromCharCode(alphabetKey)];
-				alphabetKey++;
+				alphabetKey += 1;
 			}
 			alphabet[String.fromCharCode(alphabetKey)] = letter;
-			//Make sure that the keyWordChar used is not used again in case of repettitions.
+			// Make sure that the keyWordChar used is not used again in case of repettitions.
 			usedLetters.push(letter);
-			alphabetKey++;
+			alphabetKey += 1;
 		}
 		return [letter, usedLetters, alphabet, alphabetKey];
 	};
 
 	alphabetConstructor = (alphabet, keyWord) => {
-		let usedLetters = []; //letters already used from keyword
-		let alphabetKey = 97; //lower case "a"
+		let usedLetters = []; // letters already used from keyword
+		let alphabetKey = 97; // lower case "a"
 
-		//Filter repetitions of letters
+		// Filter repetitions of letters
 		keyWord.split("").forEach(keyWordChar => {
 			[
 				keyWordChar,
@@ -112,8 +116,8 @@ export default class simpleSubstitution extends BasicCipher {
 				alphabetKey
 			);
 		});
-		//continue assigning letters until lower case "z" 122d
-		let letterIndex = 97; //restart with "a"
+		// continue assigning letters until lower case "z" 122d
+		let letterIndex = 97; // restart with "a"
 		let letter = "";
 		do {
 			letter = String.fromCharCode(letterIndex);
@@ -123,13 +127,14 @@ export default class simpleSubstitution extends BasicCipher {
 				alphabet,
 				alphabetKey
 			);
-			letterIndex++;
-		} while (alphabetKey < 123); //ASCII for lower case z
+			letterIndex += 1;
+		} while (alphabetKey < 123); // ASCII for lower case z
 		return alphabet;
 	};
 
 	encode = message =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
+
 	decode = message =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }

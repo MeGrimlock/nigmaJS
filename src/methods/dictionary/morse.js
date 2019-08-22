@@ -60,14 +60,15 @@ export default class morse extends BasicCipher {
 		super(message, encoded, "morse", "", alphabet);
 		this.wordSep = "   ";
 		this.characterSep = " ";
-		//Parametros: message,encoded,method,key,alphabet
-		//WE have no key but we do have an alphabet
-		//this.decode.bind(this);
-		//console.log("constuctor",this);
+		// Parametros: message,encoded,method,key,alphabet
+		// WE have no key but we do have an alphabet
+		// this.decode.bind(this);
+		// console.log("constuctor",this);
 	}
 
 	encode = message =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
+
 	decode = message =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }

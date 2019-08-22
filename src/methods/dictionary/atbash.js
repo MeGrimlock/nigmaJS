@@ -2,9 +2,9 @@ import { default as BasicCipher } from "../../basicCipher.js";
 
 export default class atbash extends BasicCipher {
 	constructor(message, encoded = false, debug = false) {
-		/*console.log(
+		/* console.log(
           `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-        );*/
+        ); */
 
 		const alphabet = {
 			"4": "a",
@@ -54,13 +54,14 @@ export default class atbash extends BasicCipher {
 
 		this.wordSep = " ";
 		this.characterSep = "";
-		//Parametros: message,encoded,method,key,alphabet
+		// Parametros: message,encoded,method,key,alphabet
 		// constructor(message, encoded, method, key, alphabet, debug)
-		//logMessage("constuctor",this);
+		// logMessage("constuctor",this);
 	}
 
 	encode = message =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
+
 	decode = message =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }

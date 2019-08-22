@@ -12,7 +12,7 @@ export default class baconian extends BasicCipher {
     */
 	constructor(message, encoded = false, debug = false) {
 		const alphabet = {
-			//In some versions UV or IJ are together, if needed this can be adjusted.
+			// In some versions UV or IJ are together, if needed this can be adjusted.
 			aaaaa: "a",
 			aaaab: "b",
 			aaaba: "c",
@@ -41,16 +41,17 @@ export default class baconian extends BasicCipher {
 			bbaab: "z"
 		};
 		super(message, encoded, "baconian", "", alphabet, debug);
-		//Parametros: message,encoded,method,key,alphabet
-		//WE have no key but we do have an alphabet
-		//this.decode.bind(this);
-		//logMessage("constuctor",this);
+		// Parametros: message,encoded,method,key,alphabet
+		// WE have no key but we do have an alphabet
+		// this.decode.bind(this);
+		// logMessage("constuctor",this);
 		this.wordSep = "   ";
 		this.characterSep = " ";
 	}
 
 	encode = message =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
+
 	decode = message =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }

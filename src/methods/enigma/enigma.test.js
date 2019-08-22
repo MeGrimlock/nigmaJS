@@ -1,4 +1,5 @@
 const nigma = require("../../index");
+
 const message = "Encode this text please";
 
 /*
@@ -11,7 +12,7 @@ function cipherTest(cipherObject, message, encodedMessage) {
 }
 */
 describe("Test Enigma Methods", () => {
-	//-------------------------------------ENIGMA UNIT TEST-------------------------------------
+	// -------------------------------------ENIGMA UNIT TEST-------------------------------------
 	const method = "Enigma";
 	const encoded = "FOKXHYXLOPZMLMHZOMEF";
 	const generator = new nigma.Enigma(message);

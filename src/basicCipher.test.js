@@ -1,4 +1,5 @@
 const nigma = require("./index");
+
 const message = "Encode this text please";
 
 const alphabet = {
@@ -72,7 +73,7 @@ const basic3 = new nigma.BasicCipher(
 	false
 );
 describe("Test BasicCipher GET Methods", () => {
-	//Gets
+	// Gets
 	test(`GET Message, Should return the same as message`, () => {
 		expect(basic.getMsg()).toBe(message);
 	});
@@ -90,7 +91,7 @@ describe("Test BasicCipher GET Methods", () => {
 	});
 });
 describe("Test BasicCipher SET Methods", () => {
-	//Sets
+	// Sets
 	test(`SET Message, Should return the same as message`, () => {
 		const newMsg = "new message";
 		expect(basic.setMsg(newMsg)).toBe(newMsg);
@@ -109,7 +110,7 @@ describe("Test BasicCipher SET Methods", () => {
 	});
 });
 describe("Test BasicCipher Usefull Methods", () => {
-	//Usefull methods
+	// Usefull methods
 	test(`Test shiftCharacters, Should return BCD`, () => {
 		expect(basic.shiftCharacters("abc", 1)).toBe("bcd");
 	});
@@ -119,7 +120,7 @@ describe("Test BasicCipher Usefull Methods", () => {
 });
 
 describe("Test BasicCipher Alphabet Methods", () => {
-	//Test Alphabet methods
+	// Test Alphabet methods
 	test(`Test DecodeAlphabet, Should return "encode this text  please"`, () => {
 		expect(basic2.decodeAlphabet(basic2.getMsg(), "", " ")).toBe(
 			"encode this text  please"

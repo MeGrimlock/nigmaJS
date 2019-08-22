@@ -88,19 +88,11 @@ export default class Nigma {
 
 	getTestMessage = number => this.testMessages[number];
 
-	setMsg = msg => (this.message = msg);
-
-	getMsg = () => this.message;
-
-	getAlphabet = () => this.alphabet;
-
 	getChar = cipheredChar => this.alphabet[cipheredChar];
 
 	setChar = (cipheredChar, decodedChar) => {
 		this.alphabet[cipheredChar] = decodedChar;
-		console.log(
-			`Derypting "${cipheredChar}" as  "${decodedChar}" :\n ${this.processMessage()}\n`
-		);
+		// console.log(`Derypting "${cipheredChar}" as  "${decodedChar}" :\n ${this.processMessage()}\n`);
 		return this.processMessage();
 	};
 
@@ -110,39 +102,39 @@ export default class Nigma {
 	};
 
 	swapChar = (char1, char2) => {
-		//Receives 2 keys and swaps their values in the alphabet, since we are testing the script it also updates the text.
-		let tempChar = this.alphabet[char1];
+		// Receives 2 keys and swaps their values in the alphabet, since we are testing the script it also updates the text.
+		const tempChar = this.alphabet[char1];
 		this.alphabet[char1] = this.alphabet[char2];
 		this.alphabet[char2] = tempChar;
 		return this.processMessage();
 	};
 
 	setByFrequency = () => {
-		/*The method takes the analyzed text alphabet and compares it with the default language frequency reference. 
+		/* The method takes the analyzed text alphabet and compares it with the default language frequency reference. 
     This way we have a start but notice that it works in a very unefficient way */
 
-		let sortedRefFreq = this.sortProperties(this.freqAnalysis(this.message));
-		let sortedMsgFreq = this.sortProperties(this.getSLFreq());
+		const sortedRefFreq = this.sortProperties(this.freqAnalysis(this.message));
+		const sortedMsgFreq = this.sortProperties(this.getSLFreq());
 
 		let index = 0;
 		do {
-			//sortedMsgFreq[index][0] = sortedRefFreq[index][0];
+			// sortedMsgFreq[index][0] = sortedRefFreq[index][0];
 			this.setChar(
 				String(sortedMsgFreq[index][0]).toLowerCase(),
 				String(sortedRefFreq[index][0]).toLowerCase()
 			);
-			index++;
+			index += 1;
 		} while (index < sortedRefFreq.length - 1);
-		//console.table(sortedMsgFreq);
+		// console.table(sortedMsgFreq);
 		return this.processMessage();
 	};
 
 	processMessage = () => {
-		//Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
+		// Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
 		let decodedMessage = "";
-		let temp = this.message.split("");
+		const temp = this.message.split("");
 		temp.forEach(element => {
-			let decodedChar = this.alphabet[element];
+			const decodedChar = this.alphabet[element];
 			decodedChar !== ""
 				? (decodedMessage += decodedChar)
 				: (decodedMessage += "?");
@@ -152,41 +144,45 @@ export default class Nigma {
 	// ---------------------------------------Frequency Analysis Methods ---------------------------------------
 
 	getSLFreq = () => spanishLetterFrequencies;
+
 	getS2Freq = () => spanishBigramFrequencies;
+
 	getS3Freq = () => spanishTrigramFrequencies;
+
 	getS4req = () => spanishQuadgramFrequencies;
 
 	freqAnalysis = (message = "") => {
-		//Take all of the characters inside of a text and return an array with this characters as a % of the total
-		let pseudoAlphabet = {};
-		let auxText = message.split("");
+		// Take all of the characters inside of a text and return an array with this characters as a % of the total
+		const pseudoAlphabet = {};
+		const auxText = message.split("");
 
-		//console.log("Frec. analysis");
+		// console.log("Frec. analysis");
 		auxText.forEach(charElement => {
 			if (charElement in pseudoAlphabet) {
-				pseudoAlphabet[charElement] = pseudoAlphabet[charElement] + 1;
+				pseudoAlphabet[charElement] += 1;
 			} else {
 				pseudoAlphabet[charElement] = 1;
 			}
 		});
-		let totalChars = auxText.length;
+		const totalChars = auxText.length;
 
-		for (let [key, value] of Object.entries(pseudoAlphabet)) {
-			//Convert the number of repetitions into a %
+		for (const [key, value] of Object.entries(pseudoAlphabet)) {
+			// Convert the number of repetitions into a %
 			pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
 		}
-		//console.log(pseudoAlphabet);
+		// console.log(pseudoAlphabet);
 		return pseudoAlphabet;
 	};
 
 	// ---------------------------------------Auxiliary Analysis Methods ---------------------------------------
 
 	sortProperties = (myArray, order = "desc") => {
-		//Take an Object with Key:vlaue pairs and return an array ordered according to the order parameter
-		let sortable = [];
-		for (let element in myArray) {
+		// Take an Object with Key:vlaue pairs and return an array ordered according to the order parameter
+		const sortable = [];
+
+		myArray.forEach(element => {
 			sortable.push([element, myArray[element]]);
-		}
+		});
 
 		order === "asc"
 			? sortable.sort((a, b) => a[1] - b[1])

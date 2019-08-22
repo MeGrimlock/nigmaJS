@@ -1,8 +1,9 @@
 import { default as BasicCipher } from "../../basicCipher.js";
+
 export default class AutoKey extends BasicCipher {
   constructor(message, key, encoded, debug) {
     super(message, encoded, "autoKey", key, "", debug);
-    /*Parametros: message,encoded,method,key,alphabet
+    /* Parametros: message,encoded,method,key,alphabet
     This method implements a polialphabet substitution, but instead of generating a Matrix we use a formula that does the same but faster.
     
         A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
@@ -38,8 +39,8 @@ export default class AutoKey extends BasicCipher {
   }
 
   encode = () => {
-    let plaintext = this.message.toLowerCase().replace(/[^a-z]/g, "");
-    let key = this.key.toLowerCase().replace(/[^a-z]/g, "");
+    const plaintext = this.message.toLowerCase().replace(/[^a-z]/g, "");
+    const key = this.key.toLowerCase().replace(/[^a-z]/g, "");
     let ciphertext = "";
     if (plaintext.length >= 1 && key.length > 1) {
       for (let i = 0; i < plaintext.length; i++) {
@@ -65,8 +66,8 @@ export default class AutoKey extends BasicCipher {
   };
 
   decode = () => {
-    let ciphertext = this.message.toLowerCase().replace(/[^a-z]/g, "");
-    let key = this.key.toLowerCase().replace(/[^a-z]/g, "");
+    const ciphertext = this.message.toLowerCase().replace(/[^a-z]/g, "");
+    const key = this.key.toLowerCase().replace(/[^a-z]/g, "");
     let plaintext = "";
     if (ciphertext.length > 1 && k.length > 1) {
       for (i = 0; i < ciphertext.length; i++) {

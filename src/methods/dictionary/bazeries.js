@@ -12,19 +12,21 @@ export default class Bazeries extends simpleSubstitution {
     */
 	constructor(message, key, encoded = false, debug = false) {
 		const alphabet = {
-			//In some versions IJ are together, if needed this can be adjusted.
+			// In some versions IJ are together, if needed this can be adjusted.
 		};
 		super(message, key, true, false, encoded, "", alphabet, debug);
-		//Parametros: message,encoded,method,key,alphabet
+		// Parametros: message,encoded,method,key,alphabet
 		this.method = "bazeries";
 		this.wordSep = "   ";
 		this.characterSep = " ";
 		this.transpositionAlphabet(5, 5);
 	}
 
+	/*
 	deleteCharacters = () => {
 		delete alphabet[String.fromCharCode(alphabetKey)];
 	};
+	*/
 
 	transpositionAlphabet = (rows, columns) => {
 		/*
@@ -32,32 +34,32 @@ export default class Bazeries extends simpleSubstitution {
 		For this, after different tests, i decided to go for List -> matrix -> transposition -> List.
 		At first it seemed awfull but it turned out to be the most scalable solution.
 		*/
-		let rotatedAlphabet = this.alphabet;
+		const rotatedAlphabet = this.alphabet;
 		let alphabetMatrix = [];
 		let row = [];
-		//Create the matrix
+		// Create the matrix
 		Object.keys(rotatedAlphabet).forEach(key => {
-			let tempChar = key.charCodeAt(0);
-			//wE ONLY CARE for chars Between A-Z, ignore all others
-			if (97 <= tempChar && key.charCodeAt(0) <= 123) {
+			const tempChar = key.charCodeAt(0);
+			// wE ONLY CARE for chars Between A-Z, ignore all others
+			if (tempChar >= 97 && key.charCodeAt(0) <= 123) {
 				row.push(rotatedAlphabet[key]);
-				if (tempChar === "j") console.log("bug");
+				// if (tempChar === "j") console.log("bug");
 			}
-			//Check if the row is complete and append into matrix
+			// Check if the row is complete and append into matrix
 			if (row.length === columns) {
 				alphabetMatrix.push(row);
 				row = [];
 			}
 		});
-		//Transpose
+		// Transpose
 		alphabetMatrix = this.transposeMatrix(alphabetMatrix);
-		//Merge into 1 array
+		// Merge into 1 array
 		alphabetMatrix = alphabetMatrix.join();
-		//Put values back into the alphabet as {key:value}
+		// Put values back into the alphabet as {key:value}
 		let asciiCode = 97;
 		alphabetMatrix.split(",").forEach(letter => {
 			rotatedAlphabet[String.fromCharCode(asciiCode)] = letter;
-			asciiCode++;
+			asciiCode += 1;
 		});
 
 		this.setAlphabet(rotatedAlphabet);
@@ -65,6 +67,7 @@ export default class Bazeries extends simpleSubstitution {
 
 	encode = message =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
+
 	decode = message =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }

@@ -16,26 +16,26 @@ export default class amsco extends BasicCipher {
       */
 
 	constructor(message, key, encoded = false, debug = false) {
-		/*console.log(
+		/* console.log(
       `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-    );*/
+    ); */
 		super(message, encoded, "amsco", key, "", debug);
-		//Parametros: message,encoded,method,key,alphabet
-		//this.decode.bind(this);
-		//logMessage("constuctor",this);
+		// Parametros: message,encoded,method,key,alphabet
+		// this.decode.bind(this);
+		// logMessage("constuctor",this);
 	}
 
 	decodingConstructor = (message, key) => {
-		//Support method that generates both the template for the decoded message and the decoding matrix to be used.
-		//It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
-		let explodedKey = key.split("").map(myval => myval - 1);
-		let decodedMessageTemplate = [];
+		// Support method that generates both the template for the decoded message and the decoding matrix to be used.
+		// It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
+		const explodedKey = key.split("").map(myval => myval - 1);
+		const decodedMessageTemplate = [];
 
 		explodedKey.map(value => {
 			decodedMessageTemplate.push([value]);
 		});
 
-		let decodingMatrix = this.generateDecodingMatrix(
+		const decodingMatrix = this.generateDecodingMatrix(
 			message.length,
 			explodedKey,
 			1,
@@ -46,10 +46,10 @@ export default class amsco extends BasicCipher {
 	};
 
 	validateKey = () => {
-		///Aux method that verifies if no columns in [1,2...n] are present and if all 1-9 digits are there
+		// /Aux method that verifies if no columns in [1,2...n] are present and if all 1-9 digits are there
 		let validated = true;
-		let explodedKey = this.key.split("").sort();
-		let pattern = /^\d+$/;
+		const explodedKey = this.key.split("").sort();
+		const pattern = /^\d+$/;
 		this.logMessage(
 			`Check for [0-9] chars only: ${pattern.test(this.key)} key analyzed : ${
 				this.key
@@ -65,7 +65,7 @@ export default class amsco extends BasicCipher {
 				);
 
 				element === (1 + index).toString()
-					? index++
+					? (index += 1)
 					: ((validated = false), this.logMessage("Sequence not validated"));
 			} while (validated === true && index < explodedKey.length);
 			validated ? console.log("") : this.logMessage("Invalid Key sequence");
@@ -77,16 +77,16 @@ export default class amsco extends BasicCipher {
 	};
 
 	generateDecodingMatrix = (totalChars, splitKey, initChar, alternateChar) => {
-		let decodingMatrix = [];
+		const decodingMatrix = [];
 		let numChars = initChar || 1;
-		let alternate = alternateChar || 2;
+		const alternate = alternateChar || 2;
 
-		let explodedKey = splitKey;
+		const explodedKey = splitKey;
 		explodedKey.map(value => {
 			decodingMatrix.push(new Array());
 		});
 
-		//Build decoding Matrix
+		// Build decoding Matrix
 		let index = 0;
 
 		do {
@@ -99,60 +99,60 @@ export default class amsco extends BasicCipher {
 					element.push(0);
 				}
 				index += numChars;
-				numChars = numChars == initChar ? alternate : initChar;
+				numChars = numChars === initChar ? alternate : initChar;
 			});
-			numChars = numChars == initChar ? alternate : initChar;
+			numChars = numChars === initChar ? alternate : initChar;
 		} while (index < totalChars);
 
 		return decodingMatrix;
 	};
 
 	processMatrixDecoding = (message, matrix, splitKey) => {
-		//Using the key and matrix, the encoded text is processed into the matrix format.
+		// Using the key and matrix, the encoded text is processed into the matrix format.
 		let index = 0;
 		let extraChars = 1;
 		let keys = 0;
 
-		let messageDecoded = message;
-		let decodingMatrix = matrix;
-		let explodedKey = splitKey;
+		const messageDecoded = message;
+		const decodingMatrix = matrix;
+		const explodedKey = splitKey;
 
 		do {
 			let subIndex = 0;
-			let key = explodedKey.indexOf(keys);
+			const key = explodedKey.indexOf(keys);
 			do {
 				extraChars = index + decodingMatrix[key][subIndex];
 				const element = this.message.slice(index, extraChars);
 				messageDecoded[key].push(element);
 				index = extraChars;
-				subIndex++;
+				subIndex += 1;
 			} while (subIndex < decodingMatrix[key].length);
-			keys++;
+			keys += 1;
 		} while (keys < decodingMatrix.length);
 
 		return messageDecoded;
 	};
 
 	decode = () => {
-		//To decode baconian i must take 5 letters at a tim and analyze them.
+		// To decode baconian i must take 5 letters at a tim and analyze them.
 		let messageDecoded = [];
-		//In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
+		// In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
 		if (this.validateKey()) {
-			let decodingAux = this.decodingConstructor(this.message, this.key);
+			const decodingAux = this.decodingConstructor(this.message, this.key);
 			messageDecoded = this.processMatrixDecoding(
 				decodingAux[0],
 				decodingAux[1],
 				decodingAux[2]
 			);
-			//Now all the text is ordered but in separate colums/rows
+			// Now all the text is ordered but in separate colums/rows
 			messageDecoded = this.transposeMatrix(messageDecoded);
 			messageDecoded.shift();
 			messageDecoded = messageDecoded.map(row => row.join(""));
 			messageDecoded = messageDecoded.join("");
-			//messageDecoded.sort(this.sortFunction);
+			// messageDecoded.sort(this.sortFunction);
 			this.logMessage(`Done decoding: ${messageDecoded}`);
 		} else {
-			console.log("Unable to decode, verify if message was already encrypted");
+			// console.log("Unable to decode, verify if message was already encrypted");
 		}
 		return messageDecoded;
 	};
@@ -164,15 +164,15 @@ export default class amsco extends BasicCipher {
 		let output = "";
 
 		if (this.validateKey()) {
-			//Eliminate non usable chars
+			// Eliminate non usable chars
 			originalMessage = this.message.replace(/\s+/g, "").toLocaleUpperCase();
-			//Call the constructor
-			let decodingAux = this.decodingConstructor(this.message, this.key); //Returns > [messageTemplate,matrix,splitKey]
-			//Use the values from the constructor
-			encodedMessage = decodingAux[0];
+			// Call the constructor
+			const decodingAux = this.decodingConstructor(this.message, this.key); // Returns > [messageTemplate,matrix,splitKey]
+			// Use the values from the constructor
+			[encodedMessage] = decodingAux;
 			encodingMatrix = this.transposeMatrix(decodingAux[1]);
 
-			//Using the matrix split the original message into chunks
+			// Using the matrix split the original message into chunks
 			let textIndex = 0;
 			let colIndex = 0;
 
@@ -182,17 +182,17 @@ export default class amsco extends BasicCipher {
 						originalMessage.slice(textIndex, textIndex + column)
 					);
 					textIndex += column;
-					colIndex < row.length - 1 ? colIndex++ : (colIndex = 0);
+					colIndex < row.length - 1 ? (colIndex += 1) : (colIndex = 0);
 				});
 			});
 
 			encodedMessage.sort(this.sortFunction);
 			encodedMessage.forEach(element => {
-				element.shift(); //Remove the first item since it contains key value
+				element.shift(); // Remove the first item since it contains key value
 				output += element.join("");
 			});
 		}
-		//this.encoded = true;
+		// this.encoded = true;
 		return output;
 	};
 }

@@ -1,5 +1,6 @@
-//test script for parent and child documents.
-const nigma = require("../../index");
+// test script for parent and child documents.
+const Nigma = require("../../index");
+
 const message = "Encode this text please";
 
 /*
@@ -12,43 +13,43 @@ function cipherTest(cipherObject, message, encodedMessage) {
 }
 */
 describe("Test Disctionary Methods", () => {
-	//-------------------------------------ATBASH UNIT TEST-------------------------------------
+	// -------------------------------------ATBASH UNIT TEST-------------------------------------
 	const method2 = "Atbash";
 	const encoded2 = "0r2q10 lxwm l0hl pt04m0";
-	const generator2 = new nigma.Dictionary.atbash(message);
+	const generator2 = new Nigma.Dictionary.Atbash(message);
 	test(`Should Encode message Using ${method2} module and return a perfect Match`, () => {
 		expect(generator2.encode()).toBe(encoded2);
 	});
-	//-------------------------------------AUTOKEY UNIT TEST-------------------------------------
+	// -------------------------------------AUTOKEY UNIT TEST-------------------------------------
 	const method3 = "Autokey";
 	const key3 = "Tyranosaurus";
 	const encoded3 = "xltoqslhcjnwbgrzhell";
-	const generator3 = new nigma.Dictionary.autokey(message, key3);
+	const generator3 = new Nigma.Dictionary.Autokey(message, key3);
 	test(`Should Encode message Using ${method3} module and return a perfect Match`, () => {
 		expect(generator3.encode()).toBe(encoded3);
 	});
-	//-------------------------------------BACONIAN UNIT TEST-------------------------------------
+	// -------------------------------------BACONIAN UNIT TEST-------------------------------------
 	const method4 = "Baconian";
 	const encoded4 =
 		"aabaa abbab aaaba abbba aaabb aabaa   baabb aabbb abaaa baaba   baabb aabaa babbb baabb   abbbb ababb aabaa aaaaa baaba aabaa";
-	const generator4 = new nigma.Dictionary.baconian(message);
+	const generator4 = new Nigma.Dictionary.Baconian(message);
 	test(`Should Encode message Using ${method4} module and return a perfect Match`, () => {
 		expect(generator4.encode()).toBe(encoded4);
 	});
-	//-------------------------------------MORSE UNIT TEST-------------------------------------
-	const generator5 = new nigma.Dictionary.morse(message);
+	// -------------------------------------MORSE UNIT TEST-------------------------------------
+	const generator5 = new Nigma.Dictionary.Morse(message);
 	const encoded5 =
 		". -. -.-. --- -.. .   - .... .. ...   - . -..- -   .--. .-.. . .- ... .";
 	const method5 = "Morse";
 	test(`Should Encode message Using ${method5} module and return a perfect Match`, () => {
 		expect(generator5.encode()).toBe(encoded5);
 	});
-	//-------------------------------------SIMPLE SUBSTITUTION UNIT TEST-------------------------------------
+	// -------------------------------------SIMPLE SUBSTITUTION UNIT TEST-------------------------------------
 	const method6 = "Simple Substitution";
 	const key6 = "Tyranosaurus";
 	const encoded6 = "lejfkl aopg alya usldgl";
 
-	const generator6 = new nigma.Dictionary.simpleSubstitution(message, key6);
+	const generator6 = new Nigma.Dictionary.SimpleSubstitution(message, key6);
 	test(`Should Encode message Using ${method6} module and return a perfect Match`, () => {
 		expect(generator6.encode()).toBe(encoded6);
 	});

@@ -1,7 +1,7 @@
 export default class Rotors {
   constructor() {
     this.rotorSet1 = {
-      //Commercial Enigma A B 1924
+      // Commercial Enigma A B 1924
       1: ["DMTWSILRUYQNKFEJCAZBPGXOHV"],
       2: ["HQZGPJTMOBLNCIFDYAWVEUSRKX"],
       3: ["UQNTLSZFMREHDPXKIBVYGJCWOA"]
@@ -28,7 +28,7 @@ export default class Rotors {
       "UKV-K": ["IMETCGFRAYSQBZXWLHKDVUPOJN"],
       "ETW-K": ["QWERTZUIOASDFGHJKPYXCVBNML"]
     };
-    //Default
+    // Default
     this.rotorSet4 = {
       // I - III Enigma I , IV & V M3 Army , VI - VIII M3 & M4 Naval.
       1: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ"],
@@ -51,10 +51,11 @@ export default class Rotors {
       ETW: ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
     };
   }
+
   inverse = rotor => {
-    /*This method takes the rotor and gives the inverse back.
-     Example: (RotorSet 4 rotor 3) turns A -> B and if we want to go back from B -> A we need the inverse rotor*/
-    let invertedRotor = [];
+    /* This method takes the rotor and gives the inverse back.
+     Example: (RotorSet 4 rotor 3) turns A -> B and if we want to go back from B -> A we need the inverse rotor */
+    const invertedRotor = [];
     return invertedRotor;
   };
 }

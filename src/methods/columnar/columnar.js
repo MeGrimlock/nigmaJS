@@ -1,3 +1,3 @@
-import { default as amsco } from "./amsco.js";
+import { default as Amsco } from "./amsco.js";
 
-export default { amsco };
+export default { Amsco };
