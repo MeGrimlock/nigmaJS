@@ -188,7 +188,7 @@ export default class BasicCipher {
 
 	logMessage = output => {
 		if (this.debug) {
-			console.log(output);
+			// console.log(output);
 		}
 	};
 

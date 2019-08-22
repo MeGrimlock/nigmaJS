@@ -20,7 +20,7 @@
 		"no-unused-vars": "off",
 		"import/no-named-default": "off",
 		"import/extensions": "off",
-		"array-callback-return": "warn",
-		"return-assign": "warn"
+		"array-callback-return": "off",
+		"return-assign": "off"
 	}
 }
