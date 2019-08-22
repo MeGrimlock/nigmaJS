@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class CaesarShift extends BasicCipher {
 	/*
@@ -26,7 +26,7 @@ export default class CaesarShift extends BasicCipher {
 		/* console.log(
       `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
     ); */
-		super(message, encoded, "caesarShift", key, "", debug);
+		super(message, encoded, 'caesarShift', key, '', debug);
 
 		// Parametros: message,encoded,method,key,alphabet
 		// this.decode.bind(this);

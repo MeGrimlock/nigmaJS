@@ -1,8 +1,8 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class Rot5 extends BasicCipher {
 	constructor(message, encoded = false, debug = false) {
-		super(message, encoded, "rot5", 5, "", debug);
+		super(message, encoded, 'rot5', 5, '', debug);
 	}
 
 	encode = () => this.shiftCharacters(this.message, this.key);

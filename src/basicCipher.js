@@ -26,7 +26,7 @@ export default class BasicCipher {
 		this.message = message;
 		this.encoded = encoded;
 		this.method = method;
-		this.key = key || "";
+		this.key = key || '';
 		this.alphabet = alphabet;
 		this.debug = debug;
 	}
@@ -69,7 +69,7 @@ export default class BasicCipher {
 		let amount = shift;
 		Math.abs(amount) > 26 ? (amount %= 26) : null;
 		amount < 0 ? (amount += 26) : amount;
-		let output = "";
+		let output = '';
 		for (let i = 0; i < str.length; i += 1) {
 			let c = str[i];
 			// If it's a letter...
@@ -95,11 +95,11 @@ export default class BasicCipher {
 		// Transform a text into same sized character blocks.
 		// Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
 		let str = text;
-		str = str.replace(/ /g, "");
+		str = str.replace(/ /g, '');
 		let temp = str[0];
 		let index = 1;
 		do {
-			if (index % blockSize === 0) temp += " ";
+			if (index % blockSize === 0) temp += ' ';
 			temp += str[index];
 			index += 1;
 		} while (index < str.length);
@@ -110,8 +110,8 @@ export default class BasicCipher {
 	// --------------------------------------------------Alphabet methods--------------------------------------------------
 	encodeAlphabet = (
 		message = this.message,
-		charSplit = "",
-		wordSplit = " "
+		charSplit = '',
+		wordSplit = ' '
 	) => {
 		/*
     Steps: 
@@ -123,13 +123,13 @@ export default class BasicCipher {
     5th: repeat for all chars steps 3 & 4
     */
 
-		let originalMessage = "";
-		let encodedMessage = "";
+		let originalMessage = '';
+		let encodedMessage = '';
 
 		// originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
 		originalMessage = message.toLowerCase();
-		originalMessage.split(" ").map(word => {
-			word.split("").map(letter => {
+		originalMessage.split(' ').map(word => {
+			word.split('').map(letter => {
 				const encodedChar = this.getKeyByValue(this.alphabet, letter);
 
 				encodedChar !== undefined
@@ -150,17 +150,17 @@ export default class BasicCipher {
 
 	decodeAlphabet = (
 		message = this.message,
-		charSplit = "",
-		wordSplit = " "
+		charSplit = '',
+		wordSplit = ' '
 	) => {
-		let messageDecoded = "";
+		let messageDecoded = '';
 
 		message.split(wordSplit).map(word => {
 			word.split(charSplit).map(letter => {
 				const encodedChar = this.alphabet[letter];
 				encodedChar !== undefined ? (messageDecoded += encodedChar) : null;
 			});
-			messageDecoded += " ";
+			messageDecoded += ' ';
 		});
 		messageDecoded = messageDecoded.slice(0, -1);
 
@@ -171,7 +171,7 @@ export default class BasicCipher {
 	validateEncoded = () =>
 		this.encoded === true &&
 		typeof (this.message != null) &&
-		this.message !== "";
+		this.message !== '';
 
 	sortColumns(a, b) {
 		// Sort values based on the first item on the row
@@ -192,5 +192,5 @@ export default class BasicCipher {
 		}
 	};
 
-	test = () => "NigmaJS enabled";
+	test = () => 'NigmaJS enabled';
 }

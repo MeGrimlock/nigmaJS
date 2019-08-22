@@ -1,4 +1,4 @@
-import simpleSubstitution from "./simpleSubstitution.js";
+import simpleSubstitution from './simpleSubstitution.js';
 
 export default class Bazeries extends simpleSubstitution {
 	/*
@@ -14,11 +14,11 @@ export default class Bazeries extends simpleSubstitution {
 		const alphabet = {
 			// In some versions IJ are together, if needed this can be adjusted.
 		};
-		super(message, key, true, false, encoded, "", alphabet, debug);
+		super(message, key, true, false, encoded, '', alphabet, debug);
 		// Parametros: message,encoded,method,key,alphabet
-		this.method = "bazeries";
-		this.wordSep = "   ";
-		this.characterSep = " ";
+		this.method = 'bazeries';
+		this.wordSep = ' ';
+		this.characterSep = '';
 		this.transpositionAlphabet(5, 5);
 	}
 
@@ -57,7 +57,7 @@ export default class Bazeries extends simpleSubstitution {
 		alphabetMatrix = alphabetMatrix.join();
 		// Put values back into the alphabet as {key:value}
 		let asciiCode = 97;
-		alphabetMatrix.split(",").forEach(letter => {
+		alphabetMatrix.split(',').forEach(letter => {
 			rotatedAlphabet[String.fromCharCode(asciiCode)] = letter;
 			asciiCode += 1;
 		});

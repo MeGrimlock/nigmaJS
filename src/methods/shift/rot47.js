@@ -1,8 +1,8 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class Rot47 extends BasicCipher {
 	constructor(message, encoded = false, debug = false) {
-		super(message, encoded, "rot47", 47, "", debug);
+		super(message, encoded, 'rot47', 47, '', debug);
 	}
 
 	encode = () => this.shiftCharacters(this.message, this.key);

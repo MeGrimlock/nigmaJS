@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class morse extends BasicCipher {
 	/*
@@ -16,50 +16,50 @@ export default class morse extends BasicCipher {
 
 	constructor(message, encoded = false) {
 		const alphabet = {
-			"-----": "0",
-			".----": "1",
-			"..---": "2",
-			"...--": "3",
-			"....-": "4",
-			".....": "5",
-			"-....": "6",
-			"--...": "7",
-			"---..": "8",
-			"----.": "9",
-			".-": "a",
-			"-...": "b",
-			"-.-.": "c",
-			"-..": "d",
-			".": "e",
-			"..-.": "f",
-			"--.": "g",
-			"....": "h",
-			"..": "i",
-			".---": "j",
-			"-.-": "k",
-			".-..": "l",
-			"--": "m",
-			"-.": "n",
-			"---": "o",
-			".--.": "p",
-			"--.-": "q",
-			".-.": "r",
-			"...": "s",
-			"-": "t",
-			"..-": "u",
-			"...-": "v",
-			".--": "w",
-			"-..-": "x",
-			"-.--": "y",
-			"--..": "z",
-			"/": " ",
-			"-·-·--": "!",
-			"·-·-·-": ".",
-			"--··--": ","
+			'-----': '0',
+			'.----': '1',
+			'..---': '2',
+			'...--': '3',
+			'....-': '4',
+			'.....': '5',
+			'-....': '6',
+			'--...': '7',
+			'---..': '8',
+			'----.': '9',
+			'.-': 'a',
+			'-...': 'b',
+			'-.-.': 'c',
+			'-..': 'd',
+			'.': 'e',
+			'..-.': 'f',
+			'--.': 'g',
+			'....': 'h',
+			'..': 'i',
+			'.---': 'j',
+			'-.-': 'k',
+			'.-..': 'l',
+			'--': 'm',
+			'-.': 'n',
+			'---': 'o',
+			'.--.': 'p',
+			'--.-': 'q',
+			'.-.': 'r',
+			'...': 's',
+			'-': 't',
+			'..-': 'u',
+			'...-': 'v',
+			'.--': 'w',
+			'-..-': 'x',
+			'-.--': 'y',
+			'--..': 'z',
+			'/': ' ',
+			'-·-·--': '!',
+			'·-·-·-': '.',
+			'--··--': ','
 		};
-		super(message, encoded, "morse", "", alphabet);
-		this.wordSep = "   ";
-		this.characterSep = " ";
+		super(message, encoded, 'morse', '', alphabet);
+		this.wordSep = '   ';
+		this.characterSep = ' ';
 		// Parametros: message,encoded,method,key,alphabet
 		// WE have no key but we do have an alphabet
 		// this.decode.bind(this);

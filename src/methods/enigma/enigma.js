@@ -1,5 +1,5 @@
-import { default as BasicCipher } from "../../basicCipher.js";
-import { default as Rotors } from "./rotors.js";
+import { default as BasicCipher } from '../../basicCipher.js';
+import { default as Rotors } from './rotors.js';
 
 export default class Enigma extends BasicCipher {
 	/* Enigma Machine - German WWII
@@ -30,16 +30,16 @@ export default class Enigma extends BasicCipher {
 
 	constructor(
 		message,
-		keySettings = "AAA",
-		ringSettings = "AAA",
-		plugboardSettings = "PO ML IU KJ NH YT GB VF RE DC",
-		rotorSettings = "123",
+		keySettings = 'AAA',
+		ringSettings = 'AAA',
+		plugboardSettings = 'PO ML IU KJ NH YT GB VF RE DC',
+		rotorSettings = '123',
 		encoded = false,
 		debug = false
 	) {
 		// Enigma is a very complex system, no wonder it as so hard to crack during WWII. the rotors and plugs are responsible for the setup of the alphabet.
 
-		super(message, encoded, "enigma", "", "", debug);
+		super(message, encoded, 'enigma', '', '', debug);
 		this.message = message.toUpperCase();
 		this.keySettings = keySettings;
 		this.ringSettings = ringSettings;
@@ -48,18 +48,18 @@ export default class Enigma extends BasicCipher {
 	}
 
 	initialize = () => {
-		this.rotorsettings = this.rotorSettings.replace(/[^1-9]/g, "");
-		this.keysettings = this.keySettings.toUpperCase().replace(/[^A-Z]/g, "");
-		this.ringsettings = this.ringSettings.toUpperCase().replace(/[^A-Z]/g, "");
+		this.rotorsettings = this.rotorSettings.replace(/[^1-9]/g, '');
+		this.keysettings = this.keySettings.toUpperCase().replace(/[^A-Z]/g, '');
+		this.ringsettings = this.ringSettings.toUpperCase().replace(/[^A-Z]/g, '');
 
 		this.plugboardsettings = this.plugboardSettings
 			.toUpperCase()
-			.replace(/[^A-Z]/g, "");
+			.replace(/[^A-Z]/g, '');
 	};
 
 	setupPlugboard = () => {
-		let plugboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		const parr = plugboard.split("");
+		let plugboard = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		const parr = plugboard.split('');
 		for (let i = 0, j = 1; i < this.plugboardsettings.length; i += 2, j += 2) {
 			const ichar = plugboard.indexOf(this.plugboardsettings.charAt(i));
 			const jchar = plugboard.indexOf(this.plugboardsettings.charAt(j));
@@ -67,12 +67,12 @@ export default class Enigma extends BasicCipher {
 			parr[jchar] = parr[ichar];
 			parr[ichar] = temp;
 		}
-		plugboard = parr.join("");
+		plugboard = parr.join('');
 		return plugboard;
 	};
 
 	setupKey = () => {
-		const key = this.keysettings.split("");
+		const key = this.keysettings.split('');
 		key[0] = this.code(key[0]);
 		key[1] = this.code(key[1]);
 		key[2] = this.code(key[2]);
@@ -80,7 +80,7 @@ export default class Enigma extends BasicCipher {
 	};
 
 	setupCode = () => {
-		const ring = this.ringsettings.split("");
+		const ring = this.ringsettings.split('');
 		ring[0] = this.code(ring[0]);
 		ring[1] = this.code(ring[1]);
 		ring[2] = this.code(ring[2]);
@@ -88,7 +88,7 @@ export default class Enigma extends BasicCipher {
 	};
 
 	getRotors = () => {
-		const rotors = this.rotorsettings.split("");
+		const rotors = this.rotorsettings.split('');
 		rotors[0] = rotors[0].valueOf() - 1;
 		rotors[1] = rotors[1].valueOf() - 1;
 		rotors[2] = rotors[2].valueOf() - 1;
@@ -96,8 +96,8 @@ export default class Enigma extends BasicCipher {
 	};
 
 	encode = () => {
-		let ciphertext = "";
-		const plaintext = this.message.replace(/[^A-Z]/g, "");
+		let ciphertext = '';
+		const plaintext = this.message.replace(/[^A-Z]/g, '');
 		this.initialize();
 		if (this.validateSettings(plaintext)) {
 			// interpret the rotor settings (strings 1-8 to int 0-7)
@@ -108,9 +108,9 @@ export default class Enigma extends BasicCipher {
 			let key = this.setupKey();
 			const ring = this.setupCode();
 			// do the actual enigma enciphering
-			let ch = "";
-			let echr = "";
-			plaintext.split("").forEach(letter => {
+			let ch = '';
+			let echr = '';
+			plaintext.split('').forEach(letter => {
 				ch = letter;
 				// if the current character is not a letter, pass it through unchanged
 				if (!ch.match(/[A-Z]/)) {
@@ -166,7 +166,7 @@ export default class Enigma extends BasicCipher {
 		ch = this.rotor(ch, rotors[1], key[1] - ring[1]);
 		ch = this.rotor(ch, rotors[0], key[0] - ring[0]);
 		// use reflector B
-		ch = this.simplesub(ch, "YRUHQSLDPXNGOKMIEBFZCWVJAT");
+		ch = this.simplesub(ch, 'YRUHQSLDPXNGOKMIEBFZCWVJAT');
 		// apply inverse rotor transformations from left to right
 		ch = this.rotor(ch, rotors[0] + 8, key[0] - ring[0]);
 		ch = this.rotor(ch, rotors[1] + 8, key[1] - ring[1]);
@@ -214,23 +214,23 @@ export default class Enigma extends BasicCipher {
     
     */
 		const key = [
-			"EKMFLGDQVZNTOWYHXUSPAIBRCJ",
-			"AJDKSIRUXBLHWTMCQGZNPYFVOE",
-			"BDFHJLCPRTXVZNYEIWGAKMUSQO",
-			"ESOVPZJAYQUIRHXLNFTGKDCMWB",
-			"VZBRGITYUPSDNHLXAWMJQOFECK",
-			"JPGVOUMFYQBENHZRDKASXLICTW",
-			"NZJHGRCXMYSWBOUFAIVLPEKQDT",
-			"FKQHTLXOCBJSPDZRAMEWNIUYGV",
+			'EKMFLGDQVZNTOWYHXUSPAIBRCJ',
+			'AJDKSIRUXBLHWTMCQGZNPYFVOE',
+			'BDFHJLCPRTXVZNYEIWGAKMUSQO',
+			'ESOVPZJAYQUIRHXLNFTGKDCMWB',
+			'VZBRGITYUPSDNHLXAWMJQOFECK',
+			'JPGVOUMFYQBENHZRDKASXLICTW',
+			'NZJHGRCXMYSWBOUFAIVLPEKQDT',
+			'FKQHTLXOCBJSPDZRAMEWNIUYGV',
 			// inverses
-			"UWYGADFPVZBECKMTHXSLRINQOJ",
-			"AJPCZWRLFBDKOTYUQGENHXMIVS",
-			"TAGBPCSDQEUFVNZHYIXJWLRKOM",
-			"HZWVARTNLGUPXQCEJMBSKDYOIF",
-			"QCYLXWENFTZOSMVJUDKGIARPHB",
-			"SKXQLHCNWARVGMEBJPTYFDZUIO",
-			"QMGYVPEDRCWTIANUXFKZOSLHJB",
-			"QJINSAYDVKBFRUHMCPLEWZTGXO"
+			'UWYGADFPVZBECKMTHXSLRINQOJ',
+			'AJPCZWRLFBDKOTYUQGENHXMIVS',
+			'TAGBPCSDQEUFVNZHYIXJWLRKOM',
+			'HZWVARTNLGUPXQCEJMBSKDYOIF',
+			'QCYLXWENFTZOSMVJUDKGIARPHB',
+			'SKXQLHCNWARVGMEBJPTYFDZUIO',
+			'QMGYVPEDRCWTIANUXFKZOSLHJB',
+			'QJINSAYDVKBFRUHMCPLEWZTGXO'
 		];
 		/* the following code looks a bit horrible, but it is essentially just doing a simple substitution
       taking into account 16 possible keys (8 rotors and their inverses) and the offset (which is calculated

@@ -1,6 +1,6 @@
 /* eslint-disable no-alert */
-import { default as BasicCipher } from "../../basicCipher.js";
-import { default as Rotors } from "./rotors.js";
+import { default as BasicCipher } from '../../basicCipher.js';
+import { default as Rotors } from './rotors.js';
 
 /*
 
@@ -37,37 +37,37 @@ export default class Enigma extends BasicCipher {
 
 	constructor(
 		message,
-		keySettings = "AAA",
-		ringSettings = "AAA",
-		plugboardSettings = "PO ML IU KJ NH YT GB VF RE DC",
-		rotorSettings = "123",
+		keySettings = 'AAA',
+		ringSettings = 'AAA',
+		plugboardSettings = 'PO ML IU KJ NH YT GB VF RE DC',
+		rotorSettings = '123',
 		rotorVersion = 4,
 		encoded = false,
 		debug = false
 	) {
 		// Enigma is a very complex system, no wonder it as so hard to crack during WWII. the rotors and plugs are responsible for the setup of the alphabet.
-		super(message, encoded, "enigma", "", "", debug);
+		super(message, encoded, 'enigma', '', '', debug);
 		this.message = message.toUpperCase();
 		this.keySettings = keySettings;
 		this.ringSettings = ringSettings;
 		this.plugboardSettings = plugboardSettings;
 		this.rotorSettings = rotorSettings;
-		this.notch1 = "";
-		this.notch2 = "";
-		this.notch3 = "";
+		this.notch1 = '';
+		this.notch2 = '';
+		this.notch3 = '';
 		this.initialize();
 		this.selectRotors();
 	}
 
 	initialize = () => {
 		// Function to be called at any point before we start to work with the code, I prefer to use it in the constructor and forget about it.
-		this.rotorSettings = this.rotorSettings.replace(/[^1-9]/g, "");
-		this.keySettings = this.keySettings.toUpperCase().replace(/[^A-Z]/g, "");
-		this.ringSettings = this.ringSettings.toUpperCase().replace(/[^A-Z]/g, "");
+		this.rotorSettings = this.rotorSettings.replace(/[^1-9]/g, '');
+		this.keySettings = this.keySettings.toUpperCase().replace(/[^A-Z]/g, '');
+		this.ringSettings = this.ringSettings.toUpperCase().replace(/[^A-Z]/g, '');
 
 		this.plugboardSettings = this.plugboardSettings
 			.toUpperCase()
-			.replace(/[^A-Z]/g, "");
+			.replace(/[^A-Z]/g, '');
 	};
 
 	selectRotors = () => {
@@ -93,7 +93,7 @@ export default class Enigma extends BasicCipher {
 				this.rotorSets = rotorOptions.rotorSet4;
 				break;
 		}
-		const rotors = this.rotorSettings.split("");
+		const rotors = this.rotorSettings.split('');
 		// Right (fast) rotor
 		rotors[0] = this.rotorSets[rotors[0]].join();
 		[[this.notch1]] = rotors;
@@ -112,37 +112,37 @@ export default class Enigma extends BasicCipher {
 		// do some error checking
 		let retorno = true;
 		if (plaintext.length < 1) {
-			alert("please enter some plaintext (letters and numbers only)");
+			alert('please enter some plaintext (letters and numbers only)');
 			retorno = false;
 		}
 		if (this.keySettings.length !== 3) {
-			alert("Key settings must consist of 3 uppercase characters.");
+			alert('Key settings must consist of 3 uppercase characters.');
 			retorno = false;
 		}
 		if (this.ringSettings.length !== 3) {
-			alert("Ring settings must consist of 3 uppercase characters.");
+			alert('Ring settings must consist of 3 uppercase characters.');
 			retorno = false;
 		}
 		if (this.plugboardSettings.length > 26) {
-			alert("There cannot be more than 13 pairs in the plugboard settings.");
+			alert('There cannot be more than 13 pairs in the plugboard settings.');
 			retorno = false;
 		}
 		if (this.plugboardSettings.length % 2 !== 0) {
 			alert(
-				"There must be an even number of characters in the plugboard settings."
+				'There must be an even number of characters in the plugboard settings.'
 			);
 			retorno = false;
 		}
 		if (this.rotorSettings.length !== 3) {
-			alert("Rotor settings must consist of 3 numbers 1-9.");
+			alert('Rotor settings must consist of 3 numbers 1-9.');
 			retorno = false;
 		}
 		return retorno;
 	};
 
 	setupPlugboard = () => {
-		let plugboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		const parr = plugboard.split("");
+		let plugboard = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		const parr = plugboard.split('');
 		for (let i = 0, j = 1; i < this.plugboardsettings.length; i += 2, j += 2) {
 			const ichar = plugboard.indexOf(this.plugboardsettings.charAt(i));
 			const jchar = plugboard.indexOf(this.plugboardsettings.charAt(j));
@@ -150,12 +150,12 @@ export default class Enigma extends BasicCipher {
 			parr[jchar] = parr[ichar];
 			parr[ichar] = temp;
 		}
-		plugboard = parr.join("");
+		plugboard = parr.join('');
 		return plugboard;
 	};
 
 	setupKey = () => {
-		const key = this.keysettings.split("");
+		const key = this.keysettings.split('');
 		key[0] = this.code(key[0]);
 		key[1] = this.code(key[1]);
 		key[2] = this.code(key[2]);
@@ -163,7 +163,7 @@ export default class Enigma extends BasicCipher {
 	};
 
 	setupCode = () => {
-		const ring = this.ringsettings.split("");
+		const ring = this.ringsettings.split('');
 		ring[0] = this.code(ring[0]);
 		ring[1] = this.code(ring[1]);
 		ring[2] = this.code(ring[2]);
@@ -193,13 +193,13 @@ export default class Enigma extends BasicCipher {
 	};
 
 	encode = () => {
-		let ciphertext = "";
-		const plaintext = this.message.replace(/[^A-Z]/g, "");
+		let ciphertext = '';
+		const plaintext = this.message.replace(/[^A-Z]/g, '');
 		this.initialize();
 		if (this.validateSettings(plaintext)) {
-			ciphertext = "Valid Settings";
+			ciphertext = 'Valid Settings';
 			// Encode text
-			plaintext.split("").forEach(c => {
+			plaintext.split('').forEach(c => {
 				// console.log(c, this.rotors);
 				/* All thats's missing now is to process the simple substitition in order: 
         1) Plugboard

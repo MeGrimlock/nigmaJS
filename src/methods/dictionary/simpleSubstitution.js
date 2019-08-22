@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class simpleSubstitution extends BasicCipher {
 	constructor(
@@ -11,50 +11,50 @@ export default class simpleSubstitution extends BasicCipher {
 	) {
 		const alphabet = {
 			// The keyword is what modifies the key of this alphabet by using the corresponding constructor
-			a: "",
-			b: "",
-			c: "",
-			d: "",
-			e: "",
-			f: "",
-			g: "",
-			h: "",
-			i: "",
-			j: "",
-			k: "",
-			l: "",
-			m: "",
-			n: "",
-			o: "",
-			p: "",
-			q: "",
-			r: "",
-			s: "",
-			t: "",
-			u: "",
-			v: "",
-			w: "",
-			x: "",
-			y: "",
-			z: "",
-			"0": "0",
-			"1": "1",
-			"2": "2",
-			"3": "3",
-			"4": "4",
-			"5": "5",
-			"6": "6",
-			"7": "7",
-			"8": "8",
-			"9": "9",
-			" ": " ",
-			".": ".",
-			",": ",",
-			"?": "?",
-			"!": "!"
+			a: '',
+			b: '',
+			c: '',
+			d: '',
+			e: '',
+			f: '',
+			g: '',
+			h: '',
+			i: '',
+			j: '',
+			k: '',
+			l: '',
+			m: '',
+			n: '',
+			o: '',
+			p: '',
+			q: '',
+			r: '',
+			s: '',
+			t: '',
+			u: '',
+			v: '',
+			w: '',
+			x: '',
+			y: '',
+			z: '',
+			'0': '0',
+			'1': '1',
+			'2': '2',
+			'3': '3',
+			'4': '4',
+			'5': '5',
+			'6': '6',
+			'7': '7',
+			'8': '8',
+			'9': '9',
+			' ': ' ',
+			'.': '.',
+			',': ',',
+			'?': '?',
+			'!': '!'
 		};
 
-		super(message, encoded, "simpleSubstitution", key, alphabet, debug);
+		super(message, encoded, 'simpleSubstitution', key, alphabet, debug);
 
 		this.i = ij;
 		this.v = uv;
@@ -62,8 +62,8 @@ export default class simpleSubstitution extends BasicCipher {
 		this.key = this.validateKey(key);
 		this.setAlphabet(this.alphabetConstructor(alphabet, this.key));
 
-		this.wordSep = " ";
-		this.characterSep = "";
+		this.wordSep = ' ';
+		this.characterSep = '';
 	}
 
 	getI = () => this.i;
@@ -71,7 +71,7 @@ export default class simpleSubstitution extends BasicCipher {
 	getV = () => this.v;
 
 	validateKey = key => {
-		let parsedKey = key.replace(/\s/g, "");
+		let parsedKey = key.replace(/\s/g, '');
 		parsedKey = parsedKey.toLowerCase();
 		return parsedKey;
 	};
@@ -103,7 +103,7 @@ export default class simpleSubstitution extends BasicCipher {
 		let alphabetKey = 97; // lower case "a"
 
 		// Filter repetitions of letters
-		keyWord.split("").forEach(keyWordChar => {
+		keyWord.split('').forEach(keyWordChar => {
 			[
 				keyWordChar,
 				usedLetters,
@@ -118,7 +118,7 @@ export default class simpleSubstitution extends BasicCipher {
 		});
 		// continue assigning letters until lower case "z" 122d
 		let letterIndex = 97; // restart with "a"
-		let letter = "";
+		let letter = '';
 		do {
 			letter = String.fromCharCode(letterIndex);
 			[letter, usedLetters, alphabet, alphabetKey] = this.putLetter2Alphabet(
