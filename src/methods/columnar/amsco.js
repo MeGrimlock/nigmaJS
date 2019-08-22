@@ -1,4 +1,4 @@
-import { default as BasicCipher } from "../../basicCipher.js";
+import { default as BasicCipher } from '../../basicCipher.js';
 
 export default class amsco extends BasicCipher {
 	/*
@@ -19,7 +19,7 @@ export default class amsco extends BasicCipher {
 		/* console.log(
       `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
     ); */
-		super(message, encoded, "amsco", key, "", debug);
+		super(message, encoded, 'amsco', key, '', debug);
 		// Parametros: message,encoded,method,key,alphabet
 		// this.decode.bind(this);
 		// logMessage("constuctor",this);
@@ -28,7 +28,7 @@ export default class amsco extends BasicCipher {
 	decodingConstructor = (message, key) => {
 		// Support method that generates both the template for the decoded message and the decoding matrix to be used.
 		// It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
-		const explodedKey = key.split("").map(myval => myval - 1);
+		const explodedKey = key.split('').map(myval => myval - 1);
 		const decodedMessageTemplate = [];
 
 		explodedKey.map(value => {
@@ -48,7 +48,7 @@ export default class amsco extends BasicCipher {
 	validateKey = () => {
 		// /Aux method that verifies if no columns in [1,2...n] are present and if all 1-9 digits are there
 		let validated = true;
-		const explodedKey = this.key.split("").sort();
+		const explodedKey = this.key.split('').sort();
 		const pattern = /^\d+$/;
 		this.logMessage(
 			`Check for [0-9] chars only: ${pattern.test(this.key)} key analyzed : ${
@@ -66,11 +66,11 @@ export default class amsco extends BasicCipher {
 
 				element === (1 + index).toString()
 					? (index += 1)
-					: ((validated = false), this.logMessage("Sequence not validated"));
+					: ((validated = false), this.logMessage('Sequence not validated'));
 			} while (validated === true && index < explodedKey.length);
-			validated ? console.log("") : this.logMessage("Invalid Key sequence");
+			// validated ? console.log("") : this.logMessage("Invalid Key sequence");
 		} else {
-			this.logMessage("Invlaid key, Non numbers detected");
+			this.logMessage('Invlaid key, Non numbers detected');
 			validated = false;
 		}
 		return validated;
@@ -83,7 +83,7 @@ export default class amsco extends BasicCipher {
 
 		const explodedKey = splitKey;
 		explodedKey.map(value => {
-			decodingMatrix.push(new Array());
+			decodingMatrix.push([]);
 		});
 
 		// Build decoding Matrix
@@ -147,8 +147,8 @@ export default class amsco extends BasicCipher {
 			// Now all the text is ordered but in separate colums/rows
 			messageDecoded = this.transposeMatrix(messageDecoded);
 			messageDecoded.shift();
-			messageDecoded = messageDecoded.map(row => row.join(""));
-			messageDecoded = messageDecoded.join("");
+			messageDecoded = messageDecoded.map(row => row.join(''));
+			messageDecoded = messageDecoded.join('');
 			// messageDecoded.sort(this.sortFunction);
 			this.logMessage(`Done decoding: ${messageDecoded}`);
 		} else {
@@ -158,14 +158,14 @@ export default class amsco extends BasicCipher {
 	};
 
 	encode = () => {
-		let originalMessage = "";
+		let originalMessage = '';
 		let encodedMessage = [];
 		let encodingMatrix = [];
-		let output = "";
+		let output = '';
 
 		if (this.validateKey()) {
 			// Eliminate non usable chars
-			originalMessage = this.message.replace(/\s+/g, "").toLocaleUpperCase();
+			originalMessage = this.message.replace(/\s+/g, '').toLocaleUpperCase();
 			// Call the constructor
 			const decodingAux = this.decodingConstructor(this.message, this.key); // Returns > [messageTemplate,matrix,splitKey]
 			// Use the values from the constructor
@@ -189,7 +189,7 @@ export default class amsco extends BasicCipher {
 			encodedMessage.sort(this.sortFunction);
 			encodedMessage.forEach(element => {
 				element.shift(); // Remove the first item since it contains key value
-				output += element.join("");
+				output += element.join('');
 			});
 		}
 		// this.encoded = true;

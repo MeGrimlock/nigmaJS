@@ -17,10 +17,15 @@
 		"sourceType": "module"
 	},
 	"rules": {
-		"no-unused-vars": "off",
+		"array-callback-return": "off",
+		"class-methods-use-this": "off",
 		"import/no-named-default": "off",
 		"import/extensions": "off",
-		"array-callback-return": "off",
+		"no-unused-vars": "off",
+		"no-unused-expressions": "off",
+		"no-return-assign": "off",
+		"no-param-reassign": "off",
+		"no-loop-func": "off",
 		"return-assign": "off"
 	}
 }

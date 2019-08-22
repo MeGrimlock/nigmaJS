@@ -1,16 +1,16 @@
-import { default as BasicCipher } from "./basicCipher.js";
+import { default as BasicCipher } from './basicCipher.js';
 
 import {
 	spanishLetterFrequencies,
 	spanishBigramFrequencies,
 	spanishTrigramFrequencies,
 	spanishQuadgramFrequencies
-} from "./languageAnalysis/analysis.js";
+} from './languageAnalysis/analysis.js';
 
-import { default as Columnar } from "./methods/columnar/columnar.js";
-import { default as Dictionary } from "./methods/dictionary/dictionary.js";
-import { default as Shift } from "./methods/shift/shift.js";
-import { default as Enigma } from "./methods/enigma/enigma.js";
+import { default as Columnar } from './methods/columnar/columnar.js';
+import { default as Dictionary } from './methods/dictionary/dictionary.js';
+import { default as Shift } from './methods/shift/shift.js';
+import { default as Enigma } from './methods/enigma/enigma.js';
 
 /*
 
@@ -24,12 +24,12 @@ Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
 */
 
 export default class Nigma {
-	constructor(message = "") {
+	constructor(message = '') {
 		this.testMessages = [
-			"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-			"Las dos jornadas tuvieron un denominador común: insistir, y mucho, en educar en temas financieros, a los efectos de que la gente tenga claro cuáles son las ventajas y riesgos a los que se enfrenta.",
-			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat",
-			"La posición de Washington hacia las elecciones en Palestina ha sido coherente. Las elecciones fueron postergadas hasta la muerte de Yasser Arafat, que fue recibida como una oportunidad para la realización  "
+			'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+			'Las dos jornadas tuvieron un denominador común: insistir, y mucho, en educar en temas financieros, a los efectos de que la gente tenga claro cuáles son las ventajas y riesgos a los que se enfrenta.',
+			'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi dapibus suscipit velit vitae vulputate. Vivamus vel tempus lacus. Fusce dictum, leo id porttitor dapibus, leo diam rutrum nulla, ut feugiat',
+			'La posición de Washington hacia las elecciones en Palestina ha sido coherente. Las elecciones fueron postergadas hasta la muerte de Yasser Arafat, que fue recibida como una oportunidad para la realización  '
 		];
 
 		this.message = message;
@@ -40,47 +40,47 @@ export default class Nigma {
         VALUE: is the value of the unencrypted character and can be adjusted as we try to break the code.
       
         */
-			a: "",
-			b: "",
-			c: "",
-			d: "",
-			e: "",
-			f: "",
-			g: "",
-			h: "",
-			i: "",
-			j: "",
-			k: "",
-			l: "",
-			m: "",
-			n: "",
-			o: "",
-			p: "",
-			q: "",
-			r: "",
-			s: "",
-			t: "",
-			u: "",
-			v: "",
-			w: "",
-			x: "",
-			y: "",
-			z: "",
-			"0": "0",
-			"1": "1",
-			"2": "2",
-			"3": "3",
-			"4": "4",
-			"5": "5",
-			"6": "6",
-			"7": "7",
-			"8": "8",
-			"9": "9",
-			" ": " ",
-			".": ".",
-			",": ",",
-			"?": "?",
-			"!": "!"
+			a: '',
+			b: '',
+			c: '',
+			d: '',
+			e: '',
+			f: '',
+			g: '',
+			h: '',
+			i: '',
+			j: '',
+			k: '',
+			l: '',
+			m: '',
+			n: '',
+			o: '',
+			p: '',
+			q: '',
+			r: '',
+			s: '',
+			t: '',
+			u: '',
+			v: '',
+			w: '',
+			x: '',
+			y: '',
+			z: '',
+			'0': '0',
+			'1': '1',
+			'2': '2',
+			'3': '3',
+			'4': '4',
+			'5': '5',
+			'6': '6',
+			'7': '7',
+			'8': '8',
+			'9': '9',
+			' ': ' ',
+			'.': '.',
+			',': ',',
+			'?': '?',
+			'!': '!'
 		};
 	}
 
@@ -131,13 +131,13 @@ export default class Nigma {
 
 	processMessage = () => {
 		// Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
-		let decodedMessage = "";
-		const temp = this.message.split("");
+		let decodedMessage = '';
+		const temp = this.message.split('');
 		temp.forEach(element => {
 			const decodedChar = this.alphabet[element];
-			decodedChar !== ""
+			decodedChar !== ''
 				? (decodedMessage += decodedChar)
-				: (decodedMessage += "?");
+				: (decodedMessage += '?');
 		});
 		return decodedMessage;
 	};
@@ -151,10 +151,10 @@ export default class Nigma {
 
 	getS4req = () => spanishQuadgramFrequencies;
 
-	freqAnalysis = (message = "") => {
+	freqAnalysis = (message = '') => {
 		// Take all of the characters inside of a text and return an array with this characters as a % of the total
 		const pseudoAlphabet = {};
-		const auxText = message.split("");
+		const auxText = message.split('');
 
 		// console.log("Frec. analysis");
 		auxText.forEach(charElement => {
@@ -165,18 +165,24 @@ export default class Nigma {
 			}
 		});
 		const totalChars = auxText.length;
-
+		/*
 		for (const [key, value] of Object.entries(pseudoAlphabet)) {
 			// Convert the number of repetitions into a %
 			pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
-		}
+		} */
+
+		Object.keys(pseudoAlphabet).forEach(key => {
+			const value = pseudoAlphabet[key];
+			pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
+		});
 		// console.log(pseudoAlphabet);
+
 		return pseudoAlphabet;
 	};
 
 	// ---------------------------------------Auxiliary Analysis Methods ---------------------------------------
 
-	sortProperties = (myArray, order = "desc") => {
+	sortProperties = (myArray, order = 'desc') => {
 		// Take an Object with Key:vlaue pairs and return an array ordered according to the order parameter
 		const sortable = [];
 
@@ -184,7 +190,7 @@ export default class Nigma {
 			sortable.push([element, myArray[element]]);
 		});
 
-		order === "asc"
+		order === 'asc'
 			? sortable.sort((a, b) => a[1] - b[1])
 			: sortable.sort((a, b) => b[1] - a[1]);
 		return sortable;
