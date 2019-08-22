@@ -21,12 +21,20 @@ describe("Test Disctionary Methods", () => {
 		expect(generator2.encode()).toBe(encoded2);
 	});
 	// -------------------------------------AUTOKEY UNIT TEST-------------------------------------
-	const method3 = "Autokey";
-	const key3 = "Tyranosaurus";
-	const encoded3 = "xltoqslhcjnwbgrzhell";
-	const generator3 = new Nigma.Dictionary.Autokey(message, key3);
-	test(`Should Encode message Using ${method3} module and return a perfect Match`, () => {
-		expect(generator3.encode()).toBe(encoded3);
+	const method3a = "Autokey";
+	const key3a = "Tyranosaurus";
+	const encoded3a = "xltoqslhcjnwbgrzhell";
+	const generator3a = new Nigma.Dictionary.Autokey(message, key3a);
+	test(`Should Encode message Using ${method3a} module and return a perfect Match`, () => {
+		expect(generator3a.encode()).toBe(encoded3a);
+	});
+	const method3b = "Autokey";
+	const key3b = "Tyranosaurus";
+	const encoded3b = "xltoqslhcjnwbgrzhell";
+	const decoded3b = "encodethistextplease";
+	const generator3b = new Nigma.Dictionary.Autokey(encoded3b, key3b);
+	test(`Should Encode message Using ${method3b} module and return a perfect Match`, () => {
+		expect(generator3b.decode()).toBe(decoded3b);
 	});
 	// -------------------------------------BACONIAN UNIT TEST-------------------------------------
 	const method4 = "Baconian";
