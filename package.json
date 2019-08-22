@@ -8,7 +8,9 @@
 		"build:dev": "webpack --mode development --progress",
 		"test": "jest",
 		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
+		"lint:fix": "eslint . --fix",
+		"preversion": "npm run lint:fix && test",
+		"version": "npm run build:prod"
 	},
 	"keywords": [
 		"Ciphers",
