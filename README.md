@@ -5,6 +5,7 @@
 ![Build](https://img.shields.io/travis/MeGrimlock/nigmajs)
 ![NPM Version](https://img.shields.io/npm/v/nigmajs)
 ![NPM Downloads](https://img.shields.io/npm/dy/nigmajs)
+![Commit Activity](https://img.shields.io/github/commit-activity/y/MeGrimlock/nigmaJS)
 
 
 # NigmaJS
