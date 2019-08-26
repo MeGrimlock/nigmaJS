@@ -123,6 +123,12 @@ What's important to know is that in order to setup this machine there are many a
 - **AMSCO**: encoding / decoding is ready
 - **ENIGMA**: encoding / decoding is ready
 
+# Contributing
+
+If you want to contribute to this project and make it better, your help is welcome. Contributing is also a great way to learn more about social coding, new technologies and and their ecosystems.
+
+Always write your commit messages in the present tense. Your commit message should describe what the commit, when applied, does to the code – not what you did to the code.
+
 # Disclaimer
 
 Feel free to use but know that they are currently being tested/developed for fun purposes only.
