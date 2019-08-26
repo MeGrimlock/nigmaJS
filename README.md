@@ -60,6 +60,12 @@ There are 2 ways to use this files, for this guide I'll show you how to create a
 
    **WARNING**: Note that this code works if you are standing on the `src folder` file. If you want to call this from another folder, just check where you are standing before doing the import and adjust accordingly.
 
+# Working Enviroment
+
+Since the code has been minified with **Babel + Webpack** I thought it would be cool to add a working example of the various encryption methods :-)
+
+Link to working example: https://megrimlock.github.io/nigmaJS/
+
 # Features
 
 - ES6 Class oriented + modular programming for easy code recycling
