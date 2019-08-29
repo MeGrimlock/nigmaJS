@@ -6,6 +6,7 @@
 ![NPM Version](https://img.shields.io/npm/v/nigmajs)
 ![NPM Downloads](https://img.shields.io/npm/dy/nigmajs)
 ![Commit Activity](https://img.shields.io/github/commit-activity/y/MeGrimlock/nigmaJS)
+[![Coverage Status](https://coveralls.io/repos/github/MeGrimlock/nigmaJS/badge.svg?branch=master)](https://coveralls.io/github/MeGrimlock/nigmaJS?branch=master)
 
 
 # NigmaJS
