@@ -32,7 +32,7 @@ Before installing, download and install Node.js. Node.js 0.10 or higher is requi
 
 **NPM** install command:
 
-`npm install nigmajs`
+`npm install nigmajs`, **but** since this code is written in ES6 and node only supports the `import` features when using the `--experimental-modules` flag I strongly suggest you adapt my source to fit your needs. 
 
 **YARN** install command:
 
@@ -129,6 +129,12 @@ What's important to know is that in order to setup this machine there are many a
 If you want to contribute to this project and make it better, your help is welcome. Contributing is also a great way to learn more about social coding, new technologies and and their ecosystems.
 
 Always write your commit messages in the present tense. Your commit message should describe what the commit, when applied, does to the code – not what you did to the code.
+
+# Request for help
+
+Since I've been using JavaScript for only 2 months, I'm still learning a lot on a daily basis. Because of this, the library has many thigs that can be improved or fixed.
+
+One of the main issues to fix is that it works after being installed via NPM, for this I'm working on it with Babel and Webpack but I appreciate if someone with more experience could help me.
 
 # Disclaimer
 
