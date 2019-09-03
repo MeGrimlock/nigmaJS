@@ -11,7 +11,7 @@
 
 # NigmaJS
 
-![NigmaJS logo](https://github.com/MeGrimlock/nigmaJS/favicon.ico)
+![NigmaJS logo](https://github.com/MeGrimlock/nigmaJS/blob/master/favicon.ico)
 
 This repository is focused on the implementation of many fantastic cryptographic techniques that have been generated over the last millenia.
 
