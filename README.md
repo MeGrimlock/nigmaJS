@@ -9,9 +9,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/MeGrimlock/nigmaJS/badge.svg?branch=master)](https://coveralls.io/github/MeGrimlock/nigmaJS?branch=master)
 
 
-# NigmaJS
+<p align="center">
+  <img src="https://github.com/MeGrimlock/nigmaJS/blob/master/favicon.ico" width="260" title="NigmaJS Logo">
+</p>
 
-![NigmaJS logo](https://github.com/MeGrimlock/nigmaJS/blob/master/favicon.ico)
+# NigmaJS
 
 This repository is focused on the implementation of many fantastic cryptographic techniques that have been generated over the last millenia.
 
