@@ -1,6 +1,6 @@
 {
 	"name": "nigmajs",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"description": "Module for solving and creating ciphers and codes",
 	"main": "src/index.js",
 	"scripts": {
@@ -28,8 +28,8 @@
 	],
 	"author": {
 		"name": "MeGrimlock",
-		"email":"gonzalogarat@gmail.com",
-		"url":"https://www.linkedin.com/in/gonzalo-garat-252b6013"
+		"email": "gonzalogarat@gmail.com",
+		"url": "https://www.linkedin.com/in/gonzalo-garat-252b6013"
 	},
 	"license": "GPL-3.0",
 	"devDependencies": {
@@ -62,8 +62,8 @@
 		"type": "git",
 		"url": "https://github.com/MeGrimlock/nigmaJS/"
 	},
-	"bugs":{
-		"url":"https://github.com/MeGrimlock/nigmaJS/issues",
-		"email":"gonzalogarat@gmail.com"
+	"bugs": {
+		"url": "https://github.com/MeGrimlock/nigmaJS/issues",
+		"email": "gonzalogarat@gmail.com"
 	}
 }
