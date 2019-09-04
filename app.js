@@ -10,6 +10,14 @@ import {
 const sampleMessage = 'Encode this text please';
 
 function output(cipher, section) {
+	/**
+	 * Method for publishing on the page what we are encrypting
+	 *
+	 * @method output
+	 * @param {String}
+	 * @param {String}
+	 * @return {nothing}
+	 */
 	//	console.log("log:", decrypted, encrypted);
 	const container = document.getElementById(section);
 	const content = document.createElement('div');

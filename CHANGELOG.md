@@ -10,3 +10,4 @@ All notable changes to this project will be documented in this file.
 - Added languageAnalysis folder where all the analysis and brute force deciphering are to be placed.
 - Fixed simple substitution and Bazeries cipher so that the transposition worked when i/j or u/v are combined.
 - Removed a lot of junk from package.json file.
+- Ciphers are now more flexible, encode/decode methods are now being adapted so that they support strings and a single cipher cna be used many times over.
