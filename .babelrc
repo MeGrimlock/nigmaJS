@@ -1,7 +1,17 @@
 {
-  "presets": ["@babel/preset-env"],
-  "plugins": [
-    "@babel/plugin-transform-arrow-functions",
-    "babel-plugin-transform-class-properties"
-  ]
+	"presets": [
+		[
+			"@babel/preset-env",
+			{
+				"targets": {
+					"node": "6.10",
+					"esmodules": true
+				}
+			}
+		]
+	],
+	"plugins": [
+		"@babel/plugin-transform-arrow-functions",
+		"babel-plugin-transform-class-properties"
+	]
 }
