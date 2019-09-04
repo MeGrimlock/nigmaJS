@@ -84,4 +84,5 @@ output(newMachine, 'Enigma');
 const newCaesar = new nigmajs.Shift.CaesarShift(sampleMessage, 1);
 output(newCaesar, 'Shift');
 
+console.log(nigmajs);
 module.exports = nigmajs;
