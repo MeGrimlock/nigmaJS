@@ -23,6 +23,17 @@ export default class BasicCipher {
 	 */
 
 	constructor(message, encoded, method, key, alphabet, debug) {
+		/**
+		 * BasicCipher constructor method
+		 *
+		 * @method constructor
+		 * @param {String}
+		 * @param {Boolean}
+		 * @param {String}
+		 * @param {String}
+		 * @param {Object}
+		 * @param {Boolean}
+		 */
 		this.message = message;
 		this.encoded = encoded;
 		this.method = method;
@@ -65,7 +76,15 @@ export default class BasicCipher {
 	// ----------------------------------------------------Usefull methods----------------------------------------------------
 
 	shiftCharacters = (str, shift = 1) => {
-		// Based upond Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+		/**
+		 * Based upod Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+		 *
+		 * @method shiftCharacters
+		 * @param {String}
+		 * @param {Number}
+		 * @returns {String}
+		 * */
+
 		let amount = shift;
 		Math.abs(amount) > 26 ? (amount %= 26) : null;
 		amount < 0 ? (amount += 26) : amount;
@@ -92,8 +111,14 @@ export default class BasicCipher {
 	};
 
 	text2block = (text, blockSize = 1) => {
-		// Transform a text into same sized character blocks.
-		// Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+		/**
+		 * Transform a text into same sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+		 * @method text2block
+		 * @param {String}
+		 * @param {Number}
+		 * @returns {String}
+		 */
+
 		let str = text;
 		str = str.replace(/ /g, '');
 		let temp = str[0];
@@ -113,15 +138,14 @@ export default class BasicCipher {
 		charSplit = '',
 		wordSplit = ' '
 	) => {
-		/*
-    Steps: 
-
-    1st: filter all chars not included on alphabet
-    2nd: separate by word using the wordsplit separator
-    3nd: lookup for key coresponding to value
-    4th: after the convertion, add the char separator
-    5th: repeat for all chars steps 3 & 4
-    */
+		/**
+		 * Basic method for encoding using an alphabet Steps: 1st: filter all chars not included on alphabet 2nd: separate by word using the wordsplit separator 3nd: lookup for key coresponding to value 4th: after the convertion, add the char separator 5th: repeat for all chars steps 3 & 4
+		 * @method encodeAlphabet
+		 * @param {String}
+		 * @param {String}
+		 * @param {String}
+		 * @returns {String}
+		 */
 
 		let originalMessage = '';
 		let encodedMessage = '';
@@ -153,6 +177,14 @@ export default class BasicCipher {
 		charSplit = '',
 		wordSplit = ' '
 	) => {
+		/**
+		 * Basic method for decoding when alphabet substitution method is used.
+		 * @method decodeAlphabet
+		 * @param {String}
+		 * @param {String}
+		 * @param {String}
+		 * @returns {String}
+		 */
 		let messageDecoded = '';
 
 		message.split(wordSplit).map(word => {
