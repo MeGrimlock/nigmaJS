@@ -24,6 +24,11 @@ Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
 */
 
 export default class Nigma {
+	/**
+	 * Nigma Class, super class that uses all available methods in this library
+	 * @method constructor
+	 * @param {String} message
+	 */
 	constructor(message = '') {
 		this.testMessages = [
 			'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
