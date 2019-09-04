@@ -70,7 +70,7 @@ const newSimpleSubstitution = new nigmajs.Dictionary.SimpleSubstitution(
 	sampleMessage,
 	'Tyranosaurus'
 );
-output(newAutokey, 'Dictionary');
+output(newSimpleSubstitution, 'Dictionary');
 
 // -----------------------------------------------------ENIGMA-----------------------------------------------------
 
