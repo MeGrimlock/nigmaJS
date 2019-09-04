@@ -1,3 +1,5 @@
+
+
 import { default as BasicCipher } from './basicCipher.js';
 
 import {
@@ -197,4 +199,4 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma };
+module.exports = { BasicCipher, Columnar, Dictionary, Shift, Enigma };
