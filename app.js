@@ -12,6 +12,20 @@ function output(cipher, section) {
 	 * @param {String}
 	 * @return {nothing}
 	 */
+	console.log(
+		`[${cipher.getMethod()}]: Plaintext: ${cipher.getMsg()} Ciphertext: ${cipher.encode()} `
+	);
+}
+/*
+function output(cipher, section) {
+	/**
+	 * Method for publishing on the page what we are encrypting
+	 *
+	 * @method output
+	 * @param {String}
+	 * @param {String}
+	 * @return {nothing}
+
 	//	console.log("log:", decrypted, encrypted);
 	const container = document.getElementById(section);
 	const content = document.createElement('div');
@@ -19,7 +33,7 @@ function output(cipher, section) {
 	content.setAttribute('style', 'margin-left: 50px');
 	content.innerHTML = `<h3>Encoding Text using: [${cipher.getMethod()}] encryption: </h3> <strong>Plaintext:</strong> ${cipher.getMsg()} <br> <strong>Ciphertext:</strong> ${cipher.encode()}<br>`;
 	container.appendChild(content);
-}
+} */
 
 // -----------------------------------------------------COLUMNAR-----------------------------------------------------
 
