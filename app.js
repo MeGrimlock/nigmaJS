@@ -12,9 +12,10 @@ function output(cipher, section) {
 	 * @param {String}
 	 * @return {nothing}
 	 */
+	/*
 	console.log(
 		`[${cipher.getMethod()}]: Plaintext: ${cipher.getMsg()} Ciphertext: ${cipher.encode()} `
-	);
+	); */
 }
 /*
 function output(cipher, section) {
