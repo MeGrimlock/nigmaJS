@@ -3,15 +3,16 @@ const nigmajs = require('./src/index.js');
 
 const sampleMessage = 'Encode this text please';
 
+/**
+ * Method for publishing on the page what we are encrypting
+ *
+ * @method output
+ * @param {String}
+ * @param {String}
+ * @return {nothing}
+ */
 function output(cipher, section) {
-	/**
-	 * Method for publishing on the page what we are encrypting
-	 *
-	 * @method output
-	 * @param {String}
-	 * @param {String}
-	 * @return {nothing}
-	 */
+
 	/*
 	console.log(
 		`[${cipher.getMethod()}]: Plaintext: ${cipher.getMsg()} Ciphertext: ${cipher.encode()} `
