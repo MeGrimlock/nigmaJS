@@ -182,7 +182,7 @@ export default class BasicCipher {
 	 * @param {String}
 	 * @returns {String}
 	 */
-	
+
 	decodeAlphabet = (
 		message = this.message,
 		charSplit = '',

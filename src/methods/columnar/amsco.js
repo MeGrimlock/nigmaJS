@@ -1,33 +1,43 @@
 import { default as BasicCipher } from '../../basicCipher.js';
 
-export default class amsco extends BasicCipher {
-	/*
-      http://ericbrandel.com/2016/10/09/the-amsco-cipher/
-  
-      AMSCO is an incomplete columnar transposition cipher. A bit to unpack there, but basically that means that you’re putting 
-      the message into columns and those columns may not have equal lengths. It was invented by an A.M. Scott in the 19th century, 
-      but strangely there is almost nothing online about him.
-  -
-      Suitable length: 8 to 12 lines  maximum
+/** Class representation of the AMSCO method 
+ * http://ericbrandel.com/2016/10/09/the-amsco-cipher/
+ * AMSCO is an incomplete columnar transposition cipher. A bit to unpack there, but basically that means that you’re putting
+ * the message into columns and those columns may not have equal lengths. It was invented by an A.M. Scott in the 19th century, 
+ * but strangely there is almost nothing online about him.
+ * Suitable length: 8 to 12 lines  maximum
+ * The key can be a max length of 9 and must contain the numbers 1-n, with n being the length of the key. 
+ * 1234 and 4132 would both be valid keys, but 1245 would not.
+*/
 
-      The key can be a max length of 9 and must contain the numbers 1-n, with n being the length of the key. 
-      1234 and 4132 would both be valid keys, but 1245 would not.
-  
-      */
+export default class amsco extends BasicCipher {
+
+	/**
+	 * AMSCO constructor method
+	 *
+	 * @method constructor
+	 * @param {String} message to be encoded/decoded
+	 * @param {String} key the order in which to sort columns
+	 * @param {Boolean} encoded indicating if the message passed is encoded
+	 * @param {Boolean} debug indicating if we need to print debug messages
+	 */
 
 	constructor(message, key, encoded = false, debug = false) {
-		/* console.log(
-      `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-    ); */
-		super(message, encoded, 'amsco', key, '', debug);
-		// Parametros: message,encoded,method,key,alphabet
-		// this.decode.bind(this);
-		// logMessage("constuctor",this);
+			super(message, encoded, 'amsco', key, '', debug);	
 	}
 
+	/**
+	 * Method that returns all auxiliary info required in order to implement the decoding process.
+	 * It generates both the template for the decoded message and the decoding matrix to be used.
+	 * It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
+	 * @method decodingConstructor
+	 * @param {String} message the message to be encoded
+	 * @param {String} key the order in which columnar transposition is to be made
+	 * @returns {[String,Array,Array]} [decodedMessageTemplate, decodingMatrix, explodedKey]
+	 */
+
 	decodingConstructor = (message, key) => {
-		// Support method that generates both the template for the decoded message and the decoding matrix to be used.
-		// It's important to notice that the key is placed inside of the template message and must be removed once the columns are sorted.
+
 		const explodedKey = key.split('').map(myval => myval - 1);
 		const decodedMessageTemplate = [];
 
@@ -44,6 +54,13 @@ export default class amsco extends BasicCipher {
 
 		return [decodedMessageTemplate, decodingMatrix, explodedKey];
 	};
+
+	/**
+	 * Method that returns all auxiliary info required in order to implement the decoding process.
+	 * 
+	 * @method validateKey 
+	 * @returns {Boolean} validates if the key set into the Object follows the ciphers rules.
+	 */
 
 	validateKey = () => {
 		// /Aux method that verifies if no columns in [1,2...n] are present and if all 1-9 digits are there
@@ -76,6 +93,18 @@ export default class amsco extends BasicCipher {
 		return validated;
 	};
 
+	/**
+	 * Auxiliary method used by decodingConstructor
+	 * 
+	 * @method generateDecodingMatrix
+	 * @param {String} totalChars receives message.length
+	 * @param {[String]} splitKey receives explodedKey
+	 * @param {[Number]} initChar receives 1
+	 * @param {[Number]} alternateChar receives 2
+	 * @returns {[String]} A matrix that represents the message reordered according to the key
+	 * @see decodingConstructor
+	 */
+	
 	generateDecodingMatrix = (totalChars, splitKey, initChar, alternateChar) => {
 		const decodingMatrix = [];
 		let numChars = initChar || 1;
@@ -107,8 +136,19 @@ export default class amsco extends BasicCipher {
 		return decodingMatrix;
 	};
 
+	/**
+	 * Auxiliary method used by decode() 
+	 * Using the key and matrix, the encoded text is processed into the matrix format.
+	 * 
+	 * @method processMatrixDecoding
+	 * @param {String} message receives message to decode
+	 * @param {String} matrix receives message to decode
+	 * @param {[String]} splitKey receives explodedKey
+	 * @returns {[String]} A matrix that represents the message reordered according to the key
+	 * @see decode
+	 */
+
 	processMatrixDecoding = (message, matrix, splitKey) => {
-		// Using the key and matrix, the encoded text is processed into the matrix format.
 		let index = 0;
 		let extraChars = 1;
 		let keys = 0;
@@ -133,8 +173,14 @@ export default class amsco extends BasicCipher {
 		return messageDecoded;
 	};
 
+	/**
+	 * Decode method, one of the 3 main methods from this and all classes (asides from constructor and encode)
+	 * By default it takes the message and key that have been set into the object and decode the message
+	 * @method decode
+	 * @returns {String} decoded message
+	 */
+
 	decode = () => {
-		// To decode baconian i must take 5 letters at a tim and analyze them.
 		let messageDecoded = [];
 		// In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
 		if (this.validateKey()) {
@@ -156,6 +202,13 @@ export default class amsco extends BasicCipher {
 		}
 		return messageDecoded;
 	};
+
+	/**
+	 * Encode method, one of the 3 main methods from this and all classes (asides from constructor and decode)
+	 * By default it takes the message and key that have been set into the object and ecodes the message
+	 * @method encode()
+	 * @returns {String} encoded message
+	 */
 
 	encode = () => {
 		let originalMessage = '';
@@ -196,5 +249,3 @@ export default class amsco extends BasicCipher {
 		return output;
 	};
 }
-
-// export default amsco;
