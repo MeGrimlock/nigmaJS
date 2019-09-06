@@ -8,19 +8,15 @@ import { default as BasicCipher } from '../../basicCipher.js';
  * Suitable length: 8 to 12 lines  maximum
  * The key can be a max length of 9 and must contain the numbers 1-n, with n being the length of the key. 
  * 1234 and 4132 would both be valid keys, but 1245 would not.
+ * 
+ * @method constructor
+ * @param {String} message to be encoded/decoded
+ * @param {String} key the order in which to sort columns
+ * @param {Boolean} encoded indicating if the message passed is encoded
+ * @param {Boolean} debug indicating if we need to print debug messages
 */
 
 export default class amsco extends BasicCipher {
-
-	/**
-	 * AMSCO constructor method
-	 *
-	 * @method constructor
-	 * @param {String} message to be encoded/decoded
-	 * @param {String} key the order in which to sort columns
-	 * @param {Boolean} encoded indicating if the message passed is encoded
-	 * @param {Boolean} debug indicating if we need to print debug messages
-	 */
 
 	constructor(message, key, encoded = false, debug = false) {
 			super(message, encoded, 'amsco', key, '', debug);	
