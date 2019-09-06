@@ -21,19 +21,20 @@ export default class BasicCipher {
 	 https://en.wikipedia.org/wiki/Cipher
 
 	 */
+	/**
+	 * BasicCipher constructor method
+	 *
+	 * @method constructor
+	 * @param {String}
+	 * @param {Boolean}
+	 * @param {String}
+	 * @param {String}
+	 * @param {Object}
+	 * @param {Boolean}
+	 */
 
 	constructor(message, encoded, method, key, alphabet, debug) {
-		/**
-		 * BasicCipher constructor method
-		 *
-		 * @method constructor
-		 * @param {String}
-		 * @param {Boolean}
-		 * @param {String}
-		 * @param {String}
-		 * @param {Object}
-		 * @param {Boolean}
-		 */
+	
 		this.message = message;
 		this.encoded = encoded;
 		this.method = method;
@@ -74,16 +75,16 @@ export default class BasicCipher {
 		return (this.alphabet = newAlphabet);
 	}
 	// ----------------------------------------------------Usefull methods----------------------------------------------------
+	/**
+	 * Based upod Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
+	 *
+	 * @method shiftCharacters
+	 * @param {String}
+	 * @param {Number}
+	 * @returns {String}
+	 * */
 
-	shiftCharacters = (str, shift = 1) => {
-		/**
-		 * Based upod Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
-		 *
-		 * @method shiftCharacters
-		 * @param {String}
-		 * @param {Number}
-		 * @returns {String}
-		 * */
+	shiftCharacters = (str, shift = 1) => {	
 
 		let amount = shift;
 		Math.abs(amount) > 26 ? (amount %= 26) : null;
@@ -110,14 +111,15 @@ export default class BasicCipher {
 		return output;
 	};
 
+	/**
+	 * Transform a text into same sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+	 * @method text2block
+	 * @param {String}
+	 * @param {Number}
+	 * @returns {String}
+	 */
+
 	text2block = (text, blockSize = 1) => {
-		/**
-		 * Transform a text into same sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
-		 * @method text2block
-		 * @param {String}
-		 * @param {Number}
-		 * @returns {String}
-		 */
 
 		let str = text;
 		str = str.replace(/ /g, '');
@@ -133,23 +135,23 @@ export default class BasicCipher {
 	};
 
 	// --------------------------------------------------Alphabet methods--------------------------------------------------
+
+	/**
+	 * Basic method for encoding using an alphabet Steps: 1st: filter all chars not included on alphabet 2nd: separate by word using the wordsplit separator 3nd: lookup for key coresponding to value 4th: after the convertion, add the char separator 5th: repeat for all chars steps 3 & 4
+	 * @method encodeAlphabet
+	 * @param {String}
+	 * @param {String}
+	 * @param {String}
+	 * @returns {String}
+	 */
+
 	encodeAlphabet = (
 		message = this.message,
 		charSplit = '',
 		wordSplit = ' '
 	) => {
-		/**
-		 * Basic method for encoding using an alphabet Steps: 1st: filter all chars not included on alphabet 2nd: separate by word using the wordsplit separator 3nd: lookup for key coresponding to value 4th: after the convertion, add the char separator 5th: repeat for all chars steps 3 & 4
-		 * @method encodeAlphabet
-		 * @param {String}
-		 * @param {String}
-		 * @param {String}
-		 * @returns {String}
-		 */
-
 		let originalMessage = '';
 		let encodedMessage = '';
-
 		// originalMessage = this.message.toLowerCase().replace(/[^a-z]/g, "");
 		originalMessage = message.toLowerCase();
 		originalMessage.split(' ').map(word => {
@@ -172,19 +174,21 @@ export default class BasicCipher {
 		return encodedMessage;
 	};
 
+	/**
+	 * Basic method for decoding when alphabet substitution method is used.
+	 * @method decodeAlphabet
+	 * @param {String}
+	 * @param {String}
+	 * @param {String}
+	 * @returns {String}
+	 */
+	
 	decodeAlphabet = (
 		message = this.message,
 		charSplit = '',
 		wordSplit = ' '
 	) => {
-		/**
-		 * Basic method for decoding when alphabet substitution method is used.
-		 * @method decodeAlphabet
-		 * @param {String}
-		 * @param {String}
-		 * @param {String}
-		 * @returns {String}
-		 */
+		
 		let messageDecoded = '';
 
 		message.split(wordSplit).map(word => {
