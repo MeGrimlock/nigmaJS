@@ -1,10 +1,16 @@
 import { default as BasicCipher } from '../../basicCipher.js';
 
+/**
+ * Atbash is a monoalphabetic substitution cipher originally used to encrypt the Hebrew alphabet. 
+ * It can be modified for use with any known writing system with a standard collating order.
+ * @method constructor
+ * @param {String} message to be encoded/decoded
+ * @param {Boolean} encoded indicating if the message passed is encoded, default set to false
+ * @param {Boolean} debug indicating if we need to print debug messages, default set to false
+ */
+
 export default class atbash extends BasicCipher {
 	constructor(message, encoded = false, debug = false) {
-		/* console.log(
-          `AMSCO Constructor> KEY :${key} Encoded:${encoded} DEBUG:${debug}\n Msg: ${message} \n `
-        ); */
 
 		const alphabet = {
 			'4': 'a',
@@ -59,11 +65,19 @@ export default class atbash extends BasicCipher {
 		// logMessage("constuctor",this);
 	}
 
-	encode = message =>
+	/**
+	 * @method encode
+	 * @param message text to be encoded, if empty use sotred message
+	 */
+
+	encode = (message=this.message) =>
 		this.encodeAlphabet(message, this.characterSep, this.wordSep);
 
-	decode = message =>
+	/**
+	 * @method decode
+	 * @param message text to be decoded, if empty use sotred message
+	 */
+	decode = (message=this.message) =>
 		this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }
 
-// export default atbash;
