@@ -1,37 +1,27 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-return-assign */
+
+/**
+ * BasicCipher 
+ * 
+ * In cryptography, a cipher (or cypher) is an algorithm for performing encryption or decryption—a series of well-defined steps that can be followed as a procedure. An alternative, less common term is encipherment. 
+ * To encipher or encode is to convert information into cipher or code. In common parlance, "cipher" is synonymous with "code", as they are both a set of steps that encrypt a message; 
+ * However, the concepts are distinct in cryptography, especially classical cryptography.
+ * Codes generally substitute different length strings of character in the output, while ciphers generally substitute the same number of characters as are input. 
+ * There are exceptions and some cipher systems may use slightly more, or fewer, characters when output versus the number that were input.
+ * https://en.wikipedia.org/wiki/Cipher
+ *
+ * @method constructor
+ * @param {String} message the message that is going to be processed by the cipher
+ * @param {Boolean} encoded boolean indicating whether or not the message is encoded
+ * @param {String} method a String that indicates which cipher is being used
+ * @param {String} key when the cipher needs a key, we store it here
+ * @param {Object} alphabet when the cipher needs an alphabet, we store it here albhabet is an array of key:value pairs
+ * @param {Boolean} debug boolean indicating whether or not to display debug messages
+ */
+
 export default class BasicCipher {
-	/*
-	 
-	In cryptography, a cipher (or cypher) is an algorithm for performing encryption or decryption—a series of 
-	well-defined steps that can be followed as a procedure. An alternative, less common term is encipherment. 
-	 
-	To encipher or encode is to convert information into cipher or code. 
-	In common parlance, "cipher" is synonymous with "code", 
-	as they are both a set of steps that encrypt a message; 
-	 
-	However, the concepts are distinct in cryptography, especially classical cryptography.
 
-	Codes generally substitute different length strings of character in the output, 
-	while ciphers generally substitute the same number of characters as are input. 
-	
-	There are exceptions and some cipher systems may use slightly more, or fewer, 
-	characters when output versus the number that were input.
-
-	 https://en.wikipedia.org/wiki/Cipher
-
-	 */
-	/**
-	 * BasicCipher constructor method
-	 *
-	 * @method constructor
-	 * @param {String}
-	 * @param {Boolean}
-	 * @param {String}
-	 * @param {String}
-	 * @param {Object}
-	 * @param {Boolean}
-	 */
 
 	constructor(message, encoded, method, key, alphabet, debug) {
 	
@@ -55,21 +45,45 @@ export default class BasicCipher {
 	getAlphabet = () => this.alphabet;
 
 	// --------------------------------------------------SETs--------------------------------------------------
+	/**
+	 * @method setMsg
+	 * @param {String} newMessage message that we want to store in the cipher
+	 */
 	setMsg(newMessage) {
 		return (this.message = newMessage);
 	}
+	
+	/**
+	 * @method setEncoded
+	 * @param {Boolean} newEncoded encoded is a boolean that indicates if the stored message is or not encoded
+	 */
 
 	setEncoded(newEncoded) {
 		return (this.encoded = newEncoded);
 	}
 
+	/**
+	 * @method setMethod
+	 * @param {String} newMethod 
+	 */
+
 	setMethod(newMethod) {
 		return (this.method = newMethod);
 	}
 
+	/**
+	 * @param setKey 
+	 * @param {String} newKey 
+	 */
+
 	setKey(newKey) {
 		return (this.key = newKey);
 	}
+
+	/**
+	 * @method setAlphabet
+	 * @param {Object} newAlphabet [key:value]
+	 */
 
 	setAlphabet(newAlphabet) {
 		return (this.alphabet = newAlphabet);
@@ -79,9 +93,9 @@ export default class BasicCipher {
 	 * Based upod Caesar shift method, works for letter only, any other character like 0-9 or @ # $, etc. will be ignored.
 	 *
 	 * @method shiftCharacters
-	 * @param {String}
-	 * @param {Number}
-	 * @returns {String}
+	 * @param {String} String to be shifted
+	 * @param {Number} shift indicates the number of characters the alphabet is to be rotated
+	 * @returns {String} shifted text
 	 * */
 
 	shiftCharacters = (str, shift = 1) => {	
@@ -114,9 +128,9 @@ export default class BasicCipher {
 	/**
 	 * Transform a text into same sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
 	 * @method text2block
-	 * @param {String}
-	 * @param {Number}
-	 * @returns {String}
+	 * @param {String} text to be processed
+	 * @param {Number} blockSize is the size of the chunks
+	 * @returns {String} chunked text
 	 */
 
 	text2block = (text, blockSize = 1) => {
@@ -137,12 +151,18 @@ export default class BasicCipher {
 	// --------------------------------------------------Alphabet methods--------------------------------------------------
 
 	/**
-	 * Basic method for encoding using an alphabet Steps: 1st: filter all chars not included on alphabet 2nd: separate by word using the wordsplit separator 3nd: lookup for key coresponding to value 4th: after the convertion, add the char separator 5th: repeat for all chars steps 3 & 4
+	 * Basic method for encoding using an alphabet Steps: 
+	 * 1st: filter all chars not included on alphabet 
+	 * 2nd: separate by word using the wordsplit separator 
+	 * 3nd: lookup for key coresponding to value 
+	 * 4th: after the convertion, add the char separator 
+	 * 5th: repeat for all chars steps 3 & 4
+	 * 
 	 * @method encodeAlphabet
-	 * @param {String}
-	 * @param {String}
-	 * @param {String}
-	 * @returns {String}
+	 * @param {String} message text to encode using substitution alphabet
+	 * @param {String} charSplit character to be placed after each character is processed
+	 * @param {String} wordSplit character to be placed to indicate that a word is porocessed
+	 * @returns {String} encoded message
 	 */
 
 	encodeAlphabet = (
@@ -177,10 +197,10 @@ export default class BasicCipher {
 	/**
 	 * Basic method for decoding when alphabet substitution method is used.
 	 * @method decodeAlphabet
-	 * @param {String}
-	 * @param {String}
-	 * @param {String}
-	 * @returns {String}
+	 * @param {String} message text to be decoded
+	 * @param {String} charSplit character that indicates encoded characters separation
+	 * @param {String} wordSplit character that indicates encoded words separation
+	 * @returns {String} decoded message
 	 */
 
 	decodeAlphabet = (
@@ -203,24 +223,58 @@ export default class BasicCipher {
 		return messageDecoded;
 	};
 	// --------------------------------------------------Aux methods--------------------------------------------------
+	
+	/**
+	 * Auxiliary method for validating if the key passed is ok and if the message is not empty
+	 * 
+	 * @method validateEncoded 
+	 * @returns {Boolean} true if everything is ok
+	 */
 
 	validateEncoded = () =>
 		this.encoded === true &&
 		typeof (this.message != null) &&
 		this.message !== '';
 
+	/**
+	 * Sort values based on the first item on the row
+	 * @method sortColumns
+	 * @param {*} a 
+	 * @param {*} b 
+	 */
+
 	sortColumns(a, b) {
-		// Sort values based on the first item on the row
 		if (a[0] === b[0]) {
 			return 0;
 		}
 		return a[0] < b[0] ? -1 : 1;
 	}
 
+	/**
+	 * Receives a 2D matrix and transposes it
+	 * @method transposeMatrix
+	 * @param {Array} matrix receives a 2D matrix and transposes it
+	 * @returns {Array} 
+	 */
+
 	transposeMatrix = array => array[0].map((col, i) => array.map(row => row[i]));
+
+	/**
+	 * Aux method to find a key by it's associated value
+	 * @method getKeyByValue
+	 * @param {Object} list An array of key:value pairs
+	 * @param {String} value that we want to use as needle to find its key
+	 * @returns {String} key
+	 */
 
 	getKeyByValue = (object, value) =>
 		Object.keys(object).find(key => object[key] === value);
+
+	/**
+	 * Method for outputting messages into console, by default it is disabled
+	 * @method logMessage 
+	 * @param {String} text 
+	 */
 
 	logMessage = output => {
 		if (this.debug) {
@@ -228,5 +282,6 @@ export default class BasicCipher {
 		}
 	};
 
+	
 	test = () => 'NigmaJS enabled';
 }
