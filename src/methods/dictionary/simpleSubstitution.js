@@ -1,5 +1,5 @@
 import { default as BasicCipher } from "../../basicCipher.js";
-/**This class is the basis for all substitution ciphers. Right now it works with monoalphabetic substitution only.
+/** This class is the basis for all substitution ciphers. Right now it works with monoalphabetic substitution only.
  * In cryptography, a substitution cipher is a method of encrypting by which units of plaintext are replaced with ciphertext.
  * According to a fixed system; the "units" may be single letters (the most common), pairs of letters, triplets of letters, mixtures of the above, and so forth.
  * The receiver deciphers the text by performing the inverse substitution.
