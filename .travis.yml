@@ -12,6 +12,7 @@ deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_API_KEY
+  repo_token: $COVERALLS_TOKEN
   local_dir: build
   on:
     branch: master
