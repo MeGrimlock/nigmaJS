@@ -7,7 +7,6 @@ cache:
 script:
   - npm test
   - npm run build:prod
-  - npm run coveralls
 deploy:
   provider: pages
   skip_cleanup: true
@@ -16,3 +15,11 @@ deploy:
   local_dir: build
   on:
     branch: master
+
+  jobs:
+  include:
+    - script: ./test 1 # uses the default stage name "test"
+    - script: ./test 2
+    - stage: deploy
+      script: ./deploy target-1
+    - script: ./deploy target-2
