@@ -8,17 +8,6 @@ const sampleMessage = "Encode this text please";
  * Method for publishing on the page what we are encrypting
  *
  * @method output
- * @param {String}
- * @param {String}
- * @return {nothing}
- */
-
-// function output(cipher, section) {console.log(`[${cipher.getMethod()}]: Plaintext: ${cipher.getMsg()} Ciphertext: ${cipher.encode()} `); }
-
-/**
- * Method for publishing on the page what we are encrypting
- *
- * @method output
  * @param {Object} cipher that we want to output
  * @param {String} section html tag to be used to represent this cipher
  * @return {nothing}

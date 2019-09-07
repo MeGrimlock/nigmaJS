@@ -1,70 +1,72 @@
 {
-	"name": "nigmajs",
-	"version": "2.2.5",
-	"description": "Module for solving and creating ciphers and codes",
-	"main": "./build/js/nigma.min.js",
-	"scripts": {
-		"build:prod": "webpack --mode production --progress",
-		"build:dev": "webpack --mode development --progress",
-		"test": "jest",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"preversion": "npm run lint:fix && test",
-		"start": "node ./build/js/nigma.min.js",
-		"version": "npm run build:prod"
-	},
-	"keywords": [
-		"Ciphers",
-		"Encryption",
-		"Amsco",
-		"Autokey",
-		"caesar",
-		"Rot13",
-		"Baconian",
-		"Morse",
-		"Atbash",
-		"Enigma",
-		"Bazeries",
-		"Simple Substitution"
-	],
-	"author": {
-		"name": "MeGrimlock",
-		"email": "gonzalogarat@gmail.com",
-		"url": "https://www.linkedin.com/in/gonzalo-garat-252b6013"
-	},
-	"license": "GPL-3.0",
-	"devDependencies": {
-		"@babel/cli": "^7.5.5",
-		"@babel/core": "^7.5.5",
-		"@babel/plugin-transform-arrow-functions": "^7.2.0",
-		"@babel/preset-env": "^7.5.5",
-		"babel-eslint": "^9.0.0",
-		"babel-loader": "^8.0.6",
-		"babel-plugin-transform-class-properties": "^6.24.1",
-		"eslint": "^5.16.0",
-		"eslint-config-airbnb": "^17.1.1",
-		"eslint-config-prettier": "^4.3.0",
-		"eslint-config-wesbos": "0.0.19",
-		"eslint-plugin-html": "^5.0.5",
-		"eslint-plugin-import": "^2.18.2",
-		"eslint-plugin-jsx-a11y": "^6.2.3",
-		"eslint-plugin-prettier": "^3.1.0",
-		"eslint-plugin-react": "^7.14.3",
-		"eslint-plugin-react-hooks": "^1.7.0",
-		"html-webpack-plugin": "^3.2.0",
-		"jest": "^24.8.0",
-		"prettier": "^1.18.2",
-		"webpack": "^4.39.1",
-		"webpack-cli": "^3.3.6",
-		"webpack-dev-server": "^3.7.2"
-	},
-	"homepage": "https://github.com/MeGrimlock/nigmaJS/",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/MeGrimlock/nigmaJS/"
-	},
-	"bugs": {
-		"url": "https://github.com/MeGrimlock/nigmaJS/issues",
-		"email": "gonzalogarat@gmail.com"
-	}
+  "name": "nigmajs",
+  "version": "2.2.5",
+  "description": "Module for solving and creating ciphers and codes",
+  "main": "./build/js/nigma.min.js",
+  "scripts": {
+    "build:prod": "webpack --mode production --progress",
+    "build:dev": "webpack --mode development --progress",
+    "coveralls": "jest --coverage && cat ./tests/coverage/lcov.info | coveralls",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "preversion": "npm run lint:fix && test",
+    "start": "node ./build/js/nigma.min.js",
+    "test": "jest",
+    "version": "npm run build:prod"
+  },
+  "keywords": [
+    "Ciphers",
+    "Encryption",
+    "Amsco",
+    "Autokey",
+    "caesar",
+    "Rot13",
+    "Baconian",
+    "Morse",
+    "Atbash",
+    "Enigma",
+    "Bazeries",
+    "Simple Substitution"
+  ],
+  "author": {
+    "name": "MeGrimlock",
+    "email": "gonzalogarat@gmail.com",
+    "url": "https://www.linkedin.com/in/gonzalo-garat-252b6013"
+  },
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-arrow-functions": "^7.2.0",
+    "@babel/preset-env": "^7.5.5",
+    "babel-eslint": "^9.0.0",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "coveralls": "^3.0.6",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb": "^17.1.1",
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-config-wesbos": "0.0.19",
+    "eslint-plugin-html": "^5.0.5",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-react-hooks": "^1.7.0",
+    "html-webpack-plugin": "^3.2.0",
+    "jest": "^24.8.0",
+    "prettier": "^1.18.2",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2"
+  },
+  "homepage": "https://github.com/MeGrimlock/nigmaJS/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MeGrimlock/nigmaJS/"
+  },
+  "bugs": {
+    "url": "https://github.com/MeGrimlock/nigmaJS/issues",
+    "email": "gonzalogarat@gmail.com"
+  }
 }
