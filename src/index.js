@@ -12,23 +12,20 @@ import { default as Dictionary } from './methods/dictionary/dictionary.js';
 import { default as Shift } from './methods/shift/shift.js';
 import { default as Enigma } from './methods/enigma/enigma.js';
 
-/*
-
-Nigma Imports everything so that it can any method can be called from here.
-
-As a way of simplifying the implementation, the different methods are all grouped in the corresponding JS files with the same name
-as the folder that contains them.
-
-Therefore imports are> COLUMNAR, SHIFT and DICTIONARY methods.
-
+/** 
+ * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
+ * It has 2 uses: 1) Access all methods and 2) Add criptoanalysis methods to the library.
+ * As a way of simplifying the implementation, the different methods are all grouped in the corresponding JS files with the same name as the folder that contains them.
+ * Therefore imports are-> COLUMNAR, SHIFT and DICTIONARY methods.
+ * 
+ * @method constructor
+ * @param {String} message
+ * @returns {Object} An Object with access to all nigmaJS classes
 */
 
+
 export default class Nigma {
-	/**
-	 * Nigma Class, super class that uses all available methods in this library
-	 * @method constructor
-	 * @param {String} message
-	 */
+
 	constructor(message = '') {
 		this.testMessages = [
 			'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -39,12 +36,6 @@ export default class Nigma {
 
 		this.message = message;
 		this.alphabet = {
-			/* The alphabet works the following way: 
-
-        KEY: is the representation of the encrypted character.
-        VALUE: is the value of the unencrypted character and can be adjusted as we try to break the code.
-      
-        */
 			a: '',
 			b: '',
 			c: '',
@@ -89,7 +80,7 @@ export default class Nigma {
 		};
 	}
 
-	// -------------------------------------------Dictionary Methods -------------------------------------------
+	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------
 
 	getTestMessage = number => this.testMessages[number];
 
