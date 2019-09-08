@@ -3,14 +3,15 @@
 
 /**
  * BasicCipher 
- * 
+ * Template class for creating new Ciphers, all I create extends this class.
  * In cryptography, a cipher (or cypher) is an algorithm for performing encryption or decryption—a series of well-defined steps that can be followed as a procedure. An alternative, less common term is encipherment. 
  * To encipher or encode is to convert information into cipher or code. In common parlance, "cipher" is synonymous with "code", as they are both a set of steps that encrypt a message; 
  * However, the concepts are distinct in cryptography, especially classical cryptography.
  * Codes generally substitute different length strings of character in the output, while ciphers generally substitute the same number of characters as are input. 
  * There are exceptions and some cipher systems may use slightly more, or fewer, characters when output versus the number that were input.
  * https://en.wikipedia.org/wiki/Cipher
- *
+ * 
+ * @since 1.0.0
  * @method constructor
  * @param {String} message the message that is going to be processed by the cipher
  * @param {Boolean} encoded boolean indicating whether or not the message is encoded
@@ -18,6 +19,10 @@
  * @param {String} key when the cipher needs a key, we store it here
  * @param {Object} alphabet when the cipher needs an alphabet, we store it here albhabet is an array of key:value pairs
  * @param {Boolean} debug boolean indicating whether or not to display debug messages
+ * @returns {Object} new cipher with all its properties and methods
+ * @example 
+ * const myCipher = new BasicCipher("Texto to encode",false,"cool new methods name","if theres a key","if theres an alphabet",false)
+ 
  */
 
 export default class BasicCipher {
@@ -126,7 +131,7 @@ export default class BasicCipher {
 	};
 
 	/**
-	 * Transform a text into same sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
+	 * Transform a text into equally sized character blocks. Example: ABC DEFGH IJ KLM NOPQR S TUVW XYZ -(5)-> ABCDE FGHIJ KLMNO PQRST UVWXY Z
 	 * @method text2block
 	 * @param {String} text to be processed
 	 * @param {Number} blockSize is the size of the chunks
