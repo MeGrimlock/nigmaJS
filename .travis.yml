@@ -7,7 +7,7 @@ cache:
 script:
   - npm test
   - npm run build:prod
-  - npm run post-version
+  - npm run version patch
 deploy:
   provider: pages
   skip_cleanup: true
