@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 - **JSDoc support**: I'm very new to JS and I've been looking for this since I started :) I'm happy I finally found it and I adjusted all comments so that they are properly displayed.
 - **Coveralls**: Another feature that I've been trying to implement for a while. Right now it "works" but since I'm working on win10 part of the publishing command is not working and I'm still trying to figure out how to properly configure **Travis** so that he does all the math. Roughly support seems to be around **68%**.
+-Automate publishing to NPM with Travis 
 
 ## [2.0.0] - 2019-08-19
 
