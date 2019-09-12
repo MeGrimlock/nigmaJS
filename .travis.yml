@@ -8,7 +8,7 @@ script:
   - npm test
   - npm run build:prod
 before_deploy:
-- npm version patch
+- npm version patch  --no-git-tag-version
 deploy:
   provider: pages
   skip_cleanup: true
