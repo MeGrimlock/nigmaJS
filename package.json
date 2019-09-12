@@ -13,7 +13,7 @@
     "start": "node ./build/js/nigma.min.js",
     "test": "jest",
     "version": "npm run build:prod",
-    "post-version":"npm version patch"
+    "post-version":"version patch"
   },
   "keywords": [
     "Ciphers",
