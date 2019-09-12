@@ -12,7 +12,8 @@
     "preversion": "npm run lint:fix && test",
     "start": "node ./build/js/nigma.min.js",
     "test": "jest",
-    "version": "npm run build:prod"
+    "version": "npm run build:prod",
+    "post-version":"npm version patch"
   },
   "keywords": [
     "Ciphers",
