@@ -7,6 +7,8 @@ cache:
 script:
   - npm test
   - npm run build:prod
+before_deploy:
+- npm version patch  --no-git-tag-version
 deploy:
   provider: pages
   skip_cleanup: true
@@ -15,6 +17,9 @@ deploy:
   local_dir: build
   on:
     branch: master
+  provider: npm
+  email: $EMAIL
+  api_key: $NPM_TOKEN
 
   jobs:
   include:
