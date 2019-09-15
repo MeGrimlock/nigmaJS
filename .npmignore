@@ -2,3 +2,16 @@
 .github
 node_modules
 coverage
+.babelrc
+.eslintignore
+.eslintrc.json
+.gitignore
+.travis.yml
+.CHANGELOG.md
+CODE_OF_CONDUCT.md
+coveralls.yml
+favicon.ico
+jest.config.js
+webpack.config.js
+
+
