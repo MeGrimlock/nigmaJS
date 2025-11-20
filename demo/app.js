@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const enigmaOut = document.getElementById('enigmaOutput');
   const enigmaDecoded = document.getElementById('enigmaDecoded');
 
+  const enigmaRotors = document.getElementById('enigmaRotors');
+  const enigmaRing = document.getElementById('enigmaRing');
+  const enigmaKey = document.getElementById('enigmaKey');
+  const enigmaPlugs = document.getElementById('enigmaPlugs');
+
   function update() {
     const text = input.value;
     if (!window.nigmajs) {
@@ -74,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ROT13
     try {
-      const Rot13Class = Shift.Rot13 || Shift.CaesarShift; // Fallback logic handled in class selection if needed
-      const r = new Rot13Class(text, 13); // If it's Caesar, 13 works. If Rot13, arg might be ignored or handled.
+      const Rot13Class = Shift.Rot13 || Shift.CaesarShift;
+      const r = new Rot13Class(text, 13);
       const encoded = r.encode();
       rot13Out.textContent = encoded;
 
@@ -102,12 +107,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Enigma
     try {
-      const e = new Enigma(text);
+      const rotors = enigmaRotors.value || '123';
+      const ring = enigmaRing.value || 'AAA';
+      const key = enigmaKey.value || 'AAA';
+      const plugs = enigmaPlugs.value || 'PO ML IU KJ NH YT GB VF RE DC';
+
+      const e = new Enigma(text, key, ring, plugs, rotors);
       const encoded = e.encode();
       enigmaOut.textContent = encoded;
 
-      // Enigma is reciprocal, so encoding the encoded text should decode it
-      const e2 = new Enigma(encoded);
+      const e2 = new Enigma(encoded, key, ring, plugs, rotors);
       enigmaDecoded.textContent = e2.encode();
     } catch (e) {
       enigmaOut.textContent = 'Error: ' + e.message;
@@ -119,6 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
   input.addEventListener('input', update);
   caesarShift.addEventListener('input', update);
   amscoKey.addEventListener('input', update);
+  enigmaRotors.addEventListener('input', update);
+  enigmaRing.addEventListener('input', update);
+  enigmaKey.addEventListener('input', update);
+  enigmaPlugs.addEventListener('input', update);
 
   // Initial call
   update();

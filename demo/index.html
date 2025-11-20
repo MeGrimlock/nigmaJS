@@ -198,8 +198,23 @@
       <!-- Enigma -->
       <div class="card">
         <h3>Enigma Machine</h3>
-        <div class="controls">
-          <label>Default Config</label>
+        <div class="controls" style="flex-wrap: wrap;">
+          <div>
+            <label>Rotors:</label>
+            <input type="text" id="enigmaRotors" value="123" maxlength="3" style="width: 60px;">
+          </div>
+          <div>
+            <label>Ring:</label>
+            <input type="text" id="enigmaRing" value="AAA" maxlength="3" style="width: 60px;">
+          </div>
+          <div>
+            <label>Key:</label>
+            <input type="text" id="enigmaKey" value="AAA" maxlength="3" style="width: 60px;">
+          </div>
+          <div style="width: 100%;">
+            <label>Plugs:</label>
+            <input type="text" id="enigmaPlugs" value="PO ML IU KJ NH YT GB VF RE DC" style="width: 100%;">
+          </div>
         </div>
         <label>Encoded:</label>
         <div class="output" id="enigmaOutput"></div>
