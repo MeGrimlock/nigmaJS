@@ -9,7 +9,7 @@ import { default as BasicCipher } from "../../basicCipher.js";
  * https://en.wikipedia.org/wiki/Morse_code
  */
 
-export default class morse extends BasicCipher {
+export default class Morse extends BasicCipher {
   constructor(message, encoded = false) {
     const alphabet = {
       "-----": "0",
@@ -78,4 +78,3 @@ export default class morse extends BasicCipher {
     this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }
 
-// export default morse;

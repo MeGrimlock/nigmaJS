@@ -11,7 +11,7 @@ import { default as BasicCipher } from "../../basicCipher.js";
  * @param {Boolean} encoded optional value that indicates if the message is already encoded
  * @param {Boolean} debug optional value used to show/ debug messages
  */
-export default class simpleSubstitution extends BasicCipher {
+export default class SimpleSubstitution extends BasicCipher {
   constructor(
     message,
     key,
@@ -189,4 +189,3 @@ export default class simpleSubstitution extends BasicCipher {
     this.decodeAlphabet(message, this.characterSep, this.wordSep);
 }
 
-// export default simpleSubstitution;
