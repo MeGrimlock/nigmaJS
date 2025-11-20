@@ -1,4 +1,5 @@
 import { default as BasicCipher } from "../../basicCipher.js";
+import { CipherValidator } from "../../utils/validation.js";
 
 /**
  * Morse code is a character encoding scheme used in telecommunication that encodes text characters as standardized
@@ -66,15 +67,19 @@ export default class Morse extends BasicCipher {
    * @method encode
    * @param {String} message text to use for encoding, if empty use stored message
    */
-  encode = (message = this.message) =>
-    this.encodeAlphabet(message, this.characterSep, this.wordSep);
+  encode = (message = this.message) => {
+    CipherValidator.validateMessage(message);
+    return this.encodeAlphabet(message, this.characterSep, this.wordSep);
+  }
 
   /**
    * @method decode
    * @param {String} message text to use for decoding, if empty use stored message
    */
 
-  decode = (message = this.message) =>
-    this.decodeAlphabet(message, this.characterSep, this.wordSep);
+  decode = (message = this.message) => {
+    CipherValidator.validateMessage(message);
+    return this.decodeAlphabet(message, this.characterSep, this.wordSep);
+  }
 }
 

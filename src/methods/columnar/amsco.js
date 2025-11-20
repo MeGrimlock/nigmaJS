@@ -1,4 +1,5 @@
 import { default as BasicCipher } from '../../basicCipher.js';
+import { CipherValidator } from '../../utils/validation.js';
 
 /** Class representation of the AMSCO method 
  * http://ericbrandel.com/2016/10/09/the-amsco-cipher/
@@ -176,25 +177,25 @@ export default class Amsco extends BasicCipher {
 	 */
 
 	decode = () => {
+		CipherValidator.validateMessage(this.message);
 		let messageDecoded = [];
 		// In order to encode a message first we validate that the message is encoded, that it's not null and that the string is not empty.
-		if (this.validateKey()) {
-			const decodingAux = this.decodingConstructor(this.message, this.key);
-			messageDecoded = this.processMatrixDecoding(
-				decodingAux[0],
-				decodingAux[1],
-				decodingAux[2]
-			);
-			// Now all the text is ordered but in separate colums/rows
-			messageDecoded = this.transposeMatrix(messageDecoded);
-			messageDecoded.shift();
-			messageDecoded = messageDecoded.map(row => row.join(''));
-			messageDecoded = messageDecoded.join('');
-			// messageDecoded.sort(this.sortFunction);
-			this.logMessage(`Done decoding: ${messageDecoded}`);
-		} else {
-			// console.log("Unable to decode, verify if message was already encrypted");
+		if (!this.validateKey()) {
+			throw new Error('Invalid key format for AMSCO cipher. Key must contain sequential numbers 1-n.');
 		}
+		const decodingAux = this.decodingConstructor(this.message, this.key);
+		messageDecoded = this.processMatrixDecoding(
+			decodingAux[0],
+			decodingAux[1],
+			decodingAux[2]
+		);
+		// Now all the text is ordered but in separate colums/rows
+		messageDecoded = this.transposeMatrix(messageDecoded);
+		messageDecoded.shift();
+		messageDecoded = messageDecoded.map(row => row.join(''));
+		messageDecoded = messageDecoded.join('');
+		// messageDecoded.sort(this.sortFunction);
+		this.logMessage(`Done decoding: ${messageDecoded}`);
 		return messageDecoded;
 	};
 
@@ -206,40 +207,42 @@ export default class Amsco extends BasicCipher {
 	 */
 
 	encode = () => {
+		CipherValidator.validateMessage(this.message);
 		let originalMessage = '';
 		let encodedMessage = [];
 		let encodingMatrix = [];
 		let output = '';
 
-		if (this.validateKey()) {
-			// Eliminate non usable chars
-			originalMessage = this.message.replace(/\s+/g, '').toLocaleUpperCase();
-			// Call the constructor
-			const decodingAux = this.decodingConstructor(this.message, this.key); // Returns > [messageTemplate,matrix,splitKey]
-			// Use the values from the constructor
-			[encodedMessage] = decodingAux;
-			encodingMatrix = this.transposeMatrix(decodingAux[1]);
-
-			// Using the matrix split the original message into chunks
-			let textIndex = 0;
-			let colIndex = 0;
-
-			encodingMatrix.forEach(row => {
-				row.forEach(column => {
-					encodedMessage[colIndex].push(
-						originalMessage.slice(textIndex, textIndex + column)
-					);
-					textIndex += column;
-					colIndex < row.length - 1 ? (colIndex += 1) : (colIndex = 0);
-				});
-			});
-
-			encodedMessage.sort(this.sortFunction);
-			encodedMessage.forEach(element => {
-				element.shift(); // Remove the first item since it contains key value
-				output += element.join('');
-			});
+		if (!this.validateKey()) {
+			throw new Error('Invalid key format for AMSCO cipher. Key must contain sequential numbers 1-n.');
 		}
+		// Eliminate non usable chars
+		originalMessage = this.message.replace(/\s+/g, '').toLocaleUpperCase();
+		// Call the constructor
+		const decodingAux = this.decodingConstructor(this.message, this.key); // Returns > [messageTemplate,matrix,splitKey]
+		// Use the values from the constructor
+		[encodedMessage] = decodingAux;
+		encodingMatrix = this.transposeMatrix(decodingAux[1]);
+
+		// Using the matrix split the original message into chunks
+		let textIndex = 0;
+		let colIndex = 0;
+
+		encodingMatrix.forEach(row => {
+			row.forEach(column => {
+				encodedMessage[colIndex].push(
+					originalMessage.slice(textIndex, textIndex + column)
+				);
+				textIndex += column;
+				colIndex < row.length - 1 ? (colIndex += 1) : (colIndex = 0);
+			});
+		});
+
+		encodedMessage.sort(this.sortFunction);
+		encodedMessage.forEach(element => {
+			element.shift(); // Remove the first item since it contains key value
+			output += element.join('');
+		});
 		// this.encoded = true;
 		return output;
 	};
