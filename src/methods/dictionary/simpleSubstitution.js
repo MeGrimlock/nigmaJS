@@ -1,4 +1,5 @@
 import { default as BasicCipher } from "../../basicCipher.js";
+import { CipherValidator } from "../../utils/validation.js";
 /** This class is the basis for all substitution ciphers. Right now it works with monoalphabetic substitution only.
  * In cryptography, a substitution cipher is a method of encrypting by which units of plaintext are replaced with ciphertext.
  * According to a fixed system; the "units" may be single letters (the most common), pairs of letters, triplets of letters, mixtures of the above, and so forth.
@@ -177,15 +178,19 @@ export default class SimpleSubstitution extends BasicCipher {
    * @param {String} message text to use for encoding, if empty use stored message
    */
 
-  encode = (message = this.message) =>
-    this.encodeAlphabet(message, this.characterSep, this.wordSep);
+  encode = (message = this.message) => {
+    CipherValidator.validateMessage(message);
+    return this.encodeAlphabet(message, this.characterSep, this.wordSep);
+  }
 
   /**
    * @method decode
    * @param {String} message text to use for decoding, if empty use stored message
    */
 
-  decode = (message = this.message) =>
-    this.decodeAlphabet(message, this.characterSep, this.wordSep);
+  decode = (message = this.message) => {
+    CipherValidator.validateMessage(message);
+    return this.decodeAlphabet(message, this.characterSep, this.wordSep);
+  }
 }
 

@@ -33,7 +33,7 @@ export default class BasicCipher {
 		this.message = message;
 		this.encoded = encoded;
 		this.method = method;
-		this.key = key || '';
+		this.key = (key !== undefined && key !== null) ? key : '';
 		this.alphabet = alphabet;
 		this.debug = debug;
 	}

@@ -1,32 +1,33 @@
 import { default as BasicCipher } from '../../basicCipher.js';
 import { default as Rotors } from './rotors.js';
+import { CipherValidator } from '../../utils/validation.js';
 
 export default class Enigma extends BasicCipher {
 	/* Enigma Machine - German WWII
     
-    https://en.wikipedia.org/wiki/Enigma_machine
+	https://en.wikipedia.org/wiki/Enigma_machine
 
-    The Enigma machine is an encryption device developed and used in the early- to mid-20th century to protect commercial, 
-    diplomatic and military communication. It was employed extensively by Nazi Germany during World War II, in all branches of the German military.
+	The Enigma machine is an encryption device developed and used in the early- to mid-20th century to protect commercial, 
+	diplomatic and military communication. It was employed extensively by Nazi Germany during World War II, in all branches of the German military.
     
-    Enigma has an electromechanical rotor mechanism that scrambles the 26 letters of the alphabet. In typical use, 
-    one person enters text on the Enigma’s keyboard and another person writes down which of 26 lights above the keyboard 
-    lights up at each key press. If plain text is entered, the lit-up letters are the encoded ciphertext. 
-    Entering ciphertext transforms it back into readable plaintext. 
+	Enigma has an electromechanical rotor mechanism that scrambles the 26 letters of the alphabet. In typical use, 
+	one person enters text on the Enigma’s keyboard and another person writes down which of 26 lights above the keyboard 
+	lights up at each key press. If plain text is entered, the lit-up letters are the encoded ciphertext. 
+	Entering ciphertext transforms it back into readable plaintext. 
 
-    The rotor mechanism changes the electrical connections between the keys and the lights with each keypress.
-    The security of the system depends on Enigma machine settings that were changed daily, based on secret key lists distributed in advance, 
-    and on other settings that change for each message. 
+	The rotor mechanism changes the electrical connections between the keys and the lights with each keypress.
+	The security of the system depends on Enigma machine settings that were changed daily, based on secret key lists distributed in advance, 
+	and on other settings that change for each message. 
     
-    Additional info on rotors: https://en.wikipedia.org/wiki/Enigma_rotor_details
+	Additional info on rotors: https://en.wikipedia.org/wiki/Enigma_rotor_details
     
-    The receiving station has to know and use the exact settings employed by the transmitting station to successfully decrypt a message.
+	The receiving station has to know and use the exact settings employed by the transmitting station to successfully decrypt a message.
     
-    PS: One of the most famous encryption "methods" ever, it is my pleasure to enclude it in the module. 
-    Disclaimer: All functions here were based on the works of :http://practicalcryptography.com/ciphers/enigma-cipher/ and adapted to ES6
-    and CLass format. Thanks for your work, I couldn't have done this without your code :)
+	PS: One of the most famous encryption "methods" ever, it is my pleasure to enclude it in the module. 
+	Disclaimer: All functions here were based on the works of :http://practicalcryptography.com/ciphers/enigma-cipher/ and adapted to ES6
+	and CLass format. Thanks for your work, I couldn't have done this without your code :)
 
-    */
+	*/
 
 	constructor(
 		message,
@@ -96,6 +97,7 @@ export default class Enigma extends BasicCipher {
 	};
 
 	encode = () => {
+		CipherValidator.validateMessage(this.message);
 		let ciphertext = '';
 		const plaintext = this.message.replace(/[^A-Z]/g, '');
 		this.initialize();
@@ -206,13 +208,13 @@ export default class Enigma extends BasicCipher {
 
 	rotor = (ch, r, offset) => {
 		/* 
-    There are many versions of the rotors, in a future update I'll include this so that you can recreate other versions of enigma machines.
-    The first eight strings represent the rotor substitutions I through VIII (see wiki article for more info), what's instresting is that
-    once this class is reworked for better code recycling, you will be able to create your own rotors. 
+	There are many versions of the rotors, in a future update I'll include this so that you can recreate other versions of enigma machines.
+	The first eight strings represent the rotor substitutions I through VIII (see wiki article for more info), what's instresting is that
+	once this class is reworked for better code recycling, you will be able to create your own rotors. 
     
-    The second 8 are the inverse transformations 
+	The second 8 are the inverse transformations 
     
-    */
+	*/
 		const key = [
 			'EKMFLGDQVZNTOWYHXUSPAIBRCJ',
 			'AJDKSIRUXBLHWTMCQGZNPYFVOE',
@@ -233,9 +235,9 @@ export default class Enigma extends BasicCipher {
 			'QJINSAYDVKBFRUHMCPLEWZTGXO'
 		];
 		/* the following code looks a bit horrible, but it is essentially just doing a simple substitution
-      taking into account 16 possible keys (8 rotors and their inverses) and the offset (which is calculated
-      from the indicator and ring settings). The offset essentially shifts the rotor key to the left or right
-    */
+	  taking into account 16 possible keys (8 rotors and their inverses) and the offset (which is calculated
+	  from the indicator and ring settings). The offset essentially shifts the rotor key to the left or right
+	*/
 		const chcode = (this.code(ch) + 26 + offset) % 26;
 		const mapch = ((this.code(key[r].charAt(chcode)) + 26 - offset) % 26) + 65;
 		// console.log("Rotor > char: ", ch, "->", mapch);
