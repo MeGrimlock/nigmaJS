@@ -4,16 +4,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Elements
   const caesarOut = document.getElementById('caesarOutput');
+  const caesarDecoded = document.getElementById('caesarDecoded');
   const caesarShift = document.getElementById('caesarShift');
 
   const atbashOut = document.getElementById('atbashOutput');
+  const atbashDecoded = document.getElementById('atbashDecoded');
+
   const morseOut = document.getElementById('morseOutput');
+  const morseDecoded = document.getElementById('morseDecoded');
+
   const rot13Out = document.getElementById('rot13Output');
+  const rot13Decoded = document.getElementById('rot13Decoded');
 
   const amscoOut = document.getElementById('amscoOutput');
+  const amscoDecoded = document.getElementById('amscoDecoded');
   const amscoKey = document.getElementById('amscoKey');
 
   const enigmaOut = document.getElementById('enigmaOutput');
+  const enigmaDecoded = document.getElementById('enigmaDecoded');
 
   function update() {
     const text = input.value;
@@ -28,51 +36,83 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const shift = parseInt(caesarShift.value) || 0;
       const c = new Shift.CaesarShift(text, shift);
-      caesarOut.textContent = c.encode();
-    } catch (e) { caesarOut.textContent = 'Error: ' + e.message; }
+      const encoded = c.encode();
+      caesarOut.textContent = encoded;
+
+      const c2 = new Shift.CaesarShift(encoded, shift);
+      caesarDecoded.textContent = c2.decode();
+    } catch (e) {
+      caesarOut.textContent = 'Error: ' + e.message;
+      caesarDecoded.textContent = '-';
+    }
 
     // Atbash
     try {
       const a = new Dictionary.Atbash(text);
-      atbashOut.textContent = a.encode();
-    } catch (e) { atbashOut.textContent = 'Error: ' + e.message; }
+      const encoded = a.encode();
+      atbashOut.textContent = encoded;
+
+      const a2 = new Dictionary.Atbash(encoded);
+      atbashDecoded.textContent = a2.decode();
+    } catch (e) {
+      atbashOut.textContent = 'Error: ' + e.message;
+      atbashDecoded.textContent = '-';
+    }
 
     // Morse
     try {
       const m = new Dictionary.Morse(text);
-      morseOut.textContent = m.encode();
-    } catch (e) { morseOut.textContent = 'Error: ' + e.message; }
+      const encoded = m.encode();
+      morseOut.textContent = encoded;
+
+      const m2 = new Dictionary.Morse(encoded);
+      morseDecoded.textContent = m2.decode();
+    } catch (e) {
+      morseOut.textContent = 'Error: ' + e.message;
+      morseDecoded.textContent = '-';
+    }
 
     // ROT13
     try {
-      // Check if Rot13 exists directly or under Shift
-      if (Shift.Rot13) {
-        const r = new Shift.Rot13(text);
-        rot13Out.textContent = r.encode();
-      } else {
-        // Fallback if Rot13 is not exported or named differently
-        // Maybe use Caesar with 13
-        const r = new Shift.CaesarShift(text, 13);
-        rot13Out.textContent = r.encode();
-      }
-    } catch (e) { rot13Out.textContent = 'Error: ' + e.message; }
+      const Rot13Class = Shift.Rot13 || Shift.CaesarShift; // Fallback logic handled in class selection if needed
+      const r = new Rot13Class(text, 13); // If it's Caesar, 13 works. If Rot13, arg might be ignored or handled.
+      const encoded = r.encode();
+      rot13Out.textContent = encoded;
+
+      const r2 = new Rot13Class(encoded, 13);
+      rot13Decoded.textContent = r2.decode();
+    } catch (e) {
+      rot13Out.textContent = 'Error: ' + e.message;
+      rot13Decoded.textContent = '-';
+    }
 
     // AMSCO
     try {
       const k = amscoKey.value || '123';
       const am = new Columnar.Amsco(text, k);
-      amscoOut.textContent = am.encode();
-    } catch (e) { amscoOut.textContent = 'Error: ' + e.message; }
+      const encoded = am.encode();
+      amscoOut.textContent = encoded;
+
+      const am2 = new Columnar.Amsco(encoded, k);
+      amscoDecoded.textContent = am2.decode();
+    } catch (e) {
+      amscoOut.textContent = 'Error: ' + e.message;
+      amscoDecoded.textContent = '-';
+    }
 
     // Enigma
     try {
-      // Enigma might be the default export or named export
-      // In index.js: export { Enigma }
-      // In enigma.js: export default class Enigma
-      // So window.nigmajs.Enigma should be the class
       const e = new Enigma(text);
-      enigmaOut.textContent = e.encode();
-    } catch (e) { enigmaOut.textContent = 'Error: ' + e.message; }
+      const encoded = e.encode();
+      enigmaOut.textContent = encoded;
+
+      // Enigma is reciprocal, so encoding the encoded text should decode it
+      const e2 = new Enigma(encoded);
+      enigmaDecoded.textContent = e2.encode();
+    } catch (e) {
+      enigmaOut.textContent = 'Error: ' + e.message;
+      enigmaDecoded.textContent = '-';
+    }
   }
 
   // Listeners
