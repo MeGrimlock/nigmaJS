@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 // test script for parent and child documents.
 
-import * as nigmajs from "./src/index.js";
+import * as nigmajs from "../src/index.js";
 
 const sampleMessage = "Encode this text please";
 
