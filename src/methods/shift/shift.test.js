@@ -5,8 +5,8 @@ const message = 'Encode this text please';
 
 // -------------------------------------CAESAR UNIT TEST-------------------------------------
 const method1 = 'Caesar Shift';
-const key1 = '1';
-const encoded1 = 'Pbvlfp jtdz jpxj vhpbzp';
+const key1 = 1;
+const encoded1 = 'Fodpef uijt ufyu qmfbtf';
 const generator1 = new Nigma.Shift.CaesarShift(message, key1);
 test(`Should Encode message Using ${method1} module and return a perfect Match`, () => {
 	// console.log(`Running test ${method1}`);
