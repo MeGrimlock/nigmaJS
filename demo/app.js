@@ -1,76 +1,85 @@
-/* eslint-disable no-console */
-// test script for parent and child documents.
+// Wait for DOM and Library
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('mainInput');
 
-import * as nigmajs from "../src/index.js";
+  // Elements
+  const caesarOut = document.getElementById('caesarOutput');
+  const caesarShift = document.getElementById('caesarShift');
 
-const sampleMessage = "Encode this text please";
+  const atbashOut = document.getElementById('atbashOutput');
+  const morseOut = document.getElementById('morseOutput');
+  const rot13Out = document.getElementById('rot13Output');
 
-/**
- * Method for publishing on the page what we are encrypting
- *
- * @method output
- * @param {Object} cipher that we want to output
- * @param {String} section html tag to be used to represent this cipher
- * @return {nothing}
- */
+  const amscoOut = document.getElementById('amscoOutput');
+  const amscoKey = document.getElementById('amscoKey');
 
-function output(cipher, section) {
-  //	console.log("log:", decrypted, encrypted);
-  const container = document.getElementById(section);
-  const content = document.createElement("div");
-  content.setAttribute("id", cipher.getMethod());
-  content.setAttribute("style", "margin-left: 50px");
-  content.innerHTML = `<h3>Encoding Text using: [${cipher.getMethod()}] encryption: </h3> <strong>Plaintext:</strong> ${cipher.getMsg()} <br> <strong>Ciphertext:</strong> ${cipher.encode()}<br>`;
-  container.appendChild(content);
-}
+  const enigmaOut = document.getElementById('enigmaOutput');
 
-// -----------------------------------------------------COLUMNAR-----------------------------------------------------
+  function update() {
+    const text = input.value;
+    if (!window.nigmajs) {
+      console.error('NigmaJS library not loaded!');
+      return;
+    }
 
-// Enigma sample code
-const newAmsco = new nigmajs.Columnar.Amsco(sampleMessage, "321");
-output(newAmsco, "Columnar");
+    const { Shift, Dictionary, Columnar, Enigma } = window.nigmajs;
 
-// -----------------------------------------------------DICTIONARY-----------------------------------------------------
+    // Caesar
+    try {
+      const shift = parseInt(caesarShift.value) || 0;
+      const c = new Shift.CaesarShift(text, shift);
+      caesarOut.textContent = c.encode();
+    } catch (e) { caesarOut.textContent = 'Error: ' + e.message; }
 
-const newAtbash = new nigmajs.Dictionary.Atbash(sampleMessage);
-output(newAtbash, "Dictionary");
-newAtbash.setMsg("0r2q10 lxwm l0hl  pt04m0");
-newAtbash.setEncoded(true);
+    // Atbash
+    try {
+      const a = new Dictionary.Atbash(text);
+      atbashOut.textContent = a.encode();
+    } catch (e) { atbashOut.textContent = 'Error: ' + e.message; }
 
-const newAutokey = new nigmajs.Dictionary.Autokey(
-  sampleMessage,
-  "Tyranosaurus"
-);
-output(newAutokey, "Dictionary");
+    // Morse
+    try {
+      const m = new Dictionary.Morse(text);
+      morseOut.textContent = m.encode();
+    } catch (e) { morseOut.textContent = 'Error: ' + e.message; }
 
-const newBaconian = new nigmajs.Dictionary.Baconian(sampleMessage);
-output(newBaconian, "Dictionary");
+    // ROT13
+    try {
+      // Check if Rot13 exists directly or under Shift
+      if (Shift.Rot13) {
+        const r = new Shift.Rot13(text);
+        rot13Out.textContent = r.encode();
+      } else {
+        // Fallback if Rot13 is not exported or named differently
+        // Maybe use Caesar with 13
+        const r = new Shift.CaesarShift(text, 13);
+        rot13Out.textContent = r.encode();
+      }
+    } catch (e) { rot13Out.textContent = 'Error: ' + e.message; }
 
-const newBazeries = new nigmajs.Dictionary.Bazeries(
-  "simple substitution plus transposition",
-  "Eighty one thousand two hundred fifty seven"
-);
-output(newBazeries, "Dictionary");
+    // AMSCO
+    try {
+      const k = amscoKey.value || '123';
+      const am = new Columnar.Amsco(text, k);
+      amscoOut.textContent = am.encode();
+    } catch (e) { amscoOut.textContent = 'Error: ' + e.message; }
 
-const newMorse = new nigmajs.Dictionary.Morse(sampleMessage);
-output(newMorse, "Dictionary");
+    // Enigma
+    try {
+      // Enigma might be the default export or named export
+      // In index.js: export { Enigma }
+      // In enigma.js: export default class Enigma
+      // So window.nigmajs.Enigma should be the class
+      const e = new Enigma(text);
+      enigmaOut.textContent = e.encode();
+    } catch (e) { enigmaOut.textContent = 'Error: ' + e.message; }
+  }
 
-const newSimpleSubstitution = new nigmajs.Dictionary.SimpleSubstitution(
-  sampleMessage,
-  "Tyranosaurus"
-);
-output(newSimpleSubstitution, "Dictionary");
+  // Listeners
+  input.addEventListener('input', update);
+  caesarShift.addEventListener('input', update);
+  amscoKey.addEventListener('input', update);
 
-// -----------------------------------------------------ENIGMA-----------------------------------------------------
-
-// Enigma sample code
-const newMachine = new nigmajs.Enigma(sampleMessage);
-output(newMachine, "Enigma");
-
-// -----------------------------------------------------SHIFT-----------------------------------------------------
-
-const newCaesar = new nigmajs.Shift.CaesarShift(sampleMessage, 1);
-output(newCaesar, "Shift");
-
-console.log(nigmajs);
-module.exports = nigmajs;
+  // Initial call
+  update();
+});
