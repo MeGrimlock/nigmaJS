@@ -92,21 +92,31 @@ describe('Test BasicCipher GET Methods', () => {
 });
 describe('Test BasicCipher SET Methods', () => {
 	// Sets
-	test(`SET Message, Should return the same as message`, () => {
+	test(`SET Message, Should return this for chaining and set the message`, () => {
 		const newMsg = 'new message';
-		expect(basic.setMsg(newMsg)).toBe(newMsg);
+		const result = basic.setMsg(newMsg);
+		expect(result).toBe(basic); // Returns 'this' for chaining
+		expect(basic.getMsg()).toBe(newMsg); // Message was set correctly
 	});
-	test(`SET Encoded, Should return false`, () => {
-		expect(basic.setEncoded(false)).toBe(false);
+	test(`SET Encoded, Should return this for chaining and set encoded`, () => {
+		const result = basic.setEncoded(false);
+		expect(result).toBe(basic); // Returns 'this' for chaining
+		expect(basic.getEncoded()).toBe(false); // Encoded was set correctly
 	});
-	test(`SET Method, Should return none`, () => {
-		expect(basic.setMethod('amsco')).toBe('amsco');
+	test(`SET Method, Should return this for chaining and set method`, () => {
+		const result = basic.setMethod('amsco');
+		expect(result).toBe(basic); // Returns 'this' for chaining
+		expect(basic.getMethod()).toBe('amsco'); // Method was set correctly
 	});
-	test(`SET KKey, Should return sampleKey`, () => {
-		expect(basic.setKey('newKey')).toBe('newKey');
+	test(`SET Key, Should return this for chaining and set key`, () => {
+		const result = basic.setKey('newKey');
+		expect(result).toBe(basic); // Returns 'this' for chaining
+		expect(basic.getKey()).toBe('newKey'); // Key was set correctly
 	});
-	test(`SET Alphabet, Should return empty`, () => {
-		expect(basic.setAlphabet(alphabet)).toBe(alphabet);
+	test(`SET Alphabet, Should return this for chaining and set alphabet`, () => {
+		const result = basic.setAlphabet(alphabet);
+		expect(result).toBe(basic); // Returns 'this' for chaining
+		expect(basic.getAlphabet()).toBe(alphabet); // Alphabet was set correctly
 	});
 });
 describe('Test BasicCipher Usefull Methods', () => {
