@@ -53,45 +53,51 @@ export default class BasicCipher {
 	/**
 	 * @method setMsg
 	 * @param {String} newMessage message that we want to store in the cipher
+	 * @returns {BasicCipher} Returns this instance for method chaining
 	 */
 	setMsg(newMessage) {
-		return (this.message = newMessage);
+		this.message = newMessage;
+		return this;
 	}
 
 	/**
 	 * @method setEncoded
 	 * @param {Boolean} newEncoded encoded is a boolean that indicates if the stored message is or not encoded
+	 * @returns {BasicCipher} Returns this instance for method chaining
 	 */
-
 	setEncoded(newEncoded) {
-		return (this.encoded = newEncoded);
+		this.encoded = newEncoded;
+		return this;
 	}
 
 	/**
 	 * @method setMethod
 	 * @param {String} newMethod 
+	 * @returns {BasicCipher} Returns this instance for method chaining
 	 */
-
 	setMethod(newMethod) {
-		return (this.method = newMethod);
+		this.method = newMethod;
+		return this;
 	}
 
 	/**
-	 * @param setKey 
+	 * @method setKey
 	 * @param {String} newKey 
+	 * @returns {BasicCipher} Returns this instance for method chaining
 	 */
-
 	setKey(newKey) {
-		return (this.key = newKey);
+		this.key = newKey;
+		return this;
 	}
 
 	/**
 	 * @method setAlphabet
 	 * @param {Object} newAlphabet [key:value]
+	 * @returns {BasicCipher} Returns this instance for method chaining
 	 */
-
 	setAlphabet(newAlphabet) {
-		return (this.alphabet = newAlphabet);
+		this.alphabet = newAlphabet;
+		return this;
 	}
 	// ----------------------------------------------------Usefull methods----------------------------------------------------
 	/**
