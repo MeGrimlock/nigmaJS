@@ -16,9 +16,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const rot13Out = document.getElementById('rot13Output');
   const rot13Decoded = document.getElementById('rot13Decoded');
 
+  const rot5Out = document.getElementById('rot5Output');
+  const rot5Decoded = document.getElementById('rot5Decoded');
+
+  const rot18Out = document.getElementById('rot18Output');
+  const rot18Decoded = document.getElementById('rot18Decoded');
+
+  const rot47Out = document.getElementById('rot47Output');
+  const rot47Decoded = document.getElementById('rot47Decoded');
+
   const amscoOut = document.getElementById('amscoOutput');
   const amscoDecoded = document.getElementById('amscoDecoded');
   const amscoKey = document.getElementById('amscoKey');
+
+  const autokeyOut = document.getElementById('autokeyOutput');
+  const autokeyDecoded = document.getElementById('autokeyDecoded');
+  const autokeyKey = document.getElementById('autokeyKey');
+
+  const baconianOut = document.getElementById('baconianOutput');
+  const baconianDecoded = document.getElementById('baconianDecoded');
+
+  const simpleSubOut = document.getElementById('simpleSubOutput');
+  const simpleSubDecoded = document.getElementById('simpleSubDecoded');
+  const simpleSubKey = document.getElementById('simpleSubKey');
 
   const enigmaOut = document.getElementById('enigmaOutput');
   const enigmaDecoded = document.getElementById('enigmaDecoded');
@@ -31,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function update() {
     const text = input.value;
     if (!window.nigmajs) {
-      console.error('NigmaJS library not loaded!');
       return;
     }
 
@@ -39,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Caesar
     try {
-      const shift = parseInt(caesarShift.value) || 0;
+      const shift = parseInt(caesarShift.value, 10) || 0;
       const c = new Shift.CaesarShift(text, shift);
       const encoded = c.encode();
       caesarOut.textContent = encoded;
@@ -47,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const c2 = new Shift.CaesarShift(encoded, shift);
       caesarDecoded.textContent = c2.decode();
     } catch (e) {
-      caesarOut.textContent = 'Error: ' + e.message;
+      caesarOut.textContent = `Error: ${e.message}`;
       caesarDecoded.textContent = '-';
     }
 
@@ -60,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const a2 = new Dictionary.Atbash(encoded);
       atbashDecoded.textContent = a2.decode();
     } catch (e) {
-      atbashOut.textContent = 'Error: ' + e.message;
+      atbashOut.textContent = `Error: ${e.message}`;
       atbashDecoded.textContent = '-';
     }
 
@@ -73,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const m2 = new Dictionary.Morse(encoded);
       morseDecoded.textContent = m2.decode();
     } catch (e) {
-      morseOut.textContent = 'Error: ' + e.message;
+      morseOut.textContent = `Error: ${e.message}`;
       morseDecoded.textContent = '-';
     }
 
@@ -87,8 +106,47 @@ document.addEventListener('DOMContentLoaded', () => {
       const r2 = new Rot13Class(encoded, 13);
       rot13Decoded.textContent = r2.decode();
     } catch (e) {
-      rot13Out.textContent = 'Error: ' + e.message;
+      rot13Out.textContent = `Error: ${e.message}`;
       rot13Decoded.textContent = '-';
+    }
+
+    // ROT5
+    try {
+      const r5 = new Shift.Rot5(text);
+      const encoded = r5.encode();
+      rot5Out.textContent = encoded;
+
+      const r5_2 = new Shift.Rot5(encoded);
+      rot5Decoded.textContent = r5_2.decode();
+    } catch (e) {
+      rot5Out.textContent = `Error: ${e.message}`;
+      rot5Decoded.textContent = '-';
+    }
+
+    // ROT18
+    try {
+      const r18 = new Shift.Rot18(text);
+      const encoded = r18.encode();
+      rot18Out.textContent = encoded;
+
+      const r18_2 = new Shift.Rot18(encoded);
+      rot18Decoded.textContent = r18_2.decode();
+    } catch (e) {
+      rot18Out.textContent = `Error: ${e.message}`;
+      rot18Decoded.textContent = '-';
+    }
+
+    // ROT47
+    try {
+      const r47 = new Shift.Rot47(text);
+      const encoded = r47.encode();
+      rot47Out.textContent = encoded;
+
+      const r47_2 = new Shift.Rot47(encoded);
+      rot47Decoded.textContent = r47_2.decode();
+    } catch (e) {
+      rot47Out.textContent = `Error: ${e.message}`;
+      rot47Decoded.textContent = '-';
     }
 
     // AMSCO
@@ -101,8 +159,49 @@ document.addEventListener('DOMContentLoaded', () => {
       const am2 = new Columnar.Amsco(encoded, k);
       amscoDecoded.textContent = am2.decode();
     } catch (e) {
-      amscoOut.textContent = 'Error: ' + e.message;
+      amscoOut.textContent = `Error: ${e.message}`;
       amscoDecoded.textContent = '-';
+    }
+
+    // Autokey
+    try {
+      const key = autokeyKey.value || 'SECRET';
+      const ak = new Dictionary.Autokey(text, key);
+      const encoded = ak.encode();
+      autokeyOut.textContent = encoded;
+
+      const ak2 = new Dictionary.Autokey(encoded, key);
+      autokeyDecoded.textContent = ak2.decode();
+    } catch (e) {
+      autokeyOut.textContent = `Error: ${e.message}`;
+      autokeyDecoded.textContent = '-';
+    }
+
+    // Baconian
+    try {
+      const b = new Dictionary.Baconian(text);
+      const encoded = b.encode();
+      baconianOut.textContent = encoded;
+
+      const b2 = new Dictionary.Baconian(encoded);
+      baconianDecoded.textContent = b2.decode();
+    } catch (e) {
+      baconianOut.textContent = `Error: ${e.message}`;
+      baconianDecoded.textContent = '-';
+    }
+
+    // Simple Substitution
+    try {
+      const key = simpleSubKey.value || 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+      const ss = new Dictionary.SimpleSubstitution(text, key);
+      const encoded = ss.encode();
+      simpleSubOut.textContent = encoded;
+
+      const ss2 = new Dictionary.SimpleSubstitution(encoded, key);
+      simpleSubDecoded.textContent = ss2.decode();
+    } catch (e) {
+      simpleSubOut.textContent = `Error: ${e.message}`;
+      simpleSubDecoded.textContent = '-';
     }
 
     // Enigma
@@ -119,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const e2 = new Enigma(encoded, key, ring, plugs, rotors);
       enigmaDecoded.textContent = e2.encode();
     } catch (e) {
-      enigmaOut.textContent = 'Error: ' + e.message;
+      enigmaOut.textContent = `Error: ${e.message}`;
       enigmaDecoded.textContent = '-';
     }
   }
@@ -128,6 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
   input.addEventListener('input', update);
   caesarShift.addEventListener('input', update);
   amscoKey.addEventListener('input', update);
+  autokeyKey.addEventListener('input', update);
+  simpleSubKey.addEventListener('input', update);
   enigmaRotors.addEventListener('input', update);
   enigmaRing.addEventListener('input', update);
   enigmaKey.addEventListener('input', update);

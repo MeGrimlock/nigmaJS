@@ -34,6 +34,7 @@
       font-size: 3rem;
       margin-bottom: 2rem;
       background: linear-gradient(to right, #c084fc, #6366f1);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -132,7 +133,7 @@
 
     <div class="input-section">
       <label for="mainInput">Enter text to encrypt:</label>
-      <textarea id="mainInput" placeholder="Type something secret...">Hello World</textarea>
+      <textarea id="mainInput" placeholder="Type something secret...">Hello World 123</textarea>
     </div>
 
     <div class="grid">
@@ -182,6 +183,39 @@
         </div>
       </div>
 
+      <!-- ROT5 -->
+      <div class="card">
+        <h3>ROT5</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="rot5Output"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="rot5Decoded"></div>
+        </div>
+      </div>
+
+      <!-- ROT18 -->
+      <div class="card">
+        <h3>ROT18</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="rot18Output"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="rot18Decoded"></div>
+        </div>
+      </div>
+
+      <!-- ROT47 -->
+      <div class="card">
+        <h3>ROT47</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="rot47Output"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="rot47Decoded"></div>
+        </div>
+      </div>
+
       <!-- AMSCO -->
       <div class="card">
         <h3>AMSCO</h3>
@@ -193,6 +227,43 @@
         <div class="output" id="amscoOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="amscoDecoded"></div>
+      </div>
+
+      <!-- Autokey -->
+      <div class="card">
+        <h3>Autokey</h3>
+        <div class="controls">
+          <label>Key:</label>
+          <input type="text" id="autokeyKey" value="SECRET">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="autokeyOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="autokeyDecoded"></div>
+      </div>
+
+      <!-- Baconian -->
+      <div class="card">
+        <h3>Baconian</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="baconianOutput"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="baconianDecoded"></div>
+        </div>
+      </div>
+
+      <!-- Simple Substitution -->
+      <div class="card">
+        <h3>Simple Substitution</h3>
+        <div class="controls">
+          <label>Key:</label>
+          <input type="text" id="simpleSubKey" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" style="width: 200px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="simpleSubOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="simpleSubDecoded"></div>
       </div>
 
       <!-- Enigma -->
