@@ -3,12 +3,14 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   entry: {
-    // app: "./src/index.js"
-    app: "./app.js"
+    nigma: "./src/index.js"
   },
   output: {
     path: path.resolve(__dirname, "build"),
-    filename: "js/nigma.min.js"
+    filename: "js/nigma.min.js",
+    library: "nigmajs",
+    libraryTarget: "umd",
+    globalObject: "this"
   },
   // Loaders
   module: {

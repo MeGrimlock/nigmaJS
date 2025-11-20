@@ -3,6 +3,9 @@
   "version": "2.2.7",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
+  "exports": {
+    ".": "./build/js/nigma.min.js"
+  },
   "scripts": {
     "build:prod": "webpack --mode production --progress",
     "build:dev": "webpack --mode development --progress",
