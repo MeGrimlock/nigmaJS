@@ -16,10 +16,10 @@ import { default as BasicCipher } from '../../basicCipher.js';
  * @param {Boolean} debug indicating if we need to print debug messages
 */
 
-export default class amsco extends BasicCipher {
+export default class Amsco extends BasicCipher {
 
 	constructor(message, key, encoded = false, debug = false) {
-			super(message, encoded, 'amsco', key, '', debug);	
+		super(message, encoded, 'amsco', key, '', debug);
 	}
 
 	/**
@@ -64,8 +64,7 @@ export default class amsco extends BasicCipher {
 		const explodedKey = this.key.split('').sort();
 		const pattern = /^\d+$/;
 		this.logMessage(
-			`Check for [0-9] chars only: ${pattern.test(this.key)} key analyzed : ${
-				this.key
+			`Check for [0-9] chars only: ${pattern.test(this.key)} key analyzed : ${this.key
 			}`
 		);
 		if (pattern.test(this.key)) {
@@ -83,7 +82,7 @@ export default class amsco extends BasicCipher {
 			} while (validated === true && index < explodedKey.length);
 			// validated ? console.log("") : this.logMessage("Invalid Key sequence");
 		} else {
-			this.logMessage('Invlaid key, Non numbers detected');
+			this.logMessage('Invalid key, Non numbers detected');
 			validated = false;
 		}
 		return validated;
@@ -100,7 +99,7 @@ export default class amsco extends BasicCipher {
 	 * @returns {[String]} A matrix that represents the message reordered according to the key
 	 * @see decodingConstructor
 	 */
-	
+
 	generateDecodingMatrix = (totalChars, splitKey, initChar, alternateChar) => {
 		const decodingMatrix = [];
 		let numChars = initChar || 1;

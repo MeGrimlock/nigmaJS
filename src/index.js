@@ -14,7 +14,7 @@ import { default as Enigma } from './methods/enigma/enigma.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
- * It has 2 uses: 1) Access all methods and 2) Add criptoanalysis methods to the library.
+ * It has 2 uses: 1) Access all methods and 2) Add cryptanalysis methods to the library.
  * As a way of simplifying the implementation, the different methods are all grouped in the corresponding JS files with the same name as the folder that contains them.
  * Therefore imports are-> COLUMNAR, SHIFT and DICTIONARY methods.
  * 
@@ -88,7 +88,6 @@ export default class Nigma {
 
 	setChar = (cipheredChar, decodedChar) => {
 		this.alphabet[cipheredChar] = decodedChar;
-		// console.log(`Derypting "${cipheredChar}" as  "${decodedChar}" :\n ${this.processMessage()}\n`);
 		return this.processMessage();
 	};
 
@@ -107,7 +106,7 @@ export default class Nigma {
 
 	setByFrequency = () => {
 		/* The method takes the analyzed text alphabet and compares it with the default language frequency reference. 
-    This way we have a start but notice that it works in a very unefficient way */
+	This way we have a start but notice that it works in a very unefficient way */
 
 		const sortedRefFreq = this.sortProperties(this.freqAnalysis(this.message));
 		const sortedMsgFreq = this.sortProperties(this.getSLFreq());
@@ -126,7 +125,7 @@ export default class Nigma {
 	};
 
 	processMessage = () => {
-		// Using the generated alphabet, the ciphered text is processed in an anttempt to decode it.
+		// Using the generated alphabet, the ciphered text is processed in an attempt to decode it.
 		let decodedMessage = '';
 		const temp = this.message.split('');
 		temp.forEach(element => {
@@ -145,14 +144,12 @@ export default class Nigma {
 
 	getS3Freq = () => spanishTrigramFrequencies;
 
-	getS4req = () => spanishQuadgramFrequencies;
+	getS4Freq = () => spanishQuadgramFrequencies;
 
 	freqAnalysis = (message = '') => {
 		// Take all of the characters inside of a text and return an array with this characters as a % of the total
 		const pseudoAlphabet = {};
 		const auxText = message.split('');
-
-		// console.log("Frec. analysis");
 		auxText.forEach(charElement => {
 			if (charElement in pseudoAlphabet) {
 				pseudoAlphabet[charElement] += 1;
@@ -171,7 +168,6 @@ export default class Nigma {
 			const value = pseudoAlphabet[key];
 			pseudoAlphabet[key] = parseFloat(((value / totalChars) * 100).toFixed(3));
 		});
-		// console.log(pseudoAlphabet);
 
 		return pseudoAlphabet;
 	};

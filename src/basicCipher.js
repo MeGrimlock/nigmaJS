@@ -29,7 +29,7 @@ export default class BasicCipher {
 
 
 	constructor(message, encoded, method, key, alphabet, debug) {
-	
+
 		this.message = message;
 		this.encoded = encoded;
 		this.method = method;
@@ -57,7 +57,7 @@ export default class BasicCipher {
 	setMsg(newMessage) {
 		return (this.message = newMessage);
 	}
-	
+
 	/**
 	 * @method setEncoded
 	 * @param {Boolean} newEncoded encoded is a boolean that indicates if the stored message is or not encoded
@@ -103,7 +103,7 @@ export default class BasicCipher {
 	 * @returns {String} shifted text
 	 * */
 
-	shiftCharacters = (str, shift = 1) => {	
+	shiftCharacters = (str, shift = 1) => {
 
 		let amount = shift;
 		Math.abs(amount) > 26 ? (amount %= 26) : null;
@@ -118,7 +118,6 @@ export default class BasicCipher {
 					// Uppercase letters
 					const temp = c;
 					c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
-					// console.log(temp, "->", c);
 				} else if (code >= 97 && code <= 122) {
 					// Lowercase letters
 					c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
@@ -213,7 +212,7 @@ export default class BasicCipher {
 		charSplit = '',
 		wordSplit = ' '
 	) => {
-		
+
 		let messageDecoded = '';
 
 		message.split(wordSplit).map(word => {
@@ -228,7 +227,7 @@ export default class BasicCipher {
 		return messageDecoded;
 	};
 	// --------------------------------------------------Aux methods--------------------------------------------------
-	
+
 	/**
 	 * Auxiliary method for validating if the key passed is ok and if the message is not empty
 	 * 
@@ -238,7 +237,7 @@ export default class BasicCipher {
 
 	validateEncoded = () =>
 		this.encoded === true &&
-		typeof (this.message != null) &&
+		this.message != null &&
 		this.message !== '';
 
 	/**
@@ -283,10 +282,10 @@ export default class BasicCipher {
 
 	logMessage = output => {
 		if (this.debug) {
-			// console.log(output);
+			console.log(output);
 		}
 	};
 
-	
+
 	test = () => 'NigmaJS enabled';
 }
