@@ -75,6 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const quagmire4Key = document.getElementById('quagmire4Key');
   const quagmire4Indicator = document.getElementById('quagmire4Indicator');
 
+  const beaufortOut = document.getElementById('beaufortOutput');
+  const beaufortDecoded = document.getElementById('beaufortDecoded');
+  const beaufortKey = document.getElementById('beaufortKey');
+
+  const portaOut = document.getElementById('portaOutput');
+  const portaDecoded = document.getElementById('portaDecoded');
+  const portaKey = document.getElementById('portaKey');
+
+  const gronsfeldOut = document.getElementById('gronsfeldOutput');
+  const gronsfeldDecoded = document.getElementById('gronsfeldDecoded');
+  const gronsfeldKey = document.getElementById('gronsfeldKey');
+
+  const bifidOut = document.getElementById('bifidOutput');
+  const bifidDecoded = document.getElementById('bifidDecoded');
+  const bifidKey = document.getElementById('bifidKey');
+
   function update() {
     const text = input.value;
     if (!window.nigmajs) {
@@ -335,6 +351,62 @@ document.addEventListener('DOMContentLoaded', () => {
       quagmire4Out.textContent = `Error: ${e.message}`;
       quagmire4Decoded.textContent = '-';
     }
+
+    // Beaufort
+    try {
+      const keyword = beaufortKey.value || 'KEY';
+      const b = new Polyalphabetic.Beaufort(text, keyword);
+      const encoded = b.encode();
+      beaufortOut.textContent = encoded;
+
+      const b2 = new Polyalphabetic.Beaufort(encoded, keyword, true);
+      beaufortDecoded.textContent = b2.decode();
+    } catch (e) {
+      beaufortOut.textContent = `Error: ${e.message}`;
+      beaufortDecoded.textContent = '-';
+    }
+
+    // Porta
+    try {
+      const keyword = portaKey.value || 'KEY';
+      const p = new Polyalphabetic.Porta(text, keyword);
+      const encoded = p.encode();
+      portaOut.textContent = encoded;
+
+      const p2 = new Polyalphabetic.Porta(encoded, keyword, true);
+      portaDecoded.textContent = p2.decode();
+    } catch (e) {
+      portaOut.textContent = `Error: ${e.message}`;
+      portaDecoded.textContent = '-';
+    }
+
+    // Gronsfeld
+    try {
+      const keyword = gronsfeldKey.value || '12345';
+      const g = new Polyalphabetic.Gronsfeld(text, keyword);
+      const encoded = g.encode();
+      gronsfeldOut.textContent = encoded;
+
+      const g2 = new Polyalphabetic.Gronsfeld(encoded, keyword, true);
+      gronsfeldDecoded.textContent = g2.decode();
+    } catch (e) {
+      gronsfeldOut.textContent = `Error: ${e.message}`;
+      gronsfeldDecoded.textContent = '-';
+    }
+
+    // Bifid
+    try {
+      const keyword = bifidKey.value || '';
+      const b = new Dictionary.Bifid(text, keyword);
+      const encoded = b.encode();
+      bifidOut.textContent = encoded;
+
+      const b2 = new Dictionary.Bifid(encoded, keyword, true);
+      bifidDecoded.textContent = b2.decode();
+    } catch (e) {
+      bifidOut.textContent = `Error: ${e.message}`;
+      bifidDecoded.textContent = '-';
+    }
   }
 
   // Listeners
@@ -356,6 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
   quagmire3Indicator.addEventListener('input', update);
   quagmire4Key.addEventListener('input', update);
   quagmire4Indicator.addEventListener('input', update);
+  beaufortKey.addEventListener('input', update);
+  portaKey.addEventListener('input', update);
+  gronsfeldKey.addEventListener('input', update);
+  bifidKey.addEventListener('input', update);
 
   // Initial call
   update();

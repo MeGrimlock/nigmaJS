@@ -153,6 +153,34 @@ document.addEventListener('DOMContentLoaded', () => {
             create: (text, params) => new window.nigmajs.Polyalphabetic.Quagmire4(text, params.key, params.indicator),
             encode: (cipher) => cipher.encode(),
             decode: (cipher) => cipher.decode()
+        },
+        beaufort: {
+            name: 'Beaufort',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEY' }],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Beaufort(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        porta: {
+            name: 'Porta',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEY' }],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Porta(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        gronsfeld: {
+            name: 'Gronsfeld',
+            params: [{ name: 'key', label: 'Numeric Key', type: 'text', default: '12345' }],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Gronsfeld(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        bifid: {
+            name: 'Bifid',
+            params: [{ name: 'key', label: 'Keyword (optional)', type: 'text', default: '' }],
+            create: (text, params) => new window.nigmajs.Dictionary.Bifid(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
         }
     };
 
