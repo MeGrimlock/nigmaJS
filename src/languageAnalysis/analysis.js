@@ -1,9 +1,21 @@
 import spanishData from './languages/spanish.js';
 import englishData from './languages/english.js';
+import italianData from './languages/italian.js';
+import frenchData from './languages/french.js';
+import germanData from './languages/german.js';
+import portugueseData from './languages/portuguese.js';
+import russianData from './languages/russian.js';
+import chineseData from './languages/chinese.js';
 
 const languages = {
 	spanish: spanishData,
-	english: englishData
+	english: englishData,
+    italian: italianData,
+    french: frenchData,
+    german: germanData,
+    portuguese: portugueseData,
+    russian: russianData,
+    chinese: chineseData
 };
 
 // Re-export for backward compatibility
@@ -21,19 +33,28 @@ export class LanguageAnalysis {
 
 	static languages = languages;
 
+    /**
+     * Cleans text based on language or general mode.
+     * Now supports Cyrillic and extended Latin.
+     */
+    static cleanText(text) {
+        // Allow A-Z, Accented chars (Latin-1 Supplement + Latin Extended-A), and Cyrillic
+        return text.toUpperCase().replace(/[^A-ZÑÀ-ÿĀ-žА-ЯЁ]/g, '');
+    }
+
 	/**
 	 * Calculate frequency of characters in text
 	 * @param {string} text 
 	 * @returns {Object} Map of char -> percentage
 	 */
 	static getLetterFrequencies(text) {
-		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
-		const total = cleanText.length;
+		const cleaned = this.cleanText(text);
+		const total = cleaned.length;
 		const counts = {};
 
 		if (total === 0) return {};
 
-		for (const char of cleanText) {
+		for (const char of cleaned) {
 			counts[char] = (counts[char] || 0) + 1;
 		}
 
@@ -52,14 +73,14 @@ export class LanguageAnalysis {
 	 * @returns {Object} Map of ngram -> percentage
 	 */
 	static getNgramFrequencies(text, n) {
-		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
+		const cleaned = this.cleanText(text);
 		const counts = {};
 		let total = 0;
 
-		if (cleanText.length < n) return {};
+		if (cleaned.length < n) return {};
 
-		for (let i = 0; i <= cleanText.length - n; i++) {
-			const ngram = cleanText.substring(i, i + n);
+		for (let i = 0; i <= cleaned.length - n; i++) {
+			const ngram = cleaned.substring(i, i + n);
 			counts[ngram] = (counts[ngram] || 0) + 1;
 			total++;
 		}
@@ -96,6 +117,29 @@ export class LanguageAnalysis {
 		return chiSquared;
 	}
 
+    /**
+     * Calculates Chi-Squared score based on SORTED distribution shapes.
+     * This ignores letter identity (useful for substitution ciphers).
+     */
+    static calculateShapeScore(observedFreqs, expectedFreqs) {
+        const observed = Object.values(observedFreqs).sort((a, b) => b - a);
+        const expected = Object.values(expectedFreqs).sort((a, b) => b - a);
+        
+        let score = 0;
+        // Compare based on the length of the expected model (usually top N)
+        const len = Math.min(observed.length, expected.length);
+        
+        for (let i = 0; i < len; i++) {
+            const obs = observed[i];
+            const exp = expected[i];
+            if (exp > 0) {
+                score += Math.pow(obs - exp, 2) / exp;
+            }
+        }
+        
+        return score;
+    }
+
 	/**
 	 * Analyze text against a specific language model
 	 * @param {string} text 
@@ -113,22 +157,84 @@ export class LanguageAnalysis {
 		return {
 			monograms: {
 				score: this.calculateChiSquared(letterFreqs, langData.monograms),
+                shapeScore: this.calculateShapeScore(letterFreqs, langData.monograms),
 				frequencies: letterFreqs
 			},
 			bigrams: {
 				score: this.calculateChiSquared(bigramFreqs, langData.bigrams),
+                shapeScore: this.calculateShapeScore(bigramFreqs, langData.bigrams),
 				frequencies: bigramFreqs
 			},
 			trigrams: {
 				score: this.calculateChiSquared(trigramFreqs, langData.trigrams),
+                shapeScore: this.calculateShapeScore(trigramFreqs, langData.trigrams),
 				frequencies: trigramFreqs
 			},
 			quadgrams: {
 				score: this.calculateChiSquared(quadgramFreqs, langData.quadgrams),
+                shapeScore: this.calculateShapeScore(quadgramFreqs, langData.quadgrams),
 				frequencies: quadgramFreqs
 			}
 		};
 	}
+
+    /**
+     * Detects the most likely language for a given text
+     * @param {string} text 
+     * @returns {Object} Array of languages sorted by probability (lowest average Chi-Squared)
+     */
+    static detectLanguage(text) {
+        const results = [];
+        const cleanedText = text.toUpperCase();
+        
+        // 1. Determine Script Dominance
+        const latinCount = (cleanedText.match(/[A-ZÑÀ-ÿĀ-ž]/g) || []).length;
+        const cyrillicCount = (cleanedText.match(/[А-ЯЁ]/g) || []).length;
+        // Simple Chinese check (range 4E00-9FFF usually covers common CJK)
+        const chineseCount = (cleanedText.match(/[\u4E00-\u9FFF]/g) || []).length;
+
+        const total = latinCount + cyrillicCount + chineseCount;
+        if (total === 0) return []; // No valid chars
+
+        // Determine which languages are candidates based on script
+        const candidateLanguages = [];
+        
+        // If > 50% matches a script, we only test languages of that script
+        if (latinCount > total * 0.5) {
+            candidateLanguages.push('spanish', 'english', 'italian', 'french', 'german', 'portuguese');
+        } else if (cyrillicCount > total * 0.5) {
+            candidateLanguages.push('russian');
+        } else if (chineseCount > total * 0.5) {
+            candidateLanguages.push('chinese');
+        } else {
+            // Mixed or unknown, try all
+            candidateLanguages.push(...Object.keys(languages));
+        }
+
+        // 2. Analyze only candidates
+        for (const langKey of candidateLanguages) {
+            if (!languages[langKey]) continue;
+
+            const analysis = this.analyzeCorrelation(text, langKey);
+            
+            // Calculate average score across all N-gram types
+            // USE SHAPE SCORE for language detection on encrypted text!
+            const score = (
+                analysis.monograms.shapeScore * 1 +
+                analysis.bigrams.shapeScore * 2 +
+                analysis.trigrams.shapeScore * 2 + 
+                analysis.quadgrams.shapeScore * 1
+            ) / 6;
+
+            results.push({
+                language: langKey,
+                score: score,
+                details: analysis
+            });
+        }
+
+        return results.sort((a, b) => a.score - b.score);
+    }
 
 	// Deprecated: Alias for backward compatibility
 	static analyzeSpanishCorrelation(text) {
