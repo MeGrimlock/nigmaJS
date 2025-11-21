@@ -5,76 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NigmaJS Interactive Demo</title>
+  <link rel="stylesheet" href="styles.css">
   <style>
-    :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #e2e8f0;
-      --accent: #8b5cf6;
-      --accent-hover: #7c3aed;
-      --border: #334155;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 2rem;
-      line-height: 1.5;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 3rem;
-      margin-bottom: 2rem;
-      background: linear-gradient(to right, #c084fc, #6366f1);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
+    /* index.html specific styles */
     .input-section {
       margin-bottom: 3rem;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      color: var(--text);
-      font-size: 1.1rem;
-      resize: vertical;
-      min-height: 100px;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .card:hover {
@@ -112,17 +53,7 @@
 
     input[type="number"],
     input[type="text"] {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
       width: 80px;
-    }
-
-    label {
-      font-size: 0.875rem;
-      color: #94a3b8;
     }
   </style>
 </head>

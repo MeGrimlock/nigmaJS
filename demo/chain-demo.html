@@ -5,45 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NigmaJS - Cipher Chain Builder</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #e2e8f0;
-            --accent: #8b5cf6;
-            --accent-hover: #7c3aed;
-            --border: #334155;
-            --success: #10b981;
-            --warning: #f59e0b;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            line-height: 1.6;
-        }
-
+        /* chain-demo.html specific styles */
         .container {
             max-width: 1400px;
-            margin: 0 auto;
         }
 
         h1 {
-            text-align: center;
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #c084fc, #6366f1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
@@ -60,13 +31,6 @@
             margin-bottom: 2rem;
         }
 
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-        }
-
         .card h2 {
             color: var(--accent);
             margin-bottom: 1rem;
@@ -75,27 +39,8 @@
             padding-bottom: 0.5rem;
         }
 
-        .input-section {
-            margin-bottom: 1.5rem;
-        }
-
         textarea {
-            width: 100%;
-            padding: 1rem;
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            color: var(--text);
-            font-size: 1rem;
-            resize: vertical;
             min-height: 120px;
-            font-family: 'Fira Code', monospace;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
 
         .cipher-selector {
