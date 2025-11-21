@@ -181,6 +181,68 @@ document.addEventListener('DOMContentLoaded', () => {
             create: (text, params) => new window.nigmajs.Dictionary.Bifid(text, params.key),
             encode: (cipher) => cipher.encode(),
             decode: (cipher) => cipher.decode()
+        },
+        railFence: {
+            name: 'Rail Fence',
+            params: [{ name: 'rails', label: 'Number of Rails', type: 'number', default: 3 }],
+            create: (text, params) => new window.nigmajs.Columnar.RailFence(text, params.rails),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        playfair: {
+            name: 'Playfair',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEYWORD' }],
+            create: (text, params) => new window.nigmajs.Dictionary.Playfair(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        fourSquare: {
+            name: 'Four-Square',
+            params: [
+                { name: 'key1', label: 'Keyword 1', type: 'text', default: 'EXAMPLE' },
+                { name: 'key2', label: 'Keyword 2', type: 'text', default: 'KEYWORD' }
+            ],
+            create: (text, params) => new window.nigmajs.Dictionary.FourSquare(text, params.key1, params.key2),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        twoSquare: {
+            name: 'Two-Square',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEYWORD' }],
+            create: (text, params) => new window.nigmajs.Dictionary.TwoSquare(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        adfgvx: {
+            name: 'ADFGVX',
+            params: [
+                { name: 'key', label: 'Keyword', type: 'text', default: 'KEYWORD' },
+                { name: 'transKey', label: 'Transposition Key', type: 'text', default: 'KEY' }
+            ],
+            create: (text, params) => new window.nigmajs.Dictionary.ADFGVX(text, params.key, params.transKey),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        adfgx: {
+            name: 'ADFGX',
+            params: [
+                { name: 'key', label: 'Keyword', type: 'text', default: 'KEYWORD' },
+                { name: 'transKey', label: 'Transposition Key', type: 'text', default: 'KEY' }
+            ],
+            create: (text, params) => new window.nigmajs.Dictionary.ADFGX(text, params.key, params.transKey),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        route: {
+            name: 'Route',
+            params: [
+                { name: 'rows', label: 'Rows', type: 'number', default: 5 },
+                { name: 'cols', label: 'Columns', type: 'number', default: 5 },
+                { name: 'route', label: 'Route Pattern', type: 'text', default: 'spiral' }
+            ],
+            create: (text, params) => new window.nigmajs.Columnar.Route(text, params.rows, params.cols, params.route),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
         }
     };
 

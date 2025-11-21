@@ -91,6 +91,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const bifidDecoded = document.getElementById('bifidDecoded');
   const bifidKey = document.getElementById('bifidKey');
 
+  const railFenceOut = document.getElementById('railFenceOutput');
+  const railFenceDecoded = document.getElementById('railFenceDecoded');
+  const railFenceRails = document.getElementById('railFenceRails');
+
+  const playfairOut = document.getElementById('playfairOutput');
+  const playfairDecoded = document.getElementById('playfairDecoded');
+  const playfairKey = document.getElementById('playfairKey');
+
+  const fourSquareOut = document.getElementById('fourSquareOutput');
+  const fourSquareDecoded = document.getElementById('fourSquareDecoded');
+  const fourSquareKey1 = document.getElementById('fourSquareKey1');
+  const fourSquareKey2 = document.getElementById('fourSquareKey2');
+
+  const twoSquareOut = document.getElementById('twoSquareOutput');
+  const twoSquareDecoded = document.getElementById('twoSquareDecoded');
+  const twoSquareKey = document.getElementById('twoSquareKey');
+
+  const adfgvxOut = document.getElementById('adfgvxOutput');
+  const adfgvxDecoded = document.getElementById('adfgvxDecoded');
+  const adfgvxKey = document.getElementById('adfgvxKey');
+  const adfgvxTransKey = document.getElementById('adfgvxTransKey');
+
+  const adfgxOut = document.getElementById('adfgxOutput');
+  const adfgxDecoded = document.getElementById('adfgxDecoded');
+  const adfgxKey = document.getElementById('adfgxKey');
+  const adfgxTransKey = document.getElementById('adfgxTransKey');
+
+  const routeOut = document.getElementById('routeOutput');
+  const routeDecoded = document.getElementById('routeDecoded');
+  const routeRows = document.getElementById('routeRows');
+  const routeCols = document.getElementById('routeCols');
+  const routePattern = document.getElementById('routePattern');
+
   function update() {
     const text = input.value;
     if (!window.nigmajs) {
@@ -407,6 +440,109 @@ document.addEventListener('DOMContentLoaded', () => {
       bifidOut.textContent = `Error: ${e.message}`;
       bifidDecoded.textContent = '-';
     }
+
+    // Rail Fence
+    try {
+      const rails = parseInt(railFenceRails.value, 10) || 3;
+      const rf = new Columnar.RailFence(text, rails);
+      const encoded = rf.encode();
+      railFenceOut.textContent = encoded;
+
+      const rf2 = new Columnar.RailFence(encoded, rails, true);
+      railFenceDecoded.textContent = rf2.decode();
+    } catch (e) {
+      railFenceOut.textContent = `Error: ${e.message}`;
+      railFenceDecoded.textContent = '-';
+    }
+
+    // Playfair
+    try {
+      const keyword = playfairKey.value || 'KEYWORD';
+      const pf = new Dictionary.Playfair(text, keyword);
+      const encoded = pf.encode();
+      playfairOut.textContent = encoded;
+
+      const pf2 = new Dictionary.Playfair(encoded, keyword, true);
+      playfairDecoded.textContent = pf2.decode();
+    } catch (e) {
+      playfairOut.textContent = `Error: ${e.message}`;
+      playfairDecoded.textContent = '-';
+    }
+
+    // Four-Square
+    try {
+      const keyword1 = fourSquareKey1.value || 'EXAMPLE';
+      const keyword2 = fourSquareKey2.value || 'KEYWORD';
+      const fs = new Dictionary.FourSquare(text, keyword1, keyword2);
+      const encoded = fs.encode();
+      fourSquareOut.textContent = encoded;
+
+      const fs2 = new Dictionary.FourSquare(encoded, keyword1, keyword2, true);
+      fourSquareDecoded.textContent = fs2.decode();
+    } catch (e) {
+      fourSquareOut.textContent = `Error: ${e.message}`;
+      fourSquareDecoded.textContent = '-';
+    }
+
+    // Two-Square
+    try {
+      const keyword = twoSquareKey.value || 'KEYWORD';
+      const ts = new Dictionary.TwoSquare(text, keyword);
+      const encoded = ts.encode();
+      twoSquareOut.textContent = encoded;
+
+      const ts2 = new Dictionary.TwoSquare(encoded, keyword, true);
+      twoSquareDecoded.textContent = ts2.decode();
+    } catch (e) {
+      twoSquareOut.textContent = `Error: ${e.message}`;
+      twoSquareDecoded.textContent = '-';
+    }
+
+    // ADFGVX
+    try {
+      const keyword = adfgvxKey.value || 'KEYWORD';
+      const transKey = adfgvxTransKey.value || 'KEY';
+      const avx = new Dictionary.ADFGVX(text, keyword, transKey);
+      const encoded = avx.encode();
+      adfgvxOut.textContent = encoded;
+
+      const avx2 = new Dictionary.ADFGVX(encoded, keyword, transKey, true);
+      adfgvxDecoded.textContent = avx2.decode();
+    } catch (e) {
+      adfgvxOut.textContent = `Error: ${e.message}`;
+      adfgvxDecoded.textContent = '-';
+    }
+
+    // ADFGX
+    try {
+      const keyword = adfgxKey.value || 'KEYWORD';
+      const transKey = adfgxTransKey.value || 'KEY';
+      const ax = new Dictionary.ADFGX(text, keyword, transKey);
+      const encoded = ax.encode();
+      adfgxOut.textContent = encoded;
+
+      const ax2 = new Dictionary.ADFGX(encoded, keyword, transKey, true);
+      adfgxDecoded.textContent = ax2.decode();
+    } catch (e) {
+      adfgxOut.textContent = `Error: ${e.message}`;
+      adfgxDecoded.textContent = '-';
+    }
+
+    // Route
+    try {
+      const rows = parseInt(routeRows.value, 10) || 5;
+      const cols = parseInt(routeCols.value, 10) || 5;
+      const route = routePattern.value || 'spiral';
+      const rt = new Columnar.Route(text, rows, cols, route);
+      const encoded = rt.encode();
+      routeOut.textContent = encoded;
+
+      const rt2 = new Columnar.Route(encoded, rows, cols, route, true);
+      routeDecoded.textContent = rt2.decode();
+    } catch (e) {
+      routeOut.textContent = `Error: ${e.message}`;
+      routeDecoded.textContent = '-';
+    }
   }
 
   // Listeners
@@ -432,6 +568,18 @@ document.addEventListener('DOMContentLoaded', () => {
   portaKey.addEventListener('input', update);
   gronsfeldKey.addEventListener('input', update);
   bifidKey.addEventListener('input', update);
+  railFenceRails.addEventListener('input', update);
+  playfairKey.addEventListener('input', update);
+  fourSquareKey1.addEventListener('input', update);
+  fourSquareKey2.addEventListener('input', update);
+  twoSquareKey.addEventListener('input', update);
+  adfgvxKey.addEventListener('input', update);
+  adfgvxTransKey.addEventListener('input', update);
+  adfgxKey.addEventListener('input', update);
+  adfgxTransKey.addEventListener('input', update);
+  routeRows.addEventListener('input', update);
+  routeCols.addEventListener('input', update);
+  routePattern.addEventListener('input', update);
 
   // Initial call
   update();
