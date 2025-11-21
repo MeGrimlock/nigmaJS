@@ -48,13 +48,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const enigmaKey = document.getElementById('enigmaKey');
   const enigmaPlugs = document.getElementById('enigmaPlugs');
 
+  const vigenereOut = document.getElementById('vigenereOutput');
+  const vigenereDecoded = document.getElementById('vigenereDecoded');
+  const vigenereKey = document.getElementById('vigenereKey');
+
+  const polybiusOut = document.getElementById('polybiusOutput');
+  const polybiusDecoded = document.getElementById('polybiusDecoded');
+  const polybiusKey = document.getElementById('polybiusKey');
+
+  const quagmire1Out = document.getElementById('quagmire1Output');
+  const quagmire1Decoded = document.getElementById('quagmire1Decoded');
+  const quagmire1Key = document.getElementById('quagmire1Key');
+
+  const quagmire2Out = document.getElementById('quagmire2Output');
+  const quagmire2Decoded = document.getElementById('quagmire2Decoded');
+  const quagmire2Key = document.getElementById('quagmire2Key');
+  const quagmire2Indicator = document.getElementById('quagmire2Indicator');
+
+  const quagmire3Out = document.getElementById('quagmire3Output');
+  const quagmire3Decoded = document.getElementById('quagmire3Decoded');
+  const quagmire3Key = document.getElementById('quagmire3Key');
+  const quagmire3Indicator = document.getElementById('quagmire3Indicator');
+
+  const quagmire4Out = document.getElementById('quagmire4Output');
+  const quagmire4Decoded = document.getElementById('quagmire4Decoded');
+  const quagmire4Key = document.getElementById('quagmire4Key');
+  const quagmire4Indicator = document.getElementById('quagmire4Indicator');
+
   function update() {
     const text = input.value;
     if (!window.nigmajs) {
       return;
     }
 
-    const { Shift, Dictionary, Columnar, Enigma } = window.nigmajs;
+    const { Shift, Dictionary, Columnar, Enigma, Polyalphabetic } = window.nigmajs;
 
     // Caesar
     try {
@@ -221,6 +248,93 @@ document.addEventListener('DOMContentLoaded', () => {
       enigmaOut.textContent = `Error: ${e.message}`;
       enigmaDecoded.textContent = '-';
     }
+
+    // Vigenère
+    try {
+      const keyword = vigenereKey.value || 'KEY';
+      const v = new Polyalphabetic.Vigenere(text, keyword);
+      const encoded = v.encode();
+      vigenereOut.textContent = encoded;
+
+      const v2 = new Polyalphabetic.Vigenere(encoded, keyword, true);
+      vigenereDecoded.textContent = v2.decode();
+    } catch (e) {
+      vigenereOut.textContent = `Error: ${e.message}`;
+      vigenereDecoded.textContent = '-';
+    }
+
+    // Polybius
+    try {
+      const keyword = polybiusKey.value || '';
+      const p = new Dictionary.Polybius(text, keyword);
+      const encoded = p.encode();
+      polybiusOut.textContent = encoded;
+
+      const p2 = new Dictionary.Polybius(encoded, keyword, true);
+      polybiusDecoded.textContent = p2.decode();
+    } catch (e) {
+      polybiusOut.textContent = `Error: ${e.message}`;
+      polybiusDecoded.textContent = '-';
+    }
+
+    // Quagmire I
+    try {
+      const keyword = quagmire1Key.value || 'KEY';
+      const q1 = new Polyalphabetic.Quagmire1(text, keyword);
+      const encoded = q1.encode();
+      quagmire1Out.textContent = encoded;
+
+      const q1_2 = new Polyalphabetic.Quagmire1(encoded, keyword, '', true);
+      quagmire1Decoded.textContent = q1_2.decode();
+    } catch (e) {
+      quagmire1Out.textContent = `Error: ${e.message}`;
+      quagmire1Decoded.textContent = '-';
+    }
+
+    // Quagmire II
+    try {
+      const keyword = quagmire2Key.value || 'KEY';
+      const indicator = quagmire2Indicator.value || 'A';
+      const q2 = new Polyalphabetic.Quagmire2(text, keyword, indicator);
+      const encoded = q2.encode();
+      quagmire2Out.textContent = encoded;
+
+      const q2_2 = new Polyalphabetic.Quagmire2(encoded, keyword, indicator, true);
+      quagmire2Decoded.textContent = q2_2.decode();
+    } catch (e) {
+      quagmire2Out.textContent = `Error: ${e.message}`;
+      quagmire2Decoded.textContent = '-';
+    }
+
+    // Quagmire III
+    try {
+      const keyword = quagmire3Key.value || 'KEY';
+      const indicator = quagmire3Indicator.value || 'A';
+      const q3 = new Polyalphabetic.Quagmire3(text, keyword, indicator);
+      const encoded = q3.encode();
+      quagmire3Out.textContent = encoded;
+
+      const q3_2 = new Polyalphabetic.Quagmire3(encoded, keyword, indicator, true);
+      quagmire3Decoded.textContent = q3_2.decode();
+    } catch (e) {
+      quagmire3Out.textContent = `Error: ${e.message}`;
+      quagmire3Decoded.textContent = '-';
+    }
+
+    // Quagmire IV
+    try {
+      const keyword = quagmire4Key.value || 'KEY';
+      const indicator = quagmire4Indicator.value || 'ABC';
+      const q4 = new Polyalphabetic.Quagmire4(text, keyword, indicator);
+      const encoded = q4.encode();
+      quagmire4Out.textContent = encoded;
+
+      const q4_2 = new Polyalphabetic.Quagmire4(encoded, keyword, indicator, '', true);
+      quagmire4Decoded.textContent = q4_2.decode();
+    } catch (e) {
+      quagmire4Out.textContent = `Error: ${e.message}`;
+      quagmire4Decoded.textContent = '-';
+    }
   }
 
   // Listeners
@@ -233,6 +347,15 @@ document.addEventListener('DOMContentLoaded', () => {
   enigmaRing.addEventListener('input', update);
   enigmaKey.addEventListener('input', update);
   enigmaPlugs.addEventListener('input', update);
+  vigenereKey.addEventListener('input', update);
+  polybiusKey.addEventListener('input', update);
+  quagmire1Key.addEventListener('input', update);
+  quagmire2Key.addEventListener('input', update);
+  quagmire2Indicator.addEventListener('input', update);
+  quagmire3Key.addEventListener('input', update);
+  quagmire3Indicator.addEventListener('input', update);
+  quagmire4Key.addEventListener('input', update);
+  quagmire4Indicator.addEventListener('input', update);
 
   // Initial call
   update();
