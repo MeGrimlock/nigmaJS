@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
   entry: {
@@ -29,7 +30,16 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      "buffer": require.resolve("buffer/")
+      "buffer": require.resolve("buffer/"),
+      "stream": false,
+      "crypto": false,
+      "process": false
     }
-  }
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer']
+    })
+  ]
 };
