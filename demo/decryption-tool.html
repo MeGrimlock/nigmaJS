@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NigmaJS - HMM Decryption Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guesser.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="guesser-header">
+            <h1>🔓 HMM Decryption Tool</h1>
+            <p class="subtitle">Attempt to break substitution ciphers using Hidden Markov Models</p>
+        </header>
+
+        <div class="input-card">
+            <h2>📝 Ciphered Text</h2>
+            <textarea id="cipherInput" placeholder="Paste ciphertext here (must be simple substitution)..."></textarea>
+            <button id="btnSolve" class="tab-btn active" style="margin-top: 1rem; width: 100%; text-align: center;">
+                🚀 Attempt Decryption
+            </button>
+        </div>
+
+        <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
+            <h2>🔓 Decrypted Result</h2>
+            <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; color: #e2e8f0;"></p>
+        </div>
+
+        <div class="input-card">
+            <h3>How it works</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem;">
+                This tool uses a <strong>Hidden Markov Model (HMM)</strong> with the <code>hidden-markov-model-tf</code> library.
+                <br><br>
+                1. It initializes a Transition Matrix from English bigrams.<br>
+                2. It uses One-Hot encoding to represent letters.<br>
+                3. It runs an Expectation-Maximization (Baum-Welch) loop to learn the emission probabilities (the key).<br>
+                4. It uses the Viterbi algorithm to decode the most likely plaintext.
+            </p>
+        </div>
+    </div>
+
+    <script src="../build/js/nigma.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnSolve = document.getElementById('btnSolve');
+            const input = document.getElementById('cipherInput');
+            const output = document.getElementById('decryptedOutput');
+            const container = document.getElementById('resultsContainer');
+
+            btnSolve.addEventListener('click', async () => {
+                const text = input.value;
+                if (!text) return;
+
+                btnSolve.innerText = "⏳ Solving... (This may take a moment)";
+                btnSolve.disabled = true;
+                output.innerText = "";
+                container.style.display = 'none';
+
+                // Wait for UI update
+                setTimeout(async () => {
+                    try {
+                        const { HMMSolver } = window.nigmajs;
+                        if (!HMMSolver) {
+                            throw new Error("HMMSolver not loaded. Rebuild nigmajs.");
+                        }
+
+                        const solver = new HMMSolver('english');
+                        await solver.initialize();
+                        
+                        const result = await solver.solve(text, 50); // 50 iterations
+                        
+                        output.innerText = result;
+                        container.style.display = 'block';
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error: " + e.message);
+                    } finally {
+                        btnSolve.innerText = "🚀 Attempt Decryption";
+                        btnSolve.disabled = false;
+                    }
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
+

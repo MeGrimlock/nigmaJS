@@ -13,6 +13,7 @@ import { default as Dictionary } from './methods/dictionary/dictionary.js';
 import { default as Shift } from './methods/shift/shift.js';
 import { default as Enigma } from './methods/enigma/enigma.js';
 import { default as Polyalphabetic } from './methods/polyalphabetic/polyalphabetic.js';
+import { HMMSolver } from './decryption/hmm-solver.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -191,4 +192,4 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver };

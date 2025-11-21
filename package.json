@@ -1,6 +1,6 @@
 {
   "name": "nigmajs",
-  "version": "3.1.14",
+  "version": "3.1.16",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
   "exports": {
@@ -73,5 +73,10 @@
   "bugs": {
     "url": "https://github.com/MeGrimlock/nigmaJS/issues",
     "email": "gonzalogarat@gmail.com"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "buffer": "^6.0.3",
+    "hidden-markov-model-tf": "^4.0.0"
   }
 }

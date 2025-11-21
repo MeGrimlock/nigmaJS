@@ -26,5 +26,10 @@ module.exports = {
         use: ["style-loader", "css-loader"]
       }
     ]
+  },
+  resolve: {
+    fallback: {
+      "buffer": require.resolve("buffer/")
+    }
   }
 };
