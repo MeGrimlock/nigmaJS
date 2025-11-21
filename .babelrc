@@ -4,14 +4,21 @@
 			"@babel/preset-env",
 			{
 				"targets": {
-					"node": "6.10",
-					"esmodules": true
+					"browsers": [
+						"last 2 versions",
+						"ie >= 11"
+					]
 				}
 			}
 		]
 	],
 	"plugins": [
 		"@babel/plugin-transform-arrow-functions",
-		"babel-plugin-transform-class-properties"
+		[
+			"@babel/plugin-proposal-class-properties",
+			{
+				"loose": true
+			}
+		]
 	]
 }
