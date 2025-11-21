@@ -13,5 +13,4 @@ coveralls.yml
 favicon.ico
 jest.config.js
 webpack.config.js
-
-
+smoke-test.js
