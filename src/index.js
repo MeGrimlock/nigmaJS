@@ -4,7 +4,8 @@ import {
 	spanishLetterFrequencies,
 	spanishBigramFrequencies,
 	spanishTrigramFrequencies,
-	spanishQuadgramFrequencies
+	spanishQuadgramFrequencies,
+	LanguageAnalysis
 } from './languageAnalysis/analysis.js';
 
 import { default as Columnar } from './methods/columnar/columnar.js';
@@ -190,4 +191,4 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis };

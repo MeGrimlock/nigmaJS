@@ -1,31 +1,31 @@
 export const spanishLetterFrequencies = {
 	A: 12.5,
-	K: 0.08,
-	T: 4.42,
 	B: 1.27,
-	L: 5.84,
-	U: 4.0,
 	C: 4.43,
-	M: 2.61,
-	V: 0.98,
 	D: 5.14,
-	N: 7.09,
-	W: 0.03,
 	E: 13.24,
-	Ñ: 0.22,
-	X: 0.19,
 	F: 0.79,
-	O: 8.98,
-	Y: 0.79,
 	G: 1.17,
-	P: 2.75,
-	Z: 0.42,
 	H: 0.81,
-	Q: 0.83,
 	I: 6.91,
-	R: 6.62,
 	J: 0.45,
-	S: 7.44
+	K: 0.08,
+	L: 5.84,
+	M: 2.61,
+	N: 7.09,
+	Ñ: 0.22,
+	O: 8.98,
+	P: 2.75,
+	Q: 0.83,
+	R: 6.62,
+	S: 7.44,
+	T: 4.42,
+	U: 4.0,
+	V: 0.98,
+	W: 0.03,
+	X: 0.19,
+	Y: 0.79,
+	Z: 0.42
 };
 
 export const spanishBigramFrequencies = {
@@ -126,4 +126,119 @@ export const spanishQuadgramFrequencies = {
 	ENTO: 0.14,
 	DELO: 0.12
 };
-// export default BasicCipher;
+
+export class LanguageAnalysis {
+	/**
+	 * Calculate frequency of characters in text
+	 * @param {string} text 
+	 * @returns {Object} Map of char -> percentage
+	 */
+	static getLetterFrequencies(text) {
+		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
+		const total = cleanText.length;
+		const counts = {};
+
+		if (total === 0) return {};
+
+		for (const char of cleanText) {
+			counts[char] = (counts[char] || 0) + 1;
+		}
+
+		const percentages = {};
+		for (const char in counts) {
+			percentages[char] = (counts[char] / total) * 100;
+		}
+
+		return percentages;
+	}
+
+	/**
+	 * Calculate frequency of N-grams in text
+	 * @param {string} text 
+	 * @param {number} n 
+	 * @returns {Object} Map of ngram -> percentage
+	 */
+	static getNgramFrequencies(text, n) {
+		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
+		const counts = {};
+		let total = 0;
+
+		if (cleanText.length < n) return {};
+
+		for (let i = 0; i <= cleanText.length - n; i++) {
+			const ngram = cleanText.substring(i, i + n);
+			counts[ngram] = (counts[ngram] || 0) + 1;
+			total++;
+		}
+
+		const percentages = {};
+		for (const ngram in counts) {
+			percentages[ngram] = (counts[ngram] / total) * 100;
+		}
+
+		return percentages;
+	}
+
+	/**
+	 * Calculate Chi-Squared statistic comparing text freq to standard freq
+	 * Lower value means closer match to standard language
+	 * @param {Object} observedFreqs (percentages)
+	 * @param {Object} expectedFreqs (percentages)
+	 * @returns {number} Chi-Squared value
+	 */
+	static calculateChiSquared(observedFreqs, expectedFreqs) {
+		let chiSquared = 0;
+
+		// We iterate over the expected keys (standard language model)
+		// If a key is missing in observed, it counts as 0 frequency
+		for (const key in expectedFreqs) {
+			const observed = observedFreqs[key] || 0;
+			const expected = expectedFreqs[key];
+			
+			// Formula: sum( (Observed - Expected)^2 / Expected )
+			// Since we are using percentages, we can use them directly as normalized counts
+			chiSquared += Math.pow(observed - expected, 2) / expected;
+		}
+
+		return chiSquared;
+	}
+
+	/**
+	 * Analyze text against Spanish models
+	 * @param {string} text 
+	 * @returns {Object} Analysis results
+	 */
+	static analyzeSpanishCorrelation(text) {
+		const letterFreqs = this.getLetterFrequencies(text);
+		const bigramFreqs = this.getNgramFrequencies(text, 2);
+		const trigramFreqs = this.getNgramFrequencies(text, 3);
+		const quadgramFreqs = this.getNgramFrequencies(text, 4);
+
+		return {
+			monograms: {
+				score: this.calculateChiSquared(letterFreqs, spanishLetterFrequencies),
+				frequencies: letterFreqs
+			},
+			bigrams: {
+				score: this.calculateChiSquared(bigramFreqs, spanishBigramFrequencies),
+				frequencies: bigramFreqs
+			},
+			trigrams: {
+				score: this.calculateChiSquared(trigramFreqs, spanishTrigramFrequencies),
+				frequencies: trigramFreqs
+			},
+			quadgrams: {
+				score: this.calculateChiSquared(quadgramFreqs, spanishQuadgramFrequencies),
+				frequencies: quadgramFreqs
+			}
+		};
+	}
+}
+
+export default {
+	spanishLetterFrequencies,
+	spanishBigramFrequencies,
+	spanishTrigramFrequencies,
+	spanishQuadgramFrequencies,
+	LanguageAnalysis
+};

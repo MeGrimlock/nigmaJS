@@ -374,6 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             outputLength.textContent = currentText.length;
 
+            // Update Analysis
+            if (freqChart) {
+                updateAnalysis(currentText);
+            }
+            
         } catch (error) {
             result.innerHTML = `<div style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
                 <strong>❌ Error:</strong> ${error.message}
@@ -449,6 +454,115 @@ document.addEventListener('DOMContentLoaded', () => {
         inputLength.textContent = plaintext.value.length;
     }
 
+    // --- Analysis & Visualization ---
+    let freqChart = null;
+
+    function initChart() {
+        const ctx = document.getElementById('frequencyChart').getContext('2d');
+        
+        // Initial data (Spanish standard)
+        const labels = Object.keys(window.nigmajs.LanguageAnalysis.spanishLetterFrequencies).sort();
+        const standardData = labels.map(l => window.nigmajs.LanguageAnalysis.spanishLetterFrequencies[l]);
+
+        freqChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Standard Spanish (%)',
+                        data: standardData,
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)', // --accent with opacity
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1,
+                        order: 2
+                    },
+                    {
+                        label: 'Current Text (%)',
+                        data: new Array(labels.length).fill(0),
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)', // --success with opacity
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e2e8f0'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateAnalysis(text) {
+        if (!text) return;
+
+        // 1. Analyze Text
+        const analysis = window.nigmajs.LanguageAnalysis.analyzeSpanishCorrelation(text);
+        
+        // 2. Update Chart (Monograms)
+        const labels = freqChart.data.labels;
+        const currentFreqs = analysis.monograms.frequencies;
+        const newData = labels.map(char => currentFreqs[char] || 0);
+        
+        freqChart.data.datasets[1].data = newData;
+        freqChart.update();
+
+        // 3. Update Scores Display
+        const statsContainer = document.getElementById('analysisStats');
+        
+        const createStatBox = (label, score) => {
+            // Lower score is better (closer to Spanish)
+            // Color coding: < 50 (Good match), < 100 (Ok), > 100 (Encrypted/Random)
+            let color = '#ef4444'; // Red (High difference)
+            if (score < 100) color = '#f59e0b'; // Orange
+            if (score < 50) color = '#10b981'; // Green (Close match)
+            
+            return `
+                <div style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem; text-align: center; border: 1px solid ${color};">
+                    <div style="font-size: 0.8rem; color: #94a3b8;">${label}</div>
+                    <div style="font-size: 1.1rem; font-weight: bold; color: ${color};">
+                        ${score.toFixed(2)}
+                    </div>
+                    <div style="font-size: 0.7rem; color: ${color}; opacity: 0.8;">Chi-Squared</div>
+                </div>
+            `;
+        };
+
+        statsContainer.innerHTML = `
+            ${createStatBox('Monograms', analysis.monograms.score)}
+            ${createStatBox('Bigrams', analysis.bigrams.score)}
+            ${createStatBox('Trigrams', analysis.trigrams.score)}
+            ${createStatBox('Quadgrams', analysis.quadgrams.score)}
+        `;
+    }
+
     // Event listeners
     document.querySelectorAll('.cipher-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -469,4 +583,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial stats
     updateStats();
+
+    // Wait for library to load then init chart
+    setTimeout(() => {
+        if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
+            initChart();
+        } else {
+            console.warn('NigmaJS or LanguageAnalysis not loaded yet');
+            // Retry once
+            setTimeout(initChart, 1000);
+        }
+    }, 500);
 });
