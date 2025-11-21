@@ -4,6 +4,7 @@ import { default as Baconian } from './baconian.js';
 import { default as Bazeries } from './bazeries.js';
 import { default as Bifid } from './bifid.js';
 import { default as Morse } from './morse.js';
+import { default as Playfair } from './playfair.js';
 import { default as Polybius } from './polybius.js';
 import { default as SimpleSubstitution } from './simpleSubstitution.js';
 
@@ -14,6 +15,7 @@ export default {
 	Bazeries,
 	Bifid,
 	Morse,
+	Playfair,
 	Polybius,
 	SimpleSubstitution
 };
