@@ -1,6 +1,6 @@
 {
   "name": "nigmajs",
-  "version": "2.2.7",
+  "version": "3.0.0",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
   "exports": {
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-transform-arrow-functions": "^7.2.0",
     "@babel/preset-env": "^7.5.5",
     "babel-eslint": "^9.0.0",
@@ -57,17 +58,17 @@
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.14.3",
     "eslint-plugin-react-hooks": "^1.7.0",
-    "html-webpack-plugin": "^3.2.0",
+    "html-webpack-plugin": "^5.6.0",
     "jest": "^24.8.0",
     "prettier": "^1.18.2",
-    "webpack": "^4.39.1",
-    "webpack-cli": "^3.3.6",
-    "webpack-dev-server": "^3.7.2"
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.2"
   },
   "homepage": "https://github.com/MeGrimlock/nigmaJS/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MeGrimlock/nigmaJS/"
+    "url": "git+https://github.com/MeGrimlock/nigmaJS.git"
   },
   "bugs": {
     "url": "https://github.com/MeGrimlock/nigmaJS/issues",
