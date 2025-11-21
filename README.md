@@ -15,8 +15,8 @@ NigmaJS is a comprehensive cryptographic library for Node.js and the browser. It
 
 - **Mechanical Ciphers**: Fully functional Enigma Machine (M3/M4 compatible).
 - **Shift Ciphers**: Caesar, ROT5, ROT13, ROT47.
-- **Polyalphabetic Ciphers**: Vigenère, Quagmire I, II, III, IV.
-- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Morse, Simple Substitution, Bazeries, Polybius.
+- **Polyalphabetic Ciphers**: Vigenère, Beaufort, Porta, Gronsfeld, Quagmire I, II, III, IV.
+- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Bifid, Morse, Simple Substitution, Bazeries, Polybius.
 - **Columnar Ciphers**: AMSCO.
 - **Input Validation**: Robust validation for keys and messages to prevent errors.
 - **Universal Support**: Works in Node.js and Browsers (UMD build).
@@ -93,6 +93,30 @@ const encrypted = quagmire4.encode();
 console.log(encrypted);
 
 const decrypted = new Polyalphabetic.Quagmire4(encrypted, 'KEY', 'ABC', '', true);
+console.log(decrypted.decode()); // HELLO WORLD
+```
+
+#### Beaufort Cipher
+```javascript
+const { Polyalphabetic } = require('nigmajs');
+
+const beaufort = new Polyalphabetic.Beaufort('HELLO WORLD', 'KEY');
+const encrypted = beaufort.encode();
+console.log(encrypted);
+
+const decrypted = new Polyalphabetic.Beaufort(encrypted, 'KEY', true);
+console.log(decrypted.decode()); // HELLO WORLD
+```
+
+#### Bifid Cipher
+```javascript
+const { Dictionary } = require('nigmajs');
+
+const bifid = new Dictionary.Bifid('HELLO WORLD', 'KEYWORD');
+const encrypted = bifid.encode();
+console.log(encrypted);
+
+const decrypted = new Dictionary.Bifid(encrypted, 'KEYWORD', true);
 console.log(decrypted.decode()); // HELLO WORLD
 ```
 
