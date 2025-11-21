@@ -1,13 +1,13 @@
 {
   "name": "nigmajs",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
   "exports": {
     ".": "./build/js/nigma.min.js"
   },
   "scripts": {
-    "build:prod": "webpack --mode production --progress",
+    "build:prod": "node scripts/update-version.js && webpack --mode production --progress",
     "build:dev": "webpack --mode development --progress",
     "coveralls": "jest --coverage && cat ./tests/coverage/lcov.info | coveralls",
     "lint": "eslint .",
