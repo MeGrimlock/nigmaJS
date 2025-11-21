@@ -102,6 +102,57 @@ document.addEventListener('DOMContentLoaded', () => {
             create: (text, params) => new window.nigmajs.Enigma(text, params.key, params.ring, params.plugs, params.rotors),
             encode: (cipher) => cipher.encode(),
             decode: (cipher) => cipher.encode() // Enigma is reciprocal
+        },
+        vigenere: {
+            name: 'Vigenère',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEY' }],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Vigenere(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        polybius: {
+            name: 'Polybius Square',
+            params: [{ name: 'key', label: 'Keyword (optional)', type: 'text', default: '' }],
+            create: (text, params) => new window.nigmajs.Dictionary.Polybius(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        quagmire1: {
+            name: 'Quagmire I',
+            params: [{ name: 'key', label: 'Keyword', type: 'text', default: 'KEY' }],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Quagmire1(text, params.key),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        quagmire2: {
+            name: 'Quagmire II',
+            params: [
+                { name: 'key', label: 'Keyword', type: 'text', default: 'KEY' },
+                { name: 'indicator', label: 'Indicator', type: 'text', default: 'A' }
+            ],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Quagmire2(text, params.key, params.indicator),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        quagmire3: {
+            name: 'Quagmire III',
+            params: [
+                { name: 'key', label: 'Keyword', type: 'text', default: 'KEY' },
+                { name: 'indicator', label: 'Indicator', type: 'text', default: 'A' }
+            ],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Quagmire3(text, params.key, params.indicator),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
+        },
+        quagmire4: {
+            name: 'Quagmire IV',
+            params: [
+                { name: 'key', label: 'Keyword', type: 'text', default: 'KEY' },
+                { name: 'indicator', label: 'Indicator', type: 'text', default: 'ABC' }
+            ],
+            create: (text, params) => new window.nigmajs.Polyalphabetic.Quagmire4(text, params.key, params.indicator),
+            encode: (cipher) => cipher.encode(),
+            decode: (cipher) => cipher.decode()
         }
     };
 
