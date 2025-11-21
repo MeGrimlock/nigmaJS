@@ -8,6 +8,7 @@ import { default as Morse } from './morse.js';
 import { default as Playfair } from './playfair.js';
 import { default as Polybius } from './polybius.js';
 import { default as SimpleSubstitution } from './simpleSubstitution.js';
+import { default as TwoSquare } from './twoSquare.js';
 
 export default {
 	Atbash,
@@ -19,5 +20,6 @@ export default {
 	Morse,
 	Playfair,
 	Polybius,
-	SimpleSubstitution
+	SimpleSubstitution,
+	TwoSquare
 };
