@@ -15,7 +15,8 @@ NigmaJS is a comprehensive cryptographic library for Node.js and the browser. It
 
 - **Mechanical Ciphers**: Fully functional Enigma Machine (M3/M4 compatible).
 - **Shift Ciphers**: Caesar, ROT5, ROT13, ROT47.
-- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Morse, Simple Substitution, Bazeries.
+- **Polyalphabetic Ciphers**: Vigenère, Quagmire I, II, III, IV.
+- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Morse, Simple Substitution, Bazeries, Polybius.
 - **Columnar Ciphers**: AMSCO.
 - **Input Validation**: Robust validation for keys and messages to prevent errors.
 - **Universal Support**: Works in Node.js and Browsers (UMD build).
@@ -34,12 +35,12 @@ npm install nigmajs
 
 **Node.js (CommonJS):**
 ```javascript
-const { Enigma, Shift, Dictionary } = require('nigmajs');
+const { Enigma, Shift, Dictionary, Polyalphabetic } = require('nigmajs');
 ```
 
 **ES Modules / Webpack:**
 ```javascript
-import { Enigma, Shift, Dictionary } from 'nigmajs';
+import { Enigma, Shift, Dictionary, Polyalphabetic } from 'nigmajs';
 ```
 
 ### Examples
@@ -69,6 +70,30 @@ const { Dictionary } = require('nigmajs');
 
 const morse = new Dictionary.Morse('SOS');
 console.log(morse.encode()); // ... --- ...
+```
+
+#### Quagmire III Cipher
+```javascript
+const { Polyalphabetic } = require('nigmajs');
+
+const quagmire3 = new Polyalphabetic.Quagmire3('HELLO WORLD', 'KEY', 'KEY');
+const encrypted = quagmire3.encode();
+console.log(encrypted);
+
+const decrypted = new Polyalphabetic.Quagmire3(encrypted, 'KEY', 'KEY', true);
+console.log(decrypted.decode()); // HELLO WORLD
+```
+
+#### Quagmire IV Cipher
+```javascript
+const { Polyalphabetic } = require('nigmajs');
+
+const quagmire4 = new Polyalphabetic.Quagmire4('HELLO WORLD', 'KEY', 'ABC');
+const encrypted = quagmire4.encode();
+console.log(encrypted);
+
+const decrypted = new Polyalphabetic.Quagmire4(encrypted, 'KEY', 'ABC', '', true);
+console.log(decrypted.decode()); // HELLO WORLD
 ```
 
 ## Documentation
