@@ -9,6 +9,7 @@ import { default as Playfair } from './playfair.js';
 import { default as Polybius } from './polybius.js';
 import { default as SimpleSubstitution } from './simpleSubstitution.js';
 import { default as TwoSquare } from './twoSquare.js';
+import { default as ADFGVX } from './adfgvx.js';
 
 export default {
 	Atbash,
@@ -21,5 +22,6 @@ export default {
 	Playfair,
 	Polybius,
 	SimpleSubstitution,
-	TwoSquare
+	TwoSquare,
+	ADFGVX
 };
