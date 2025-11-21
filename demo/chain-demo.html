@@ -335,6 +335,39 @@
             color: #94a3b8;
             margin-top: 0.25rem;
         }
+
+        .cipher-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .cipher-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .cipher-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cipher-group-icon {
+            font-size: 1.2rem;
+        }
+
+        .cipher-group-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .cipher-group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.5rem;
+        }
     </style>
 </head>
 
@@ -355,19 +388,57 @@
 
                 <div class="card" style="margin-top: 1rem;">
                     <h2>🔧 Available Ciphers</h2>
-                    <div class="cipher-selector">
-                        <button class="cipher-btn" data-cipher="caesar">Caesar</button>
-                        <button class="cipher-btn" data-cipher="atbash">Atbash</button>
-                        <button class="cipher-btn" data-cipher="morse">Morse</button>
-                        <button class="cipher-btn" data-cipher="rot13">ROT13</button>
-                        <button class="cipher-btn" data-cipher="rot5">ROT5</button>
-                        <button class="cipher-btn" data-cipher="rot18">ROT18</button>
-                        <button class="cipher-btn" data-cipher="rot47">ROT47</button>
-                        <button class="cipher-btn" data-cipher="amsco">AMSCO</button>
-                        <button class="cipher-btn" data-cipher="autokey">Autokey</button>
-                        <button class="cipher-btn" data-cipher="baconian">Baconian</button>
-                        <button class="cipher-btn" data-cipher="simpleSub">Simple Sub</button>
-                        <button class="cipher-btn" data-cipher="enigma">Enigma</button>
+                    
+                    <!-- Shift Ciphers -->
+                    <div class="cipher-group">
+                        <div class="cipher-group-header">
+                            <span class="cipher-group-icon">🔄</span>
+                            <span class="cipher-group-title">Shift Ciphers</span>
+                        </div>
+                        <div class="cipher-group-grid">
+                            <button class="cipher-btn" data-cipher="caesar">Caesar</button>
+                            <button class="cipher-btn" data-cipher="rot13">ROT13</button>
+                            <button class="cipher-btn" data-cipher="rot5">ROT5</button>
+                            <button class="cipher-btn" data-cipher="rot18">ROT18</button>
+                            <button class="cipher-btn" data-cipher="rot47">ROT47</button>
+                        </div>
+                    </div>
+
+                    <!-- Dictionary Ciphers -->
+                    <div class="cipher-group">
+                        <div class="cipher-group-header">
+                            <span class="cipher-group-icon">📖</span>
+                            <span class="cipher-group-title">Dictionary Ciphers</span>
+                        </div>
+                        <div class="cipher-group-grid">
+                            <button class="cipher-btn" data-cipher="atbash">Atbash</button>
+                            <button class="cipher-btn" data-cipher="morse">Morse</button>
+                            <button class="cipher-btn" data-cipher="autokey">Autokey</button>
+                            <button class="cipher-btn" data-cipher="baconian">Baconian</button>
+                            <button class="cipher-btn" data-cipher="simpleSub">Simple Sub</button>
+                        </div>
+                    </div>
+
+                    <!-- Columnar Ciphers -->
+                    <div class="cipher-group">
+                        <div class="cipher-group-header">
+                            <span class="cipher-group-icon">📊</span>
+                            <span class="cipher-group-title">Columnar Ciphers</span>
+                        </div>
+                        <div class="cipher-group-grid">
+                            <button class="cipher-btn" data-cipher="amsco">AMSCO</button>
+                        </div>
+                    </div>
+
+                    <!-- Machine Ciphers -->
+                    <div class="cipher-group">
+                        <div class="cipher-group-header">
+                            <span class="cipher-group-icon">⚙️</span>
+                            <span class="cipher-group-title">Machine Ciphers</span>
+                        </div>
+                        <div class="cipher-group-grid">
+                            <button class="cipher-btn" data-cipher="enigma">Enigma</button>
+                        </div>
                     </div>
                 </div>
             </div>
