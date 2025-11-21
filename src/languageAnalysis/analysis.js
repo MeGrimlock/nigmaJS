@@ -1,137 +1,25 @@
-export const spanishLetterFrequencies = {
-	A: 12.5,
-	B: 1.27,
-	C: 4.43,
-	D: 5.14,
-	E: 13.24,
-	F: 0.79,
-	G: 1.17,
-	H: 0.81,
-	I: 6.91,
-	J: 0.45,
-	K: 0.08,
-	L: 5.84,
-	M: 2.61,
-	N: 7.09,
-	Ñ: 0.22,
-	O: 8.98,
-	P: 2.75,
-	Q: 0.83,
-	R: 6.62,
-	S: 7.44,
-	T: 4.42,
-	U: 4.0,
-	V: 0.98,
-	W: 0.03,
-	X: 0.19,
-	Y: 0.79,
-	Z: 0.42
+import spanishData from './languages/spanish.js';
+import englishData from './languages/english.js';
+
+const languages = {
+	spanish: spanishData,
+	english: englishData
 };
 
-export const spanishBigramFrequencies = {
-	DE: 2.57,
-	AD: 1.43,
-	TA: 1.09,
-	ES: 2.31,
-	AR: 1.43,
-	TE: 1.0,
-	EN: 2.27,
-	RE: 1.42,
-	OR: 0.98,
-	EL: 2.01,
-	AL: 1.33,
-	DO: 0.98,
-	LA: 1.8,
-	AN: 1.24,
-	IO: 0.98,
-	OS: 1.79,
-	NT: 1.22,
-	AC: 0.96,
-	ON: 1.61,
-	UE: 1.21,
-	ST: 0.95,
-	AS: 1.56,
-	CI: 1.15,
-	NA: 0.92,
-	ER: 1.52,
-	CO: 1.13,
-	RO: 0.85,
-	RA: 1.47,
-	SE: 1.11,
-	UN: 0.84
-};
-
-export const spanishTrigramFrequencies = {
-	DEL: 0.75,
-	EST: 0.48,
-	PAR: 0.32,
-	QUE: 0.74,
-	LOS: 0.47,
-	DES: 0.31,
-	ENT: 0.67,
-	ODE: 0.47,
-	ESE: 0.3,
-	ION: 0.56,
-	ADO: 0.45,
-	IEN: 0.3,
-	ELA: 0.55,
-	RES: 0.4,
-	ALA: 0.29,
-	CON: 0.54,
-	STA: 0.38,
-	POR: 0.29,
-	SDE: 0.52,
-	ACI: 0.36,
-	ONE: 0.29,
-	ADE: 0.51,
-	LAS: 0.35,
-	NDE: 0.29,
-	CIO: 0.5,
-	ARA: 0.34,
-	TRA: 0.28,
-	NTE: 0.49,
-	ENE: 0.32,
-	NES: 0.27
-};
-
-export const spanishQuadgramFrequencies = {
-	CION: 0.42,
-	MENT: 0.16,
-	NCIA: 0.14,
-	DELA: 0.33,
-	IONE: 0.16,
-	AQUE: 0.14,
-	ACIO: 0.27,
-	ODEL: 0.16,
-	SQUE: 0.14,
-	ENTE: 0.25,
-	ONDE: 0.16,
-	ENCI: 0.13,
-	ESTA: 0.22,
-	OQUE: 0.15,
-	ENLA: 0.13,
-	ESDE: 0.22,
-	IDAD: 0.15,
-	ENTR: 0.13,
-	PARA: 0.19,
-	ELOS: 0.15,
-	IENT: 0.12,
-	ONES: 0.17,
-	ADEL: 0.15,
-	ASDE: 0.12,
-	SDEL: 0.17,
-	ANTE: 0.15,
-	ENEL: 0.12,
-	OSDE: 0.17,
-	ENTO: 0.14,
-	DELO: 0.12
-};
+// Re-export for backward compatibility
+export const spanishLetterFrequencies = spanishData.monograms;
+export const spanishBigramFrequencies = spanishData.bigrams;
+export const spanishTrigramFrequencies = spanishData.trigrams;
+export const spanishQuadgramFrequencies = spanishData.quadgrams;
 
 export class LanguageAnalysis {
-	static spanishLetterFrequencies = spanishLetterFrequencies;
-	static spanishBigramFrequencies = spanishBigramFrequencies;
-	static spanishTrigramFrequencies = spanishTrigramFrequencies;
-	static spanishQuadgramFrequencies = spanishQuadgramFrequencies;
+	// Keep static properties for backward compatibility if needed, but better to use the languages object
+	static spanishLetterFrequencies = spanishData.monograms;
+	static spanishBigramFrequencies = spanishData.bigrams;
+	static spanishTrigramFrequencies = spanishData.trigrams;
+	static spanishQuadgramFrequencies = spanishData.quadgrams;
+
+	static languages = languages;
 
 	/**
 	 * Calculate frequency of characters in text
@@ -209,11 +97,14 @@ export class LanguageAnalysis {
 	}
 
 	/**
-	 * Analyze text against Spanish models
+	 * Analyze text against a specific language model
 	 * @param {string} text 
+	 * @param {string} languageKey 'spanish' or 'english'
 	 * @returns {Object} Analysis results
 	 */
-	static analyzeSpanishCorrelation(text) {
+	static analyzeCorrelation(text, languageKey = 'spanish') {
+		const langData = languages[languageKey] || languages.spanish;
+
 		const letterFreqs = this.getLetterFrequencies(text);
 		const bigramFreqs = this.getNgramFrequencies(text, 2);
 		const trigramFreqs = this.getNgramFrequencies(text, 3);
@@ -221,29 +112,30 @@ export class LanguageAnalysis {
 
 		return {
 			monograms: {
-				score: this.calculateChiSquared(letterFreqs, spanishLetterFrequencies),
+				score: this.calculateChiSquared(letterFreqs, langData.monograms),
 				frequencies: letterFreqs
 			},
 			bigrams: {
-				score: this.calculateChiSquared(bigramFreqs, spanishBigramFrequencies),
+				score: this.calculateChiSquared(bigramFreqs, langData.bigrams),
 				frequencies: bigramFreqs
 			},
 			trigrams: {
-				score: this.calculateChiSquared(trigramFreqs, spanishTrigramFrequencies),
+				score: this.calculateChiSquared(trigramFreqs, langData.trigrams),
 				frequencies: trigramFreqs
 			},
 			quadgrams: {
-				score: this.calculateChiSquared(quadgramFreqs, spanishQuadgramFrequencies),
+				score: this.calculateChiSquared(quadgramFreqs, langData.quadgrams),
 				frequencies: quadgramFreqs
 			}
 		};
 	}
+
+	// Deprecated: Alias for backward compatibility
+	static analyzeSpanishCorrelation(text) {
+		return this.analyzeCorrelation(text, 'spanish');
+	}
 }
 
 export default {
-	spanishLetterFrequencies,
-	spanishBigramFrequencies,
-	spanishTrigramFrequencies,
-	spanishQuadgramFrequencies,
 	LanguageAnalysis
 };
