@@ -246,9 +246,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const candidates = LanguageAnalysis.detectLanguage(text);
         if (candidates.length > 0) {
             const winner = candidates[0];
+            const runnerUp = candidates[1];
             
             recommendationCard.style.display = 'block';
-            detectedLangEl.textContent = capitalize(winner.language) + ' ' + getFlag(winner.language);
+            let resultText = capitalize(winner.language) + ' ' + getFlag(winner.language);
+            
+            // If the difference between 1st and 2nd is small, show ambiguity
+            if (runnerUp && (runnerUp.score - winner.score < 5)) {
+                resultText += ` (or possibly ${capitalize(runnerUp.language)} ${getFlag(runnerUp.language)})`;
+            }
+
+            detectedLangEl.textContent = resultText;
             confidenceScoreEl.textContent = winner.score.toFixed(2);
             
             // Set color based on confidence
