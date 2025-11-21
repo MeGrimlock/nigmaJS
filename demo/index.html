@@ -5,76 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NigmaJS Interactive Demo</title>
+  <link rel="stylesheet" href="styles.css">
   <style>
-    :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #e2e8f0;
-      --accent: #8b5cf6;
-      --accent-hover: #7c3aed;
-      --border: #334155;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 2rem;
-      line-height: 1.5;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 3rem;
-      margin-bottom: 2rem;
-      background: linear-gradient(to right, #c084fc, #6366f1);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
+    /* index.html specific styles */
     .input-section {
       margin-bottom: 3rem;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      color: var(--text);
-      font-size: 1.1rem;
-      resize: vertical;
-      min-height: 100px;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .card:hover {
@@ -112,17 +53,7 @@
 
     input[type="number"],
     input[type="text"] {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
       width: 80px;
-    }
-
-    label {
-      font-size: 0.875rem;
-      color: #94a3b8;
     }
   </style>
 </head>
@@ -381,6 +312,173 @@
         <div class="output" id="quagmire4Output"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="quagmire4Decoded"></div>
+      </div>
+
+      <!-- Beaufort -->
+      <div class="card">
+        <h3>Beaufort</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="beaufortKey" value="KEY">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="beaufortOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="beaufortDecoded"></div>
+      </div>
+
+      <!-- Porta -->
+      <div class="card">
+        <h3>Porta</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="portaKey" value="KEY">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="portaOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="portaDecoded"></div>
+      </div>
+
+      <!-- Gronsfeld -->
+      <div class="card">
+        <h3>Gronsfeld</h3>
+        <div class="controls">
+          <label>Numeric Key:</label>
+          <input type="text" id="gronsfeldKey" value="12345" placeholder="e.g., 12345">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="gronsfeldOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="gronsfeldDecoded"></div>
+      </div>
+
+      <!-- Bifid -->
+      <div class="card">
+        <h3>Bifid</h3>
+        <div class="controls">
+          <label>Keyword (optional):</label>
+          <input type="text" id="bifidKey" value="" placeholder="Leave empty for default">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="bifidOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="bifidDecoded"></div>
+      </div>
+
+      <!-- Rail Fence -->
+      <div class="card">
+        <h3>Rail Fence</h3>
+        <div class="controls">
+          <label>Number of Rails:</label>
+          <input type="number" id="railFenceRails" value="3" min="2" style="width: 80px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="railFenceOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="railFenceDecoded"></div>
+      </div>
+
+      <!-- Playfair -->
+      <div class="card">
+        <h3>Playfair</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="playfairKey" value="KEYWORD">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="playfairOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="playfairDecoded"></div>
+      </div>
+
+      <!-- Four-Square -->
+      <div class="card">
+        <h3>Four-Square</h3>
+        <div class="controls">
+          <label>Keyword 1:</label>
+          <input type="text" id="fourSquareKey1" value="EXAMPLE" style="width: 100px;">
+        </div>
+        <div class="controls">
+          <label>Keyword 2:</label>
+          <input type="text" id="fourSquareKey2" value="KEYWORD" style="width: 100px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="fourSquareOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="fourSquareDecoded"></div>
+      </div>
+
+      <!-- Two-Square -->
+      <div class="card">
+        <h3>Two-Square</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="twoSquareKey" value="KEYWORD">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="twoSquareOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="twoSquareDecoded"></div>
+      </div>
+
+      <!-- ADFGVX -->
+      <div class="card">
+        <h3>ADFGVX</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="adfgvxKey" value="KEYWORD" style="width: 100px;">
+        </div>
+        <div class="controls">
+          <label>Transposition Key:</label>
+          <input type="text" id="adfgvxTransKey" value="KEY" style="width: 100px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="adfgvxOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="adfgvxDecoded"></div>
+      </div>
+
+      <!-- ADFGX -->
+      <div class="card">
+        <h3>ADFGX</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="adfgxKey" value="KEYWORD" style="width: 100px;">
+        </div>
+        <div class="controls">
+          <label>Transposition Key:</label>
+          <input type="text" id="adfgxTransKey" value="KEY" style="width: 100px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="adfgxOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="adfgxDecoded"></div>
+      </div>
+
+      <!-- Route -->
+      <div class="card">
+        <h3>Route</h3>
+        <div class="controls">
+          <label>Rows:</label>
+          <input type="number" id="routeRows" value="5" min="2" style="width: 60px;">
+        </div>
+        <div class="controls">
+          <label>Columns:</label>
+          <input type="number" id="routeCols" value="5" min="2" style="width: 60px;">
+        </div>
+        <div class="controls">
+          <label>Route:</label>
+          <select id="routePattern" style="width: 100px;">
+            <option value="spiral">Spiral</option>
+            <option value="zigzag">Zigzag</option>
+            <option value="column">Column</option>
+          </select>
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="routeOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="routeDecoded"></div>
       </div>
     </div>
   </div>

@@ -5,370 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NigmaJS - Cipher Chain Builder</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #e2e8f0;
-            --accent: #8b5cf6;
-            --accent-hover: #7c3aed;
-            --border: #334155;
-            --success: #10b981;
-            --warning: #f59e0b;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #c084fc, #6366f1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-        }
-
-        .card h2 {
-            color: var(--accent);
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-
-        .input-section {
-            margin-bottom: 1.5rem;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 1rem;
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            color: var(--text);
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 120px;
-            font-family: 'Fira Code', monospace;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-        }
-
-        .cipher-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .cipher-btn {
-            padding: 0.6rem 0.8rem;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--accent);
-            border-radius: 0.5rem;
-            color: var(--accent);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .cipher-btn:hover {
-            background: var(--accent);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .chain-container {
-            min-height: 200px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 2px dashed var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
-        }
-
-        .chain-empty {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            color: #64748b;
-            font-style: italic;
-        }
-
-        .chain-step {
-            background: var(--card-bg);
-            border: 1px solid var(--accent);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            position: relative;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .step-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .step-number {
-            background: var(--accent);
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .step-name {
-            flex: 1;
-            margin-left: 0.75rem;
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        .step-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .step-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--border);
-            border-radius: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            color: var(--text);
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .step-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .step-btn.remove {
-            color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        .step-btn.remove:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        .step-params {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-
-        .param-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .param-group label {
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-
-        .param-group input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            border-radius: 0.25rem;
-            padding: 0.35rem 0.6rem;
-            color: var(--text);
-            font-size: 0.9rem;
-            width: 120px;
-        }
-
-        .param-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .result-section {
-            margin-top: 1.5rem;
-        }
-
-        .result-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--success);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-family: 'Fira Code', monospace;
-            word-break: break-all;
-            min-height: 100px;
-            color: var(--success);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .arrow-down {
-            text-align: center;
-            color: var(--accent);
-            font-size: 1.5rem;
-            margin: 0.25rem 0;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .stat-card {
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--accent);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            margin-top: 0.25rem;
-        }
-
-        .cipher-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .cipher-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .cipher-group-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cipher-group-icon {
-            font-size: 1.2rem;
-        }
-
-        .cipher-group-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        .cipher-group-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 0.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chain-demo.css">
 </head>
 
 <body>
@@ -404,6 +42,24 @@
                         </div>
                     </div>
 
+                    <!-- Polyalphabetic Ciphers -->
+                    <div class="cipher-group">
+                        <div class="cipher-group-header">
+                            <span class="cipher-group-icon">🔤</span>
+                            <span class="cipher-group-title">Polyalphabetic Ciphers</span>
+                        </div>
+                        <div class="cipher-group-grid">
+                            <button class="cipher-btn" data-cipher="vigenere">Vigenère</button>
+                            <button class="cipher-btn" data-cipher="beaufort">Beaufort</button>
+                            <button class="cipher-btn" data-cipher="porta">Porta</button>
+                            <button class="cipher-btn" data-cipher="gronsfeld">Gronsfeld</button>
+                            <button class="cipher-btn" data-cipher="quagmire1">Quagmire I</button>
+                            <button class="cipher-btn" data-cipher="quagmire2">Quagmire II</button>
+                            <button class="cipher-btn" data-cipher="quagmire3">Quagmire III</button>
+                            <button class="cipher-btn" data-cipher="quagmire4">Quagmire IV</button>
+                        </div>
+                    </div>
+
                     <!-- Dictionary Ciphers -->
                     <div class="cipher-group">
                         <div class="cipher-group-header">
@@ -416,6 +72,12 @@
                             <button class="cipher-btn" data-cipher="autokey">Autokey</button>
                             <button class="cipher-btn" data-cipher="baconian">Baconian</button>
                             <button class="cipher-btn" data-cipher="polybius">Polybius</button>
+                            <button class="cipher-btn" data-cipher="bifid">Bifid</button>
+                            <button class="cipher-btn" data-cipher="playfair">Playfair</button>
+                            <button class="cipher-btn" data-cipher="fourSquare">Four-Square</button>
+                            <button class="cipher-btn" data-cipher="twoSquare">Two-Square</button>
+                            <button class="cipher-btn" data-cipher="adfgvx">ADFGVX</button>
+                            <button class="cipher-btn" data-cipher="adfgx">ADFGX</button>
                             <button class="cipher-btn" data-cipher="simpleSub">Simple Sub</button>
                         </div>
                     </div>
@@ -428,6 +90,8 @@
                         </div>
                         <div class="cipher-group-grid">
                             <button class="cipher-btn" data-cipher="amsco">AMSCO</button>
+                            <button class="cipher-btn" data-cipher="railFence">Rail Fence</button>
+                            <button class="cipher-btn" data-cipher="route">Route</button>
                         </div>
                     </div>
 
@@ -439,20 +103,6 @@
                         </div>
                         <div class="cipher-group-grid">
                             <button class="cipher-btn" data-cipher="enigma">Enigma</button>
-                        </div>
-                    </div>
-                    <!-- Polyalphabetic Ciphers Group -->
-                    <div class="cipher-group">
-                        <div class="cipher-group-header">
-                            <span class="cipher-group-icon">🔤</span>
-                            <span class="cipher-group-title">Polyalphabetic Ciphers</span>
-                        </div>
-                        <div class="cipher-group-grid">
-                            <button class="cipher-btn" data-cipher="vigenere">Vigenère</button>
-                            <button class="cipher-btn" data-cipher="quagmire1">Quagmire I</button>
-                            <button class="cipher-btn" data-cipher="quagmire2">Quagmire II</button>
-                            <button class="cipher-btn" data-cipher="quagmire3">Quagmire III</button>
-                            <button class="cipher-btn" data-cipher="quagmire4">Quagmire IV</button>
                         </div>
                     </div>
                 </div>

@@ -16,8 +16,8 @@ NigmaJS is a comprehensive cryptographic library for Node.js and the browser. It
 - **Mechanical Ciphers**: Fully functional Enigma Machine (M3/M4 compatible).
 - **Shift Ciphers**: Caesar, ROT5, ROT13, ROT47.
 - **Polyalphabetic Ciphers**: Vigenère, Beaufort, Porta, Gronsfeld, Quagmire I, II, III, IV.
-- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Bifid, Morse, Simple Substitution, Bazeries, Polybius.
-- **Columnar Ciphers**: AMSCO.
+- **Dictionary Ciphers**: Atbash, Autokey, Baconian, Bifid, Four-Square, Two-Square, ADFGX, ADFGVX, Morse, Playfair, Simple Substitution, Bazeries, Polybius.
+- **Columnar Ciphers**: AMSCO, Rail Fence, Route.
 - **Input Validation**: Robust validation for keys and messages to prevent errors.
 - **Universal Support**: Works in Node.js and Browsers (UMD build).
 
