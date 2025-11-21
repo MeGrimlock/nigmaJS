@@ -108,6 +108,18 @@ const decrypted = new Polyalphabetic.Beaufort(encrypted, 'KEY', true);
 console.log(decrypted.decode()); // HELLO WORLD
 ```
 
+#### Bifid Cipher
+```javascript
+const { Dictionary } = require('nigmajs');
+
+const bifid = new Dictionary.Bifid('HELLO WORLD', 'KEYWORD');
+const encrypted = bifid.encode();
+console.log(encrypted);
+
+const decrypted = new Dictionary.Bifid(encrypted, 'KEYWORD', true);
+console.log(decrypted.decode()); // HELLO WORLD
+```
+
 ## Documentation
 
 Detailed documentation for contributing, code of conduct, and changelog can be found in the `docs/` directory:
