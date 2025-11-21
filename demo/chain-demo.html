@@ -7,6 +7,7 @@
     <title>NigmaJS - Cipher Chain Builder</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chain-demo.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -142,6 +143,21 @@
                     <h2>✨ Result</h2>
                     <div class="result-section">
                         <div class="result-box" id="result">Execute the chain to see the encrypted result...</div>
+                    </div>
+                </div>
+
+                <!-- Analysis Section -->
+                <div class="card" style="margin-top: 1rem;">
+                    <h2>📊 Frequency Analysis (Spanish)</h2>
+                    <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">
+                        Compares the letter frequency of your result against standard Spanish language.
+                        Lower Chi-Squared score means closer resemblance to natural Spanish.
+                    </p>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                    <div id="analysisStats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 1rem;">
+                        <!-- Stats will be injected here -->
                     </div>
                 </div>
             </div>
