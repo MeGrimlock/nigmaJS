@@ -203,19 +203,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let currentText = plaintext.value;
         const steps = [];
+        let stepsHTML = '<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem; border-left: 3px solid #8b5cf6;">';
+        stepsHTML += '<strong style="color: #8b5cf6;">🔍 Intermediate Steps:</strong><br><br>';
+        stepsHTML += `<div style="color: #94a3b8; margin: 0.5rem 0;">Input: <span style="color: #10b981;">${currentText}</span></div>`;
 
         try {
             chain.forEach((step, index) => {
                 const cipher = step.config.create(currentText, step.params);
+                const previousText = currentText;
                 currentText = step.config.encode(cipher);
-                steps.push(`Step ${index + 1} (${step.config.name}): ${currentText}`);
+                steps.push(currentText);
+
+                stepsHTML += `<div style="margin: 0.5rem 0; padding-left: 1rem; border-left: 2px solid #334155;">`;
+                stepsHTML += `<div style="color: #8b5cf6;">Step ${index + 1}: ${step.config.name}</div>`;
+                stepsHTML += `<div style="color: #e2e8f0; font-family: 'Fira Code', monospace; font-size: 0.9rem;">${currentText}</div>`;
+                stepsHTML += `</div>`;
             });
 
-            result.textContent = currentText;
+            stepsHTML += '</div>';
+
+            // Store steps for decryption
+            window.encryptionSteps = steps;
+            window.encryptedResult = currentText;
+
+            result.innerHTML = stepsHTML + `<div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 0.5rem;">
+                <strong style="color: #10b981;">✨ Final Result:</strong><br>
+                <div style="margin-top: 0.5rem; font-family: 'Fira Code', monospace; color: #10b981; word-break: break-all;">${currentText}</div>
+            </div>`;
+
             outputLength.textContent = currentText.length;
 
         } catch (error) {
-            result.textContent = `Error: ${error.message}`;
+            result.innerHTML = `<div style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
+                <strong>❌ Error:</strong> ${error.message}
+            </div>`;
         }
     }
 
@@ -226,11 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        let currentText = result.textContent;
-        if (currentText.startsWith('Error') || currentText === 'Execute the chain to see the encrypted result...') {
+        if (!window.encryptedResult) {
             alert('Please execute the chain first!');
             return;
         }
+
+        let currentText = window.encryptedResult;
+        let stepsHTML = '<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem; border-left: 3px solid #f59e0b;">';
+        stepsHTML += '<strong style="color: #f59e0b;">🔓 Decryption Steps (Reverse Order):</strong><br><br>';
+        stepsHTML += `<div style="color: #94a3b8; margin: 0.5rem 0;">Encrypted: <span style="color: #f59e0b;">${currentText}</span></div>`;
 
         try {
             // Reverse the chain and decrypt
@@ -238,12 +263,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const step = chain[i];
                 const cipher = step.config.create(currentText, step.params);
                 currentText = step.config.decode(cipher);
+
+                stepsHTML += `<div style="margin: 0.5rem 0; padding-left: 1rem; border-left: 2px solid #334155;">`;
+                stepsHTML += `<div style="color: #f59e0b;">Step ${chain.length - i}: Reverse ${step.config.name}</div>`;
+                stepsHTML += `<div style="color: #e2e8f0; font-family: 'Fira Code', monospace; font-size: 0.9rem;">${currentText}</div>`;
+                stepsHTML += `</div>`;
             }
 
-            result.textContent = `Decrypted: ${currentText}`;
+            stepsHTML += '</div>';
+
+            const originalText = plaintext.value;
+            const isMatch = currentText.trim().toLowerCase() === originalText.trim().toLowerCase();
+
+            result.innerHTML = stepsHTML + `<div style="margin-top: 1rem; padding: 1rem; background: rgba(${isMatch ? '16, 185, 129' : '239, 68, 68'}, 0.1); border: 1px solid ${isMatch ? '#10b981' : '#ef4444'}; border-radius: 0.5rem;">
+                <strong style="color: ${isMatch ? '#10b981' : '#ef4444'};">${isMatch ? '✅' : '⚠️'} Decrypted Result:</strong><br>
+                <div style="margin-top: 0.5rem; font-family: 'Fira Code', monospace; color: ${isMatch ? '#10b981' : '#ef4444'}; word-break: break-all;">${currentText}</div>
+                ${!isMatch ? `<div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 0.25rem; font-size: 0.9rem;">
+                    <strong>⚠️ Warning:</strong> Decrypted text doesn't match original input!<br>
+                    <strong>Original:</strong> ${originalText}<br>
+                    <strong>Got:</strong> ${currentText}<br><br>
+                    <em>This usually happens when chaining incompatible ciphers (e.g., Morse changes text format, making subsequent ciphers process symbols instead of letters).</em>
+                </div>` : ''}
+            </div>`;
 
         } catch (error) {
-            result.textContent = `Decryption Error: ${error.message}`;
+            result.innerHTML = `<div style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 0.5rem;">
+                <strong>❌ Decryption Error:</strong> ${error.message}
+            </div>`;
         }
     }
 
