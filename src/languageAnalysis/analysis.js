@@ -42,6 +42,85 @@ export class LanguageAnalysis {
         return text.toUpperCase().replace(/[^A-ZÑÀ-ÿĀ-žА-ЯЁ]/g, '');
     }
 
+    /**
+     * Generates a Transition Matrix (Markov Chain Order 1) from text.
+     * Returns a 26x26 object where matrix[char1][char2] = probability.
+     */
+    static getTransitionMatrix(text) {
+        const cleaned = this.cleanText(text);
+        const matrix = {};
+        const totals = {};
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // Initialize
+        for (const c1 of chars) {
+            matrix[c1] = {};
+            totals[c1] = 0;
+            for (const c2 of chars) {
+                matrix[c1][c2] = 0;
+            }
+        }
+
+        // Count transitions
+        for (let i = 0; i < cleaned.length - 1; i++) {
+            const c1 = cleaned[i];
+            const c2 = cleaned[i+1];
+            if (matrix[c1] && matrix[c1][c2] !== undefined) {
+                matrix[c1][c2]++;
+                totals[c1]++;
+            }
+        }
+
+        // Normalize to probabilities
+        for (const c1 of chars) {
+            if (totals[c1] > 0) {
+                for (const c2 of chars) {
+                    matrix[c1][c2] = matrix[c1][c2] / totals[c1];
+                }
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Approximates a Transition Matrix from Language Bigram Data.
+     * P(B|A) approx P(AB) / P(A)
+     */
+    static getLanguageTransitionMatrix(languageKey) {
+        const langData = languages[languageKey];
+        if (!langData) return null;
+
+        const matrix = {};
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // Initialize
+        for (const c1 of chars) {
+            matrix[c1] = {};
+            for (const c2 of chars) {
+                matrix[c1][c2] = 0;
+            }
+        }
+
+        // Fill from Bigrams
+        // Note: P(AB) is percentage of total bigrams. P(A) is percentage of total letters.
+        // P(B|A) = Count(AB) / Count(A) = (Freq(AB)/100 * N) / (Freq(A)/100 * N) = Freq(AB) / Freq(A)
+        
+        for (const bigram in langData.bigrams) {
+            if (bigram.length !== 2) continue;
+            const c1 = bigram[0];
+            const c2 = bigram[1];
+            const probAB = langData.bigrams[bigram] || 0;
+            const probA = langData.monograms[c1] || 0.01; // Avoid div by zero
+            
+            if (matrix[c1]) {
+                matrix[c1][c2] = probAB / probA;
+            }
+        }
+
+        return matrix;
+    }
+
 	/**
 	 * Calculate frequency of characters in text
 	 * @param {string} text 

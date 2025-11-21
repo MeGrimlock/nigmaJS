@@ -18,6 +18,11 @@
         <div class="input-card">
             <h2>📝 Ciphered Text Input</h2>
             <textarea id="cipherInput" placeholder="Paste your encrypted text here to analyze frequencies..."></textarea>
+            
+            <div class="view-controls" style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <button id="btnFreq" class="tab-btn active">📊 Frequency Charts</button>
+                <button id="btnMarkov" class="tab-btn">🕸️ Markov Heatmap</button>
+            </div>
         </div>
 
         <div id="recommendationCard" class="input-card" style="border-color: var(--accent); background: rgba(139, 92, 246, 0.05); display: none;">
@@ -32,6 +37,39 @@
 
         <div id="chartsContainer" class="charts-grid">
             <!-- Charts will be dynamically generated here -->
+        </div>
+
+        <div id="markovContainer" class="input-card" style="display: none;">
+            <h2>Markov Transition Matrix</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">
+                This heatmap shows the probability of one letter following another. 
+                <span style="color: var(--accent);">Y-Axis</span> is the current letter, 
+                <span style="color: var(--accent);">X-Axis</span> is the next letter.
+            </p>
+            
+            <div class="language-selector" style="margin-bottom: 1rem;">
+                <label>Compare against: </label>
+                <select id="markovLangSelect" style="background: #1e293b; color: white; border: 1px solid #334155; padding: 0.5rem; border-radius: 4px;">
+                    <option value="english">English</option>
+                    <option value="spanish">Spanish</option>
+                    <option value="french">French</option>
+                    <option value="german">German</option>
+                    <option value="italian">Italian</option>
+                    <option value="portuguese">Portuguese</option>
+                    <option value="russian">Russian</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="text-align: center;">Input Text Transitions</h3>
+                    <canvas id="markovInputChart"></canvas>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="text-align: center;">Standard <span id="markovLangLabel">English</span> Transitions</h3>
+                    <canvas id="markovStandardChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -161,12 +161,99 @@ class FrequencyChart {
     }
 }
 
+class MarkovVisualizer {
+    constructor(canvasCtx, color) {
+        this.ctx = canvasCtx;
+        this.color = color || '#10b981';
+        this.size = 26;
+        this.cellSize = 0; // Calculated on draw
+    }
+
+    draw(matrix) {
+        const canvas = this.ctx.canvas;
+        // Ensure square canvas
+        const dim = Math.min(canvas.width, canvas.height) || 300;
+        // Adjust for high DPI if needed, but keep simple for now
+        
+        this.cellSize = (dim - 40) / 26; // 40px padding for labels
+        const offsetX = 30;
+        const offsetY = 10;
+
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw Labels
+        this.ctx.fillStyle = '#94a3b8';
+        this.ctx.font = '10px monospace';
+        this.ctx.textAlign = 'center';
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        
+        for(let i=0; i<26; i++) {
+            // X-Axis (Next Letter)
+            this.ctx.fillText(chars[i], offsetX + i*this.cellSize + this.cellSize/2, offsetY + 26*this.cellSize + 15);
+            // Y-Axis (Current Letter)
+            this.ctx.fillText(chars[i], offsetX - 10, offsetY + i*this.cellSize + this.cellSize/1.5);
+        }
+
+        // Draw Cells
+        if (!matrix) return;
+
+        for (let i = 0; i < 26; i++) {
+            const c1 = chars[i];
+            if (!matrix[c1]) continue;
+
+            for (let j = 0; j < 26; j++) {
+                const c2 = chars[j];
+                const prob = matrix[c1][c2] || 0; // 0 to 1
+
+                // Color Intensity
+                // prob is usually low (max ~0.5 for Q->U), so scale it
+                const alpha = Math.min(prob * 5, 1); // Boost visibility
+
+                if (prob > 0) {
+                    this.ctx.fillStyle = this.hexToRgba(this.color, alpha);
+                    this.ctx.fillRect(
+                        offsetX + j * this.cellSize, 
+                        offsetY + i * this.cellSize, 
+                        this.cellSize - 1, 
+                        this.cellSize - 1
+                    );
+                } else {
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+                    this.ctx.fillRect(
+                        offsetX + j * this.cellSize, 
+                        offsetY + i * this.cellSize, 
+                        this.cellSize - 1, 
+                        this.cellSize - 1
+                    );
+                }
+            }
+        }
+    }
+
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const cipherInput = document.getElementById('cipherInput');
     const chartsContainer = document.getElementById('chartsContainer');
+    const markovContainer = document.getElementById('markovContainer');
     const recommendationCard = document.getElementById('recommendationCard');
     const detectedLangEl = document.getElementById('detectedLang');
     const confidenceScoreEl = document.getElementById('confidenceScore');
+    
+    // Tabs
+    const btnFreq = document.getElementById('btnFreq');
+    const btnMarkov = document.getElementById('btnMarkov');
+    
+    // Markov Elements
+    const markovLangSelect = document.getElementById('markovLangSelect');
+    const markovInputCanvas = document.getElementById('markovInputChart');
+    const markovStandardCanvas = document.getElementById('markovStandardChart');
     
     // Wait for NigmaJS to load
     const checkInterval = setInterval(() => {
@@ -177,13 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 
     let charts = [];
+    let markovVisualizerInput = null;
+    let markovVisualizerStandard = null;
 
     function initializeApp() {
         const { LanguageAnalysis } = window.nigmajs;
         const languages = Object.keys(LanguageAnalysis.languages); // ['spanish', 'english']
         const types = ['monograms', 'bigrams', 'trigrams', 'quadgrams'];
 
-        // Generate DOM and Charts
+        // --- Frequency Charts Init ---
         types.forEach(type => {
             // Create Row
             const rowDiv = document.createElement('div');
@@ -227,10 +316,68 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Add Event Listener
+        // --- Markov Init ---
+        // Set canvas size
+        markovInputCanvas.width = 400;
+        markovInputCanvas.height = 400;
+        markovStandardCanvas.width = 400;
+        markovStandardCanvas.height = 400;
+
+        markovVisualizerInput = new MarkovVisualizer(markovInputCanvas.getContext('2d'), '#10b981'); // Green
+        markovVisualizerStandard = new MarkovVisualizer(markovStandardCanvas.getContext('2d'), '#3b82f6'); // Blue
+
+        // Initial draw (empty)
+        markovVisualizerInput.draw(null);
+        markovVisualizerStandard.draw(null);
+
+        // --- Event Listeners ---
         cipherInput.addEventListener('input', (e) => {
-            updateAllCharts(e.target.value);
+            const text = e.target.value;
+            updateAllCharts(text);
+            updateMarkov(text);
         });
+
+        btnFreq.addEventListener('click', () => switchTab('freq'));
+        btnMarkov.addEventListener('click', () => switchTab('markov'));
+        
+        markovLangSelect.addEventListener('change', () => {
+            const label = document.getElementById('markovLangLabel');
+            label.textContent = capitalize(markovLangSelect.value);
+            updateMarkov(cipherInput.value);
+        });
+    }
+
+    function switchTab(tab) {
+        if (tab === 'freq') {
+            chartsContainer.style.display = 'flex';
+            markovContainer.style.display = 'none';
+            btnFreq.classList.add('active');
+            btnMarkov.classList.remove('active');
+        } else {
+            chartsContainer.style.display = 'none';
+            markovContainer.style.display = 'block';
+            btnFreq.classList.remove('active');
+            btnMarkov.classList.add('active');
+            // Trigger update to ensure render
+            updateMarkov(cipherInput.value);
+        }
+    }
+
+    function updateMarkov(text) {
+        if (markovContainer.style.display === 'none') return; // Optimize
+        
+        const { LanguageAnalysis } = window.nigmajs;
+        const langKey = markovLangSelect.value;
+        
+        // 1. Input Matrix
+        if (text) {
+            const inputMatrix = LanguageAnalysis.getTransitionMatrix(text);
+            markovVisualizerInput.draw(inputMatrix);
+        }
+
+        // 2. Standard Matrix
+        const stdMatrix = LanguageAnalysis.getLanguageTransitionMatrix(langKey);
+        markovVisualizerStandard.draw(stdMatrix);
     }
 
     function updateAllCharts(text) {
