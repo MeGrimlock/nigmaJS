@@ -128,6 +128,11 @@ export const spanishQuadgramFrequencies = {
 };
 
 export class LanguageAnalysis {
+	static spanishLetterFrequencies = spanishLetterFrequencies;
+	static spanishBigramFrequencies = spanishBigramFrequencies;
+	static spanishTrigramFrequencies = spanishTrigramFrequencies;
+	static spanishQuadgramFrequencies = spanishQuadgramFrequencies;
+
 	/**
 	 * Calculate frequency of characters in text
 	 * @param {string} text 
