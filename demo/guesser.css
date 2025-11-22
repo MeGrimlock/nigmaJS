@@ -38,6 +38,28 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
+/* View Controls */
+.tab-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.tab-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
 /* Charts Grid Layout */
 .charts-grid {
     display: flex;
