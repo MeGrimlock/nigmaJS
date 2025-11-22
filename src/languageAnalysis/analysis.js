@@ -1,137 +1,46 @@
-export const spanishLetterFrequencies = {
-	A: 12.5,
-	B: 1.27,
-	C: 4.43,
-	D: 5.14,
-	E: 13.24,
-	F: 0.79,
-	G: 1.17,
-	H: 0.81,
-	I: 6.91,
-	J: 0.45,
-	K: 0.08,
-	L: 5.84,
-	M: 2.61,
-	N: 7.09,
-	Ñ: 0.22,
-	O: 8.98,
-	P: 2.75,
-	Q: 0.83,
-	R: 6.62,
-	S: 7.44,
-	T: 4.42,
-	U: 4.0,
-	V: 0.98,
-	W: 0.03,
-	X: 0.19,
-	Y: 0.79,
-	Z: 0.42
+import spanishData from './languages/spanish.js';
+import englishData from './languages/english.js';
+import italianData from './languages/italian.js';
+import frenchData from './languages/french.js';
+import germanData from './languages/german.js';
+import portugueseData from './languages/portuguese.js';
+import russianData from './languages/russian.js';
+import chineseData from './languages/chinese.js';
+
+const languages = {
+	spanish: spanishData,
+	english: englishData,
+    italian: italianData,
+    french: frenchData,
+    german: germanData,
+    portuguese: portugueseData,
+    russian: russianData,
+    chinese: chineseData
 };
 
-export const spanishBigramFrequencies = {
-	DE: 2.57,
-	AD: 1.43,
-	TA: 1.09,
-	ES: 2.31,
-	AR: 1.43,
-	TE: 1.0,
-	EN: 2.27,
-	RE: 1.42,
-	OR: 0.98,
-	EL: 2.01,
-	AL: 1.33,
-	DO: 0.98,
-	LA: 1.8,
-	AN: 1.24,
-	IO: 0.98,
-	OS: 1.79,
-	NT: 1.22,
-	AC: 0.96,
-	ON: 1.61,
-	UE: 1.21,
-	ST: 0.95,
-	AS: 1.56,
-	CI: 1.15,
-	NA: 0.92,
-	ER: 1.52,
-	CO: 1.13,
-	RO: 0.85,
-	RA: 1.47,
-	SE: 1.11,
-	UN: 0.84
-};
-
-export const spanishTrigramFrequencies = {
-	DEL: 0.75,
-	EST: 0.48,
-	PAR: 0.32,
-	QUE: 0.74,
-	LOS: 0.47,
-	DES: 0.31,
-	ENT: 0.67,
-	ODE: 0.47,
-	ESE: 0.3,
-	ION: 0.56,
-	ADO: 0.45,
-	IEN: 0.3,
-	ELA: 0.55,
-	RES: 0.4,
-	ALA: 0.29,
-	CON: 0.54,
-	STA: 0.38,
-	POR: 0.29,
-	SDE: 0.52,
-	ACI: 0.36,
-	ONE: 0.29,
-	ADE: 0.51,
-	LAS: 0.35,
-	NDE: 0.29,
-	CIO: 0.5,
-	ARA: 0.34,
-	TRA: 0.28,
-	NTE: 0.49,
-	ENE: 0.32,
-	NES: 0.27
-};
-
-export const spanishQuadgramFrequencies = {
-	CION: 0.42,
-	MENT: 0.16,
-	NCIA: 0.14,
-	DELA: 0.33,
-	IONE: 0.16,
-	AQUE: 0.14,
-	ACIO: 0.27,
-	ODEL: 0.16,
-	SQUE: 0.14,
-	ENTE: 0.25,
-	ONDE: 0.16,
-	ENCI: 0.13,
-	ESTA: 0.22,
-	OQUE: 0.15,
-	ENLA: 0.13,
-	ESDE: 0.22,
-	IDAD: 0.15,
-	ENTR: 0.13,
-	PARA: 0.19,
-	ELOS: 0.15,
-	IENT: 0.12,
-	ONES: 0.17,
-	ADEL: 0.15,
-	ASDE: 0.12,
-	SDEL: 0.17,
-	ANTE: 0.15,
-	ENEL: 0.12,
-	OSDE: 0.17,
-	ENTO: 0.14,
-	DELO: 0.12
-};
+// Re-export for backward compatibility
+export const spanishLetterFrequencies = spanishData.monograms;
+export const spanishBigramFrequencies = spanishData.bigrams;
+export const spanishTrigramFrequencies = spanishData.trigrams;
+export const spanishQuadgramFrequencies = spanishData.quadgrams;
 
 export class LanguageAnalysis {
-	static spanishLetterFrequencies = spanishLetterFrequencies;
-	static spanishBigramFrequencies = spanishBigramFrequencies;
-	static spanishTrigramFrequencies = spanishTrigramFrequencies;
-	static spanishQuadgramFrequencies = spanishQuadgramFrequencies;
+	// Keep static properties for backward compatibility if needed, but better to use the languages object
+	static spanishLetterFrequencies = spanishData.monograms;
+	static spanishBigramFrequencies = spanishData.bigrams;
+	static spanishTrigramFrequencies = spanishData.trigrams;
+	static spanishQuadgramFrequencies = spanishData.quadgrams;
+
+	static languages = languages;
+
+    /**
+     * Cleans text based on language or general mode.
+     * Now supports Cyrillic and extended Latin.
+     */
+    static cleanText(text) {
+        // Allow A-Z, Accented chars (Latin-1 Supplement + Latin Extended-A), and Cyrillic
+        return text.toUpperCase().replace(/[^A-ZÑÀ-ÿĀ-žА-ЯЁ]/g, '');
+    }
 
 	/**
 	 * Calculate frequency of characters in text
@@ -139,13 +48,13 @@ export class LanguageAnalysis {
 	 * @returns {Object} Map of char -> percentage
 	 */
 	static getLetterFrequencies(text) {
-		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
-		const total = cleanText.length;
+		const cleaned = this.cleanText(text);
+		const total = cleaned.length;
 		const counts = {};
 
 		if (total === 0) return {};
 
-		for (const char of cleanText) {
+		for (const char of cleaned) {
 			counts[char] = (counts[char] || 0) + 1;
 		}
 
@@ -164,14 +73,14 @@ export class LanguageAnalysis {
 	 * @returns {Object} Map of ngram -> percentage
 	 */
 	static getNgramFrequencies(text, n) {
-		const cleanText = text.toUpperCase().replace(/[^A-ZÑ]/g, '');
+		const cleaned = this.cleanText(text);
 		const counts = {};
 		let total = 0;
 
-		if (cleanText.length < n) return {};
+		if (cleaned.length < n) return {};
 
-		for (let i = 0; i <= cleanText.length - n; i++) {
-			const ngram = cleanText.substring(i, i + n);
+		for (let i = 0; i <= cleaned.length - n; i++) {
+			const ngram = cleaned.substring(i, i + n);
 			counts[ngram] = (counts[ngram] || 0) + 1;
 			total++;
 		}
@@ -208,12 +117,38 @@ export class LanguageAnalysis {
 		return chiSquared;
 	}
 
+    /**
+     * Calculates Chi-Squared score based on SORTED distribution shapes.
+     * This ignores letter identity (useful for substitution ciphers).
+     */
+    static calculateShapeScore(observedFreqs, expectedFreqs) {
+        const observed = Object.values(observedFreqs).sort((a, b) => b - a);
+        const expected = Object.values(expectedFreqs).sort((a, b) => b - a);
+        
+        let score = 0;
+        // Compare based on the length of the expected model (usually top N)
+        const len = Math.min(observed.length, expected.length);
+        
+        for (let i = 0; i < len; i++) {
+            const obs = observed[i];
+            const exp = expected[i];
+            if (exp > 0) {
+                score += Math.pow(obs - exp, 2) / exp;
+            }
+        }
+        
+        return score;
+    }
+
 	/**
-	 * Analyze text against Spanish models
+	 * Analyze text against a specific language model
 	 * @param {string} text 
+	 * @param {string} languageKey 'spanish' or 'english'
 	 * @returns {Object} Analysis results
 	 */
-	static analyzeSpanishCorrelation(text) {
+	static analyzeCorrelation(text, languageKey = 'spanish') {
+		const langData = languages[languageKey] || languages.spanish;
+
 		const letterFreqs = this.getLetterFrequencies(text);
 		const bigramFreqs = this.getNgramFrequencies(text, 2);
 		const trigramFreqs = this.getNgramFrequencies(text, 3);
@@ -221,29 +156,141 @@ export class LanguageAnalysis {
 
 		return {
 			monograms: {
-				score: this.calculateChiSquared(letterFreqs, spanishLetterFrequencies),
+				score: this.calculateChiSquared(letterFreqs, langData.monograms),
+                shapeScore: this.calculateShapeScore(letterFreqs, langData.monograms),
 				frequencies: letterFreqs
 			},
 			bigrams: {
-				score: this.calculateChiSquared(bigramFreqs, spanishBigramFrequencies),
+				score: this.calculateChiSquared(bigramFreqs, langData.bigrams),
+                shapeScore: this.calculateShapeScore(bigramFreqs, langData.bigrams),
 				frequencies: bigramFreqs
 			},
 			trigrams: {
-				score: this.calculateChiSquared(trigramFreqs, spanishTrigramFrequencies),
+				score: this.calculateChiSquared(trigramFreqs, langData.trigrams),
+                shapeScore: this.calculateShapeScore(trigramFreqs, langData.trigrams),
 				frequencies: trigramFreqs
 			},
 			quadgrams: {
-				score: this.calculateChiSquared(quadgramFreqs, spanishQuadgramFrequencies),
+				score: this.calculateChiSquared(quadgramFreqs, langData.quadgrams),
+                shapeScore: this.calculateShapeScore(quadgramFreqs, langData.quadgrams),
 				frequencies: quadgramFreqs
 			}
 		};
 	}
+
+    /**
+     * Calculates Index of Coincidence (IoC) for a text.
+     * IoC is invariant to substitution ciphers.
+     */
+    static calculateIoC(text) {
+        const counts = {};
+        const cleaned = this.cleanText(text);
+        const N = cleaned.length;
+        
+        if (N <= 1) return 0;
+
+        for (const char of cleaned) {
+            counts[char] = (counts[char] || 0) + 1;
+        }
+
+        let sum = 0;
+        for (const char in counts) {
+            const n = counts[char];
+            sum += n * (n - 1);
+        }
+
+        // Normalized IoC (multiplied by 26 for standard comparison scale)
+        // Normal random text is ~1.0, English ~1.73
+        return (sum / (N * (N - 1))) * 26;
+    }
+
+    /**
+     * Detects the most likely language for a given text
+     * @param {string} text 
+     * @returns {Object} Array of languages sorted by probability
+     */
+    static detectLanguage(text) {
+        const results = [];
+        const cleanedText = text.toUpperCase();
+        
+        // Standard IoC values for languages (Refined)
+        const expectedIoC = {
+            english: 1.73,
+            french: 2.02,
+            german: 2.05,
+            italian: 1.94,
+            portuguese: 1.94, // Very close to Spanish
+            spanish: 1.94,
+            russian: 1.76,
+            chinese: 0.0
+        };
+
+        // ... (rest of code) ...
+
+        // 1. Determine Script Dominance
+        const latinCount = (cleanedText.match(/[A-ZÑÀ-ÿĀ-ž]/g) || []).length;
+        const cyrillicCount = (cleanedText.match(/[А-ЯЁ]/g) || []).length;
+        const chineseCount = (cleanedText.match(/[\u4E00-\u9FFF]/g) || []).length;
+
+        const total = latinCount + cyrillicCount + chineseCount;
+        if (total === 0) return []; 
+
+        let script = 'latin';
+        if (cyrillicCount > total * 0.5) script = 'cyrillic';
+        if (chineseCount > total * 0.5) script = 'chinese';
+
+        // Candidates based on script
+        let candidateLanguages = [];
+        if (script === 'latin') candidateLanguages = ['english', 'french', 'german', 'italian', 'portuguese', 'spanish'];
+        else if (script === 'cyrillic') candidateLanguages = ['russian'];
+        else if (script === 'chinese') candidateLanguages = ['chinese'];
+
+        // Calculate Text IoC
+        const textIoC = this.calculateIoC(text);
+
+        for (const langKey of candidateLanguages) {
+            if (!languages[langKey]) continue;
+
+            const analysis = this.analyzeCorrelation(text, langKey);
+            
+            // Metric 1: Shape Difference
+            // Bigrams are the best fingerprint for Latin languages
+            const shapeScore = (
+                analysis.monograms.shapeScore * 0.5 +
+                analysis.bigrams.shapeScore * 3.0 + // Increased weight
+                analysis.trigrams.shapeScore * 2.0 + 
+                analysis.quadgrams.shapeScore * 1.0
+            ) / 6.5;
+
+            // Metric 2: IoC Distance
+            const targetIoC = expectedIoC[langKey] || 1.7;
+            const iocDistance = Math.abs(textIoC - targetIoC) * 50; // Scaled down slightly
+
+            // Metric 3: Unique Bigram Match (Experimental)
+            // Check if the top observed bigrams exist in the top language bigrams
+            // This helps distinguish Es vs It (e.g. 'EL' vs 'IL')
+            // Note: This only works if Substitution is standard/simple. If shifted, this fails.
+            // But ShapeScore handles shifted. This metric is a tie-breaker.
+            
+            // Combined Score
+            const finalScore = shapeScore + iocDistance;
+
+            results.push({
+                language: langKey,
+                score: finalScore,
+                details: { ...analysis, ioc: textIoC, expectedIoC: targetIoC }
+            });
+        }
+
+        return results.sort((a, b) => a.score - b.score);
+    }
+
+	// Deprecated: Alias for backward compatibility
+	static analyzeSpanishCorrelation(text) {
+		return this.analyzeCorrelation(text, 'spanish');
+	}
 }
 
 export default {
-	spanishLetterFrequencies,
-	spanishBigramFrequencies,
-	spanishTrigramFrequencies,
-	spanishQuadgramFrequencies,
 	LanguageAnalysis
 };

@@ -61,49 +61,56 @@
 
 ---
 
-### 🟢 NIVEL 2: SIMPLES (2-4 horas cada uno)
+### 🟢 NIVEL 2: SIMPLES (2-4 horas cada uno) ✅ COMPLETADO
 
-#### 5. **Playfair Cipher**
+#### 5. **Playfair Cipher** ✅
 - **Tipo**: Sustitución de dígrafos
 - **Complejidad**: ⭐⭐
 - **Descripción**: Cifra pares de letras usando una matriz 5x5
 - **Dificultad**: Media-Baja - requiere manejo de pares de letras y reglas especiales
+- **Estado**: ✅ Implementado - Tests: 7/7 pasando
 
-#### 6. **Four-Square Cipher**
+#### 6. **Four-Square Cipher** ✅
 - **Tipo**: Sustitución de dígrafos
 - **Complejidad**: ⭐⭐
 - **Descripción**: Usa 4 cuadrados de Polybius para cifrar dígrafos
 - **Dificultad**: Media-Baja - extensión de Polybius
+- **Estado**: ✅ Implementado - Tests: 7/7 pasando
 
-#### 7. **Two-Square Cipher**
+#### 7. **Two-Square Cipher** ✅
 - **Tipo**: Sustitución de dígrafos
 - **Complejidad**: ⭐⭐
 - **Descripción**: Versión simplificada de Four-Square con 2 cuadrados
 - **Dificultad**: Media-Baja
+- **Estado**: ✅ Implementado - Tests: 7/7 pasando
 
-#### 8. **ADFGVX Cipher**
+#### 8. **ADFGVX Cipher** ✅
 - **Tipo**: Sustitución + Transposición
 - **Complejidad**: ⭐⭐⭐
 - **Descripción**: Usa Polybius Square con coordenadas ADFGVX y luego transposición columnar
 - **Dificultad**: Media - combina Polybius y transposición
+- **Estado**: ✅ Implementado - Tests: 7/7 pasando
 
-#### 9. **ADFGX Cipher**
+#### 9. **ADFGX Cipher** ✅
 - **Tipo**: Sustitución + Transposición
 - **Complejidad**: ⭐⭐⭐
 - **Descripción**: Versión anterior de ADFGVX (sin V)
 - **Dificultad**: Media
+- **Estado**: ✅ Implementado - Tests: 7/7 pasando
 
-#### 10. **Rail Fence Cipher**
+#### 10. **Rail Fence Cipher** ✅
 - **Tipo**: Transposición
 - **Complejidad**: ⭐⭐
 - **Descripción**: Escribe el texto en zigzag y lee por filas
 - **Dificultad**: Baja - transposición simple
+- **Estado**: ✅ Implementado - Tests: 5/5 pasando
 
-#### 11. **Route Cipher**
+#### 11. **Route Cipher** ✅
 - **Tipo**: Transposición
 - **Complejidad**: ⭐⭐
 - **Descripción**: Escribe en una grilla y lee siguiendo una ruta específica
 - **Dificultad**: Baja-Media
+- **Estado**: ✅ Implementado - Tests: 5/5 pasando
 
 ---
 
@@ -226,15 +233,13 @@
 
 ## 💡 Sugerencia de Orden de Implementación
 
-### ✅ Completados (Nivel 1)
+### ✅ Completados (Nivel 1 y 2)
 1. ✅ **Beaufort** → 2. ✅ **Porta** → 3. ✅ **Gronsfeld** → 4. ✅ **Bifid**
+5. ✅ **Rail Fence** → 6. ✅ **Playfair** → 7. ✅ **Four-Square** → 8. ✅ **Two-Square** 
+9. ✅ **ADFGVX** → 10. ✅ **ADFGX** → 11. ✅ **Route**
 
-### 📋 Próximos (Nivel 2)
-5. **Rail Fence** → 6. **Playfair** → 7. **Columnar Transposition** → 
-8. **Four-Square** → 9. **Two-Square** → 10. **ADFGVX** → 11. **ADFGX** → 12. **Route**
-
-### 🔄 Siguientes (Nivel 3+)
-13. **Hill** → 14. **Double Columnar Transposition** → 15. **Trifid** → 
-16. **Straddling Checkerboard** → 17. **Nihilist** → 18. **Running Key** → 
+### 📋 Próximos (Nivel 3+)
+12. **Columnar Transposition** → 13. **Hill** → 14. **Double Columnar Transposition** → 
+15. **Trifid** → 16. **Straddling Checkerboard** → 17. **Nihilist** → 18. **Running Key** → 
 19. **Vernam** → 20. **Chaocipher** → ...
 

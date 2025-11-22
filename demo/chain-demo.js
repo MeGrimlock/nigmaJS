@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const stepCount = document.getElementById('stepCount');
     const inputLength = document.getElementById('inputLength');
     const outputLength = document.getElementById('outputLength');
+    const languageSelect = document.getElementById('languageSelect');
 
     let chain = [];
 
@@ -456,31 +457,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Analysis & Visualization ---
     let freqChart = null;
+    let currentAnalysisMode = 'monograms'; // monograms, bigrams, trigrams, quadgrams
+
+    // Helper to get sorted keys by frequency
+    function getTopKeys(freqObj, n = 15) {
+        return Object.entries(freqObj)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, n)
+            .map(([key]) => key);
+    }
 
     function initChart() {
         const ctx = document.getElementById('frequencyChart').getContext('2d');
         
-        // Initial data (Spanish standard)
-        const labels = Object.keys(window.nigmajs.LanguageAnalysis.spanishLetterFrequencies).sort();
-        const standardData = labels.map(l => window.nigmajs.LanguageAnalysis.spanishLetterFrequencies[l]);
-
         freqChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: [],
                 datasets: [
                     {
                         label: 'Standard Spanish (%)',
-                        data: standardData,
-                        backgroundColor: 'rgba(139, 92, 246, 0.2)', // --accent with opacity
+                        data: [],
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)', // --accent
                         borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1,
+                        order: 3
+                    },
+                    {
+                        label: 'Original Text (%)',
+                        data: [],
+                        backgroundColor: 'rgba(245, 158, 11, 0.4)', // --warning
+                        borderColor: 'rgba(245, 158, 11, 1)',
                         borderWidth: 1,
                         order: 2
                     },
                     {
-                        label: 'Current Text (%)',
-                        data: new Array(labels.length).fill(0),
-                        backgroundColor: 'rgba(16, 185, 129, 0.6)', // --success with opacity
+                        label: 'Ciphered Text (%)',
+                        data: [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)', // --success
                         borderColor: 'rgba(16, 185, 129, 1)',
                         borderWidth: 1,
                         order: 1
@@ -493,56 +507,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#94a3b8' }
                     },
                     x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#94a3b8' }
                     }
                 },
                 plugins: {
-                    legend: {
-                        labels: {
-                            color: '#e2e8f0'
-                        }
+                    legend: { labels: { color: '#e2e8f0' } },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
                     }
                 }
             }
         });
     }
 
-    function updateAnalysis(text) {
-        if (!text) return;
+    function updateChartData(inputText, outputText) {
+        if (!freqChart || !inputText || !outputText) return;
 
-        // 1. Analyze Text
-        const analysis = window.nigmajs.LanguageAnalysis.analyzeSpanishCorrelation(text);
+        const { LanguageAnalysis } = window.nigmajs;
+        const selectedLang = languageSelect.value;
+        const langData = LanguageAnalysis.languages[selectedLang];
+        let fullStandardFreqs;
+        let inputFreqs, outputFreqs;
+        let n = 1;
+
+        if (currentAnalysisMode === 'monograms') {
+            fullStandardFreqs = langData.monograms;
+            inputFreqs = LanguageAnalysis.getLetterFrequencies(inputText);
+            outputFreqs = LanguageAnalysis.getLetterFrequencies(outputText);
+            n = 1;
+        } else {
+            n = currentAnalysisMode === 'bigrams' ? 2 : (currentAnalysisMode === 'trigrams' ? 3 : 4);
+            if (currentAnalysisMode === 'bigrams') fullStandardFreqs = langData.bigrams;
+            else if (currentAnalysisMode === 'trigrams') fullStandardFreqs = langData.trigrams;
+            else fullStandardFreqs = langData.quadgrams;
+
+            inputFreqs = LanguageAnalysis.getNgramFrequencies(inputText, n);
+            outputFreqs = LanguageAnalysis.getNgramFrequencies(outputText, n);
+        }
+
+        // Update Chart Label
+        freqChart.data.datasets[0].label = `Standard ${selectedLang.charAt(0).toUpperCase() + selectedLang.slice(1)} (%)`;
+
+        // Generate merged labels
+        let labels = [];
+        if (n === 1) {
+            // For monograms, always show all letters sorted alphabetically
+            labels = Object.keys(fullStandardFreqs).sort();
+        } else {
+            // For N-grams, merge top frequent items from all sources to ensure visibility
+            const standardKeys = getTopKeys(fullStandardFreqs, 15);
+            const inputKeys = getTopKeys(inputFreqs, 5);
+            const outputKeys = getTopKeys(outputFreqs, 5); // Show what's in the cipher text even if it's weird
+            
+            const allKeys = new Set([...standardKeys, ...inputKeys, ...outputKeys]);
+            labels = Array.from(allKeys);
+            
+            // Sort by standard frequency magnitude for readability
+            labels.sort((a, b) => {
+                const stdA = fullStandardFreqs[a] || 0;
+                const stdB = fullStandardFreqs[b] || 0;
+                return stdB - stdA;
+            });
+        }
+
+        // Map data to labels (ensure alignment)
+        const standardData = labels.map(l => fullStandardFreqs[l] || 0);
+        const inputData = labels.map(l => inputFreqs[l] || 0);
+        const outputData = labels.map(l => outputFreqs[l] || 0);
+
+        // Update Chart
+        freqChart.data.labels = labels;
+        freqChart.data.datasets[0].data = standardData;
+        freqChart.data.datasets[1].data = inputData;
+        freqChart.data.datasets[2].data = outputData;
         
-        // 2. Update Chart (Monograms)
-        const labels = freqChart.data.labels;
-        const currentFreqs = analysis.monograms.frequencies;
-        const newData = labels.map(char => currentFreqs[char] || 0);
-        
-        freqChart.data.datasets[1].data = newData;
+        // Hide "Ciphered Text" if no ciphers are applied
+        const isCiphered = chain.length > 0;
+        freqChart.data.datasets[2].hidden = !isCiphered;
+
         freqChart.update();
+    }
 
-        // 3. Update Scores Display
-        const statsContainer = document.getElementById('analysisStats');
+    function updateAnalysis(outputText) {
+        const inputText = plaintext.value;
+        if (!outputText || !inputText) return;
+
+        const { LanguageAnalysis } = window.nigmajs;
+        const analysis = LanguageAnalysis.analyzeCorrelation(outputText, languageSelect.value);
         
+        updateChartData(inputText, outputText);
+
+        // Update Scores Display
+        const statsContainer = document.getElementById('analysisStats');
         const createStatBox = (label, score) => {
-            // Lower score is better (closer to Spanish)
-            // Color coding: < 50 (Good match), < 100 (Ok), > 100 (Encrypted/Random)
-            let color = '#ef4444'; // Red (High difference)
-            if (score < 100) color = '#f59e0b'; // Orange
-            if (score < 50) color = '#10b981'; // Green (Close match)
+            let color = '#ef4444'; 
+            if (score < 100) color = '#f59e0b'; 
+            if (score < 50) color = '#10b981'; 
             
             return `
                 <div style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem; text-align: center; border: 1px solid ${color};">
@@ -563,7 +629,31 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // Tabs Logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Update active state
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            // Update mode and chart
+            currentAnalysisMode = e.target.dataset.type;
+            if (window.encryptedResult) {
+                updateChartData(plaintext.value, window.encryptedResult);
+            }
+        });
+    });
+
     // Event listeners
+    languageSelect.addEventListener('change', () => {
+        if (window.encryptedResult) {
+            updateAnalysis(window.encryptedResult);
+        } else if (plaintext.value) {
+            // If no result yet, just update chart with plaintext
+            updateChartData(plaintext.value, plaintext.value);
+        }
+    });
+
     document.querySelectorAll('.cipher-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             addCipherToChain(btn.dataset.cipher);
@@ -588,10 +678,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
             initChart();
+            // If there is default text, run initial analysis
+            if (plaintext.value) {
+                // Create a temporary chart update with input text as output just to show initial state
+                updateChartData(plaintext.value, plaintext.value);
+            }
         } else {
             console.warn('NigmaJS or LanguageAnalysis not loaded yet');
             // Retry once
-            setTimeout(initChart, 1000);
+            setTimeout(() => {
+                initChart();
+                if (plaintext.value) updateChartData(plaintext.value, plaintext.value);
+            }, 1000);
         }
     }, 500);
 });

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NigmaJS - Language Guesser</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guesser.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="guesser-header">
+            <h1>🌍 Language Guesser</h1>
+            <p class="subtitle">Analyze ciphered text frequencies to guess the underlying language</p>
+        </header>
+
+        <div class="input-card">
+            <h2>📝 Ciphered Text Input</h2>
+            <textarea id="cipherInput" placeholder="Paste your encrypted text here to analyze frequencies..."></textarea>
+        </div>
+
+        <div id="recommendationCard" class="input-card" style="border-color: var(--accent); background: rgba(139, 92, 246, 0.05); display: none;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 2rem;">💡</div>
+                <div>
+                    <h2 style="margin-bottom: 0.5rem;">Detected Language: <span id="detectedLang" style="color: #fff;">...</span></h2>
+                    <p style="color: #94a3b8; margin: 0;">Confidence Score: <span id="confidenceScore">...</span> (Lower is better)</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="chartsContainer" class="charts-grid">
+            <!-- Charts will be dynamically generated here -->
+        </div>
+    </div>
+
+    <script src="../build/js/nigma.min.js"></script>
+    <script src="language-guesser.js"></script>
+</body>
+</html>
+

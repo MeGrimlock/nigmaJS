@@ -148,11 +148,25 @@
 
                 <!-- Analysis Section -->
                 <div class="card" style="margin-top: 1rem;">
-                    <h2>📊 Frequency Analysis (Spanish)</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        <h2 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">📊 Frequency Analysis</h2>
+                        <select id="languageSelect" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--accent); color: var(--text); padding: 0.4rem 0.8rem; border-radius: 0.5rem; outline: none; cursor: pointer;">
+                            <option value="spanish">Spanish 🇪🇸</option>
+                            <option value="english">English 🇬🇧</option>
+                        </select>
+                    </div>
                     <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">
-                        Compares the letter frequency of your result against standard Spanish language.
-                        Lower Chi-Squared score means closer resemblance to natural Spanish.
+                        Compares the n-gram frequencies against standard language.
+                        Lower Chi-Squared score means closer resemblance to natural language.
                     </p>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" data-type="monograms">Monograms (1)</button>
+                        <button class="tab-btn" data-type="bigrams">Bigrams (2)</button>
+                        <button class="tab-btn" data-type="trigrams">Trigrams (3)</button>
+                        <button class="tab-btn" data-type="quadgrams">Quadgrams (4)</button>
+                    </div>
+
                     <div style="position: relative; height: 300px; width: 100%;">
                         <canvas id="frequencyChart"></canvas>
                     </div>
