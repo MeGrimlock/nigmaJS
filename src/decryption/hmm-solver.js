@@ -97,6 +97,22 @@ export class HMMSolver {
             // d. Maximization (Update Mu, Sigma)
             const [newPi, newA, newMu, newSigma] = this.hmm._maximization(processedData, gamma, xi);
 
+            // Force Mu to be doubly stochastic (approx 1-to-1 mapping)
+            // We apply a few iterations of Sinkhorn normalization (row/col normalization)
+            // This prevents mode collapse where all states map to 'A' or 'E'.
+            let balancedMu = newMu;
+            for(let k=0; k<5; k++) {
+                // Normalize rows (States sum to 1)
+                const rowSum = balancedMu.sum(1, true);
+                balancedMu = balancedMu.div(rowSum.add(1e-8)); // Add epsilon
+                
+                // Normalize cols (Emissions sum to 1)
+                const colSum = balancedMu.sum(0, true);
+                balancedMu = balancedMu.div(colSum.add(1e-8));
+            }
+            // Final row norm to ensure valid probability
+            balancedMu = balancedMu.div(balancedMu.sum(1, true));
+
             // Regularize Sigma to prevent singularity
             const epsilon = 1e-2;
             const eye = tf.eye(26).expandDims(0).tile([26, 1, 1]);
@@ -106,7 +122,7 @@ export class HMMSolver {
             await this.hmm.setParameters({
                 pi: newPi, 
                 A: this.fixedA, // KEEP A FIXED
-                mu: newMu,     
+                mu: balancedMu, // Use balanced Mu
                 Sigma: regSigma
             });
             
