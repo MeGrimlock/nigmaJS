@@ -7,67 +7,7 @@
   <title>NigmaJS Interactive Demo</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/navbar.css">
-  <style>
-    /* index.html specific styles */
-    .input-section {
-      margin-bottom: 3rem;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .cipher-group-title {
-        grid-column: 1 / -1;
-        margin-top: 1rem;
-        margin-bottom: 1.5rem;
-        color: var(--accent);
-        border-bottom: 2px solid var(--border);
-        padding-bottom: 0.5rem;
-        font-size: 1.5rem;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      color: var(--accent);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-    }
-
-    .card-content {
-      margin-top: 1rem;
-    }
-
-    .output {
-      background-color: rgba(0, 0, 0, 0.2);
-      padding: 0.75rem;
-      border-radius: 0.375rem;
-      font-family: 'Fira Code', monospace;
-      word-break: break-all;
-      min-height: 2rem;
-      margin-top: 1rem;
-    }
-
-    .controls {
-      margin-bottom: 1rem;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    input[type="number"],
-    input[type="text"] {
-      width: 80px;
-    }
-  </style>
+  <link rel="stylesheet" href="css/demo.css">
 </head>
 
 <body>
@@ -81,6 +21,13 @@
 
     <!-- Shift Ciphers -->
     <h2 class="cipher-group-title">Shift Ciphers</h2>
+    <p class="cipher-group-desc">
+        The simplest form of encryption. Moves letters by a fixed number of positions in the alphabet.
+        <br>
+        <strong>Security: None.</strong> Trivial to break via brute force (only 25 possible keys) or letter frequency analysis.
+        <br>
+        <strong>Usage:</strong> Puzzles, games, or obscuring text from casual glances (ROT13).
+    </p>
     <div class="grid">
       <!-- Caesar -->
       <div class="card">
@@ -142,6 +89,13 @@
 
     <!-- Polyalphabetic Ciphers -->
     <h2 class="cipher-group-title">Polyalphabetic Ciphers</h2>
+    <p class="cipher-group-desc">
+        Uses multiple cipher alphabets to substitute plaintext, flattening the letter frequency distribution.
+        <br>
+        <strong>Security: Low to Medium.</strong> Much stronger than simple substitution, but vulnerable to statistical methods (Kasiski, IoC) if the message is significantly longer than the key.
+        <br>
+        <strong>Usage:</strong> Historically used for military/diplomatic comms (Vigenère, Enigma).
+    </p>
     <div class="grid">
       <!-- Vigenère -->
       <div class="card">
@@ -289,6 +243,13 @@
 
     <!-- Dictionary & Substitution Ciphers -->
     <h2 class="cipher-group-title">Dictionary & Substitution Ciphers</h2>
+    <p class="cipher-group-desc">
+        Replaces single characters or pairs (digraphs) based on keywords, grids, or symbols.
+        <br>
+        <strong>Security: Low.</strong> Vulnerable to frequency analysis. Digraph ciphers (Playfair) require more ciphertext (~50+ chars) to break than simple substitution.
+        <br>
+        <strong>Usage:</strong> Field encryption where equipment was limited (Playfair, ADFGVX).
+    </p>
     <div class="grid">
       <!-- Simple Substitution -->
       <div class="card">
@@ -455,6 +416,13 @@
 
     <!-- Columnar & Transposition Ciphers -->
     <h2 class="cipher-group-title">Columnar & Transposition Ciphers</h2>
+    <p class="cipher-group-desc">
+        Rearranges the order of characters without changing their identity. Letter frequencies (monograms) remain identical to the plaintext.
+        <br>
+        <strong>Security: Low.</strong> Vulnerable to anagramming, bigram analysis, and multiple anagramming if messages share length/keys.
+        <br>
+        <strong>Usage:</strong> Often combined with substitution (Fractionated Morse, ADFGVX) to add diffusion.
+    </p>
     <div class="grid">
       <!-- Rail Fence -->
       <div class="card">
