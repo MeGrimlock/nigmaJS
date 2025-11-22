@@ -7,6 +7,16 @@ import portugueseData from './languages/portuguese.js';
 import russianData from './languages/russian.js';
 import chineseData from './languages/chinese.js';
 
+import englishWords from 'an-array-of-english-words';
+import spanishWords from 'an-array-of-spanish-words';
+
+// Initialize Dictionaries (Sets for O(1) lookup)
+const dictionaries = {
+    english: new Set(englishWords.map(w => w.toUpperCase())),
+    spanish: new Set(spanishWords.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase())) 
+    // Normalize Spanish to remove accents for easier matching if cipher produces plain text
+};
+
 const languages = {
 	spanish: spanishData,
 	english: englishData,
@@ -40,6 +50,40 @@ export class LanguageAnalysis {
     static cleanText(text) {
         // Allow A-Z, Accented chars (Latin-1 Supplement + Latin Extended-A), and Cyrillic
         return text.toUpperCase().replace(/[^A-ZÑÀ-ÿĀ-žА-ЯЁ]/g, '');
+    }
+
+    /**
+     * Calculates the percentage of words in the text that are valid dictionary words.
+     * @param {string} text - The text to check.
+     * @param {string} language - 'english' or 'spanish'.
+     * @returns {number} Score from 0.0 to 1.0 (1.0 = all tokens are valid words).
+     */
+    static getWordCountScore(text, language = 'english') {
+        if (!dictionaries[language]) return 0;
+
+        // Split by non-word characters to get tokens
+        // We keep accents for checking against dictionary if possible, 
+        // but our dictionary Set is UPPERCASE and Spanish normalized (no accents).
+        
+        // Clean and normalize text for checking
+        const clean = text.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        const tokens = clean.split(/[^A-Z]+/);
+        
+        let validCount = 0;
+        let totalCount = 0;
+
+        const dict = dictionaries[language];
+
+        for (const token of tokens) {
+            if (token.length < 2) continue; // Ignore single letters or empty
+            totalCount++;
+            if (dict.has(token)) {
+                validCount++;
+            }
+        }
+
+        if (totalCount === 0) return 0;
+        return validCount / totalCount;
     }
 
     /**

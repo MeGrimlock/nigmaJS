@@ -231,13 +231,6 @@ export class HMMSolver {
             }
         }
 
-        // Heuristic confidence:
-        // Log likelihood depends on length.
-        // We can compare bestScore to the second best score?
-        // If best is much better than second best, we are confident.
-        
-        let confidence = 0.9; // Assume Bigrams are powerful enough
-
         // Reconstruct original text with punctuation for display
         let fullText = "";
         for (let i = 0; i < ciphertext.length; i++) {
@@ -251,6 +244,35 @@ export class HMMSolver {
             } else {
                 fullText += char;
             }
+        }
+
+        // --- VALIDATION WITH DICTIONARY (Gold Standard) ---
+        // Bigrams are good, but Dictionary is better for avoiding false positives 
+        // like "ARSEB DHESW" which might have okay bigrams but are nonsense.
+        
+        // Check vocabulary score (0.0 to 1.0)
+        const vocabScore = LanguageAnalysis.getWordCountScore(fullText, this.language);
+        
+        let confidence = 0.5; // Baseline for "Best Bigram Match"
+
+        if (vocabScore > 0.5) {
+            // If > 50% of words are real, we are VERY confident
+            confidence = 1.0;
+        } else if (vocabScore > 0.3) {
+            // Some words found
+            confidence = 0.85;
+        } else if (vocabScore === 0 && bestScore > -300) { // Arbitrary low log-likelihood check
+            // If NO words found, downgrade confidence massively unless bigrams are PERFECT
+            // "ARSEB DHESW" has no words -> confidence drops
+            confidence = 0.1; 
+        } else {
+            // Low vocab score
+            confidence = 0.2;
+        }
+
+        // Force confidence 0 if text is short and no words match
+        if (clean.length < 20 && vocabScore === 0) {
+            confidence = 0;
         }
 
         return {
