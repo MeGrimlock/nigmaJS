@@ -12,10 +12,24 @@
 </head>
 
 <body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Initializing NigmaJS...</div>
+        </div>
+    </div>
+
     <!-- Navbar injected by navbar.js -->
     <div class="container">
-        <h1>🔐 Cipher Chain Builder</h1>
-        <p class="subtitle">Build complex encryption sequences by chaining multiple ciphers</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1 style="margin: 0;">🔐 Cipher Chain Builder</h1>
+            <div class="mode-switch" style="background: rgba(0, 0, 0, 0.3); padding: 4px; border-radius: 8px; display: flex; gap: 4px;">
+                <button class="mode-btn active" id="modeEncrypt" data-mode="encrypt" style="padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; background: var(--accent); color: white; font-weight: bold; transition: all 0.2s;">🔒 Encrypt</button>
+                <button class="mode-btn" id="modeDecrypt" data-mode="decrypt" style="padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: var(--text-muted); font-weight: bold; transition: all 0.2s;">🔓 Decrypt</button>
+            </div>
+        </div>
+        <p class="subtitle" id="pageSubtitle">Build complex encryption sequences by chaining multiple ciphers</p>
 
         <div class="main-grid">
             <!-- Left Panel: Input & Cipher Selection -->

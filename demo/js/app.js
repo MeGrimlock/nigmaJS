@@ -585,6 +585,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function checkLibrary() {
     if (window.nigmajs) {
       update();
+      // Hide loading overlay
+      const loader = document.getElementById('loading-overlay');
+      if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => loader.remove(), 500);
+      }
     } else {
       // Retry
       setTimeout(checkLibrary, 200);

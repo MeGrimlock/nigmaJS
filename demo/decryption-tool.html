@@ -10,6 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Initializing NigmaJS...</div>
+        </div>
+    </div>
+
     <!-- Navbar injected by navbar.js -->
     <div class="container">
         <header class="guesser-header">
@@ -64,6 +72,20 @@
     <script src="js/navbar.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Check Library and Hide Loader
+            function checkLibrary() {
+                if (window.nigmajs && window.nigmajs.HMMSolver) {
+                    const loader = document.getElementById('loading-overlay');
+                    if (loader) {
+                        loader.classList.add('hidden');
+                        setTimeout(() => loader.remove(), 500);
+                    }
+                } else {
+                    setTimeout(checkLibrary, 200);
+                }
+            }
+            checkLibrary();
+
             const btnSolve = document.getElementById('btnSolve');
             const input = document.getElementById('cipherInput');
             const output = document.getElementById('decryptedOutput');

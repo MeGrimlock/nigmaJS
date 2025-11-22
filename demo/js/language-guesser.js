@@ -262,6 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
             clearInterval(checkInterval);
             initializeApp();
+            // Hide loading overlay
+            const loader = document.getElementById('loading-overlay');
+            if (loader) {
+                loader.classList.add('hidden');
+                setTimeout(() => loader.remove(), 500);
+            }
         } else if (checkCount > 100) { // 10 seconds timeout (increased for slow connections)
             clearInterval(checkInterval);
             console.error("NigmaJS failed to load.");

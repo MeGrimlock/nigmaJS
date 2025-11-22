@@ -10,8 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputLength = document.getElementById('inputLength');
     const outputLength = document.getElementById('outputLength');
     const languageSelect = document.getElementById('languageSelect');
+    const modeEncryptBtn = document.getElementById('modeEncrypt');
+    const modeDecryptBtn = document.getElementById('modeDecrypt');
+    const pageSubtitle = document.getElementById('pageSubtitle');
 
     let chain = [];
+    let currentMode = 'encrypt'; // 'encrypt' or 'decrypt'
 
     // Cipher configurations
     const cipherConfigs = {
@@ -247,6 +251,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Mode Switch Logic
+    function setMode(mode) {
+        currentMode = mode;
+        const isEncrypt = mode === 'encrypt';
+        
+        // Update Buttons
+        modeEncryptBtn.classList.toggle('active', isEncrypt);
+        modeDecryptBtn.classList.toggle('active', !isEncrypt);
+        modeEncryptBtn.style.background = isEncrypt ? 'var(--accent)' : 'transparent';
+        modeEncryptBtn.style.color = isEncrypt ? 'white' : 'var(--text-muted)';
+        modeDecryptBtn.style.background = !isEncrypt ? 'var(--accent)' : 'transparent';
+        modeDecryptBtn.style.color = !isEncrypt ? 'white' : 'var(--text-muted)';
+
+        // Update Labels
+        document.querySelector('#plaintext').placeholder = isEncrypt ? "Enter your plaintext here..." : "Enter your ciphertext here...";
+        document.querySelector('h2:first-of-type').innerText = isEncrypt ? "📝 Input Text" : "📝 Ciphertext Input";
+        
+        const resultTitle = document.querySelector('.result-section').parentElement.querySelector('h2');
+        if (resultTitle) resultTitle.innerText = isEncrypt ? "✨ Result" : "✨ Decrypted Plaintext";
+
+        // Update Buttons visibility
+        reverseBtn.style.display = isEncrypt ? 'inline-block' : 'none';
+        executeBtn.innerHTML = isEncrypt ? "🚀 Execute Chain" : "🔓 Decrypt Chain";
+        
+        // Clear results if any
+        result.innerHTML = isEncrypt ? 'Execute the chain to see the encrypted result...' : 'Execute the chain to see the decrypted result...';
+    }
+
+    modeEncryptBtn.addEventListener('click', () => setMode('encrypt'));
+    modeDecryptBtn.addEventListener('click', () => setMode('decrypt'));
+
+
     // Add cipher to chain
     function addCipherToChain(cipherType) {
         const config = cipherConfigs[cipherType];
@@ -345,32 +381,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let currentText = plaintext.value;
         const steps = [];
-        let stepsHTML = '<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem; border-left: 3px solid #8b5cf6;">';
-        stepsHTML += '<strong style="color: #8b5cf6;">🔍 Intermediate Steps:</strong><br><br>';
-        stepsHTML += `<div style="color: #94a3b8; margin: 0.5rem 0;">Input: <span style="color: #10b981;">${currentText}</span></div>`;
+        const isEncrypt = currentMode === 'encrypt';
+        
+        let color = isEncrypt ? '#8b5cf6' : '#f59e0b'; // Purple vs Orange
+        let resultColor = isEncrypt ? '#10b981' : '#3b82f6'; // Green vs Blue
+        let operationName = isEncrypt ? 'Step' : 'Decryption Step';
+
+        let stepsHTML = `<div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem; border-left: 3px solid ${color};">`;
+        stepsHTML += `<strong style="color: ${color};">🔍 Intermediate Steps:</strong><br><br>`;
+        stepsHTML += `<div style="color: #94a3b8; margin: 0.5rem 0;">Input: <span style="color: ${isEncrypt ? '#10b981' : '#f59e0b'};">${currentText}</span></div>`;
 
         try {
             chain.forEach((step, index) => {
                 const cipher = step.config.create(currentText, step.params);
                 const previousText = currentText;
-                currentText = step.config.encode(cipher);
+                
+                // KEY LOGIC: Encode or Decode based on mode
+                if (isEncrypt) {
+                    currentText = step.config.encode(cipher);
+                } else {
+                    currentText = step.config.decode(cipher);
+                }
+                
                 steps.push(currentText);
 
                 stepsHTML += `<div style="margin: 0.5rem 0; padding-left: 1rem; border-left: 2px solid #334155;">`;
-                stepsHTML += `<div style="color: #8b5cf6;">Step ${index + 1}: ${step.config.name}</div>`;
+                stepsHTML += `<div style="color: ${color};">${operationName} ${index + 1}: ${step.config.name} ${!isEncrypt ? '(Decode)' : ''}</div>`;
                 stepsHTML += `<div style="color: #e2e8f0; font-family: 'Fira Code', monospace; font-size: 0.9rem;">${currentText}</div>`;
                 stepsHTML += `</div>`;
             });
 
             stepsHTML += '</div>';
 
-            // Store steps for decryption
-            window.encryptionSteps = steps;
-            window.encryptedResult = currentText;
+            // Store steps for potential reversal (only in encrypt mode)
+            if (isEncrypt) {
+                window.encryptionSteps = steps;
+                window.encryptedResult = currentText;
+            }
 
-            result.innerHTML = stepsHTML + `<div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 0.5rem;">
-                <strong style="color: #10b981;">✨ Final Result:</strong><br>
-                <div style="margin-top: 0.5rem; font-family: 'Fira Code', monospace; color: #10b981; word-break: break-all;">${currentText}</div>
+            result.innerHTML = stepsHTML + `<div style="margin-top: 1rem; padding: 1rem; background: rgba(${isEncrypt ? '16, 185, 129' : '59, 130, 246'}, 0.1); border: 1px solid ${resultColor}; border-radius: 0.5rem;">
+                <strong style="color: ${resultColor};">✨ Final Result:</strong><br>
+                <div style="margin-top: 0.5rem; font-family: 'Fira Code', monospace; color: ${resultColor}; word-break: break-all;">${currentText}</div>
             </div>`;
 
             outputLength.textContent = currentText.length;
@@ -387,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Reverse chain and decrypt
+    // Reverse chain and decrypt (Legacy function for Encrypt mode only)
     function reverseAndDecrypt() {
         if (chain.length === 0) {
             result.textContent = 'No ciphers in the chain!';
@@ -445,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chain = [];
         renderChain();
         updateStats();
-        result.textContent = 'Execute the chain to see the encrypted result...';
+        result.textContent = currentMode === 'encrypt' ? 'Execute the chain to see the encrypted result...' : 'Execute the chain to see the decrypted result...';
         outputLength.textContent = '0';
     }
 
@@ -681,6 +732,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (plaintext.value) {
                 updateChartData(plaintext.value, plaintext.value);
             }
+            
+            // Hide loading overlay
+            const loader = document.getElementById('loading-overlay');
+            if (loader) {
+                loader.classList.add('hidden');
+                // Remove from DOM after transition
+                setTimeout(() => {
+                    loader.remove();
+                }, 500);
+            }
+
         } else {
             console.warn('NigmaJS not loaded. Retrying...');
             setTimeout(checkLibrary, 500);
