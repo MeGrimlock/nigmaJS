@@ -29,15 +29,18 @@ export class HMMSolver {
         const piArr = new Array(26).fill(1/26);
         const pi = tf.tensor1d(piArr);
 
-        // Mu: Emissions (Means) - Initialize Randomly
-        // We want to learn this. It represents P(CipherChar | PlainChar)
-        // In Gaussian approximation with One-Hot, Mu[i] is a vector of size 26.
-        // Ideally close to One-Hot.
-        const mu = tf.randomUniform([26, 26], 0, 1);
+        // Mu: Emissions (Means) - Initialize with Permutation Prior
+        // Initialize near a random permutation matrix to assume 1-to-1 mapping (approx)
+        // This prevents "Mode Collapse" where all emissions converge to the same letter (e.g. AAAAA...)
+        const noise = tf.randomUniform([26, 26], 0, 0.1);
+        const permutation = this.randomPermutationMatrix();
+        // Weighted sum: 90% Permutation + 10% Noise
+        const mu = permutation.mul(0.9).add(noise);
         
         // Sigma: Covariance (Small variance)
         // We want "sharp" emissions (letters are discrete)
-        const sigmaVal = 0.1;
+        // Reduced from 0.1 to 0.01 to reduce overlap
+        const sigmaVal = 0.01;
         const sigmaArr = [];
         for(let i=0; i<26; i++) {
             const row = [];
@@ -145,6 +148,23 @@ export class HMMSolver {
             finalResult = status.decryptedText;
         }
         return finalResult;
+    }
+
+    randomPermutationMatrix() {
+        // Create a 26x26 permutation matrix
+        const indices = Array.from({length: 26}, (_, i) => i);
+        // Shuffle indices (Fisher-Yates)
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        
+        const buffer = tf.buffer([26, 26]);
+        for (let i = 0; i < 26; i++) {
+            // State i maps to Emission indices[i]
+            buffer.set(1, i, indices[i]);
+        }
+        return buffer.toTensor();
     }
 
     textToOneHot(text) {
