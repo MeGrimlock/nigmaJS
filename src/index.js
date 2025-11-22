@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import { default as BasicCipher } from './basicCipher.js';
 
 import {
