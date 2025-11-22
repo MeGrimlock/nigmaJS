@@ -21,9 +21,22 @@
     <!-- Navbar injected by navbar.js -->
     <div class="container">
         <header class="guesser-header">
-            <h1>🔓 HMM Decryption Tool</h1>
-            <p class="subtitle">Attempt to break substitution ciphers using Hidden Markov Models</p>
+            <h1>🔓 Universal Decryption Tool <span style="font-size: 0.5em; vertical-align: middle; background: #f59e0b; color: #000; padding: 2px 8px; border-radius: 4px; margin-left: 10px;">EXPERIMENTAL</span></h1>
+            <p class="subtitle">Automated cryptanalysis sandbox. Work in progress.</p>
         </header>
+
+        <!-- Disclaimer / Limitations -->
+        <div class="input-card" style="border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+            <h3 style="color: #f59e0b; margin-top: 0;">⚠️ Early Development Stage</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 0;">
+                This tool is currently <strong>experimental</strong> and may fail often. Automated decryption is statistical and requires specific conditions to work:
+            </p>
+            <ul style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; padding-left: 1.5rem;">
+                <li><strong>Text Length:</strong> Requires at least 50-100 characters for accurate statistics.</li>
+                <li><strong>Language:</strong> Optimized for standard English. Slang, mixed languages, or numbers will confuse it.</li>
+                <li><strong>Supported Ciphers:</strong> Currently targets Caesar, Vigenère, and Simple Substitution only.</li>
+            </ul>
+        </div>
 
         <div class="input-card">
             <h2>📝 Ciphered Text</h2>
@@ -57,13 +70,15 @@
             <div class="input-card">
                 <h3>How it works</h3>
                 <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
-                    This tool uses a hybrid approach:
+                    This tool uses a multi-stage attack:
                     <br><br>
-                    <strong>1. Brute Force (Caesar Shift):</strong> For short texts or simple shifts, it instantly checks all 26 possibilities using Bigram analysis.
+                    <strong>1. Vigenère Analysis (Friedman Test):</strong> Checks for polyalphabetic patterns (Index of Coincidence). If detected, it finds the key length and solves each column as a Caesar shift.
                     <br>
-                    <strong>2. Hidden Markov Models (HMM):</strong> For complex substitution ciphers on longer texts (>50 chars), it uses a probabilistic model to "learn" the key.
+                    <strong>2. Brute Force (Caesar Shift):</strong> Instantly checks all 26 simple shifts using Bigram analysis.
+                    <br>
+                    <strong>3. Hidden Markov Models (HMM):</strong> For complex substitution ciphers, it uses a probabilistic model to "learn" the key mapping from scratch.
                     <br><br>
-                    <em>Note: HMM requires enough text to analyze statistics. Short texts (like "Hello World") work best with the Brute Force method.</em>
+                    <em>Note: HMM requires enough text (>50 chars) to analyze statistics effectively.</em>
                 </p>
             </div>
     </div>
@@ -95,6 +110,33 @@
             const progressText = document.getElementById('progressText');
             const methodBadge = document.getElementById('methodBadge');
 
+            // Helper: Apply decrypted letters back to original layout (preserving spaces/numbers)
+            function matchLayout(original, cleanDecrypted) {
+                let result = "";
+                let cleanIndex = 0;
+                for (let i = 0; i < original.length; i++) {
+                    const char = original[i];
+                    if (char.match(/[a-zA-Z]/)) {
+                        // It's a letter, use the decrypted one
+                        if (cleanIndex < cleanDecrypted.length) {
+                            const decChar = cleanDecrypted[cleanIndex];
+                            // Maintain original case
+                            result += (char === char.toUpperCase()) ? decChar.toUpperCase() : decChar.toLowerCase();
+                            cleanIndex++;
+                        } else {
+                            result += char; // Fallback
+                        }
+                    } else {
+                        // Not a letter (space, number), keep as is
+                        result += char;
+                    }
+                }
+                return result;
+            }
+
+            // Helper: Random Char for Matrix Effect
+            const randomChar = () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
                 if (!text) return;
@@ -102,44 +144,104 @@
                 btnSolve.innerText = "⏳ Solving...";
                 btnSolve.disabled = true;
                 output.innerText = "";
-                container.style.display = 'block'; // Show container immediately
+                container.style.display = 'block'; 
                 progressContainer.style.display = 'block';
                 methodBadge.innerText = "Method: Detecting...";
+                
+                // Reset Badge
+                methodBadge.style.color = 'var(--accent)';
+                methodBadge.style.borderColor = 'var(--border)';
 
                 // Wait for UI update
                 setTimeout(async () => {
                     try {
-                        const { HMMSolver } = window.nigmajs;
-                        if (!HMMSolver) {
-                            throw new Error("HMMSolver not loaded. Rebuild nigmajs.");
+                        const { HMMSolver, VigenereSolver } = window.nigmajs;
+                        if (!HMMSolver || !VigenereSolver) throw new Error("Library not loaded.");
+
+                        // --- 1. Try Vigenère Solver First ---
+                        const vigenereSolver = new VigenereSolver('english');
+                        const vResult = vigenereSolver.solve(text);
+                        
+                        // If high confidence (IoC match) and key length > 1 (not Caesar)
+                        if (vResult.confidence > 0.85 && vResult.analysis.length > 1) {
+                            progressBar.style.width = '100%';
+                            progressText.innerText = 'Done!';
+                            output.innerText = matchLayout(text, vResult.plaintext);
+                            
+                            methodBadge.innerText = `Method: Vigenère (Key: ${vResult.key})`;
+                            methodBadge.style.color = '#8b5cf6'; // Purple
+                            methodBadge.style.borderColor = '#8b5cf6';
+                            
+                            container.scrollIntoView({ behavior: 'smooth' });
+                            btnSolve.innerText = "🚀 Attempt Decryption";
+                            btnSolve.disabled = false;
+                            return; // Stop here
                         }
 
+                        // --- 2. Fallback to HMM (handles Caesar + Substitution) ---
                         const solver = new HMMSolver('english');
-                        await solver.initialize();
+                        // Initialize with text to use Frequency Analysis Smart Init
+                        await solver.initialize(text);
                         
-                        // Use Generator for progress updates
-                        for await (const status of solver.solveGenerator(text, 100)) {
-                            // Update UI
+                        let finalCleanText = "";
+
+                        // Use Generator
+                        for await (const status of solver.solveGenerator(text, 150)) { // Increased iterations slightly
+                            // Update Progress
                             progressBar.style.width = `${status.progress}%`;
                             progressText.innerText = `Iteration ${status.iteration}/${status.totalIterations}`;
-                            output.innerText = status.decryptedText;
+                            
+                            // --- MATRIX EFFECT LOGIC ---
+                            const isFinished = status.progress >= 100;
+                            let displayStr = "";
+
+                            if (status.method === 'caesar' || isFinished) {
+                                // Done: Show clean result formatted nicely
+                                displayStr = matchLayout(text, status.decryptedText);
+                                finalCleanText = status.decryptedText;
+                            } else {
+                                // In Progress: Scramble Effect
+                                // 1. Get current best guess from HMM (stripped)
+                                const currentGuess = status.decryptedText === "Optimizing..." ? 
+                                    text.replace(/[^a-zA-Z]/g, '') : status.decryptedText;
+                                
+                                // 2. Add noise to the guess
+                                let noisyGuess = "";
+                                for(let i=0; i<currentGuess.length; i++) {
+                                    // 20% chance to show random char instead of guess (Flicker effect)
+                                    if (Math.random() < 0.2) {
+                                        noisyGuess += randomChar();
+                                    } else {
+                                        noisyGuess += currentGuess[i];
+                                    }
+                                }
+
+                                // 3. Map back to original layout
+                                displayStr = matchLayout(text, noisyGuess);
+                            }
+
+                            output.innerText = displayStr;
                             
                             // Update Method Badge
                             if (status.method) {
                                 methodBadge.innerText = `Method: ${status.method === 'caesar' ? 'Brute Force (Caesar)' : 'HMM (Substitution)'}`;
                                 if (status.method === 'caesar') {
-                                    methodBadge.style.color = '#10b981'; // Green
+                                    methodBadge.style.color = '#10b981'; 
+                                    methodBadge.style.borderColor = '#10b981';
                                 } else {
-                                    methodBadge.style.color = '#f59e0b'; // Orange
+                                    methodBadge.style.color = '#f59e0b';
+                                    methodBadge.style.borderColor = '#f59e0b';
                                 }
                             }
                             
-                            // Scroll result into view if needed
                             if (status.iteration === 1) container.scrollIntoView({ behavior: 'smooth' });
+                            
+                            // Allow UI render
+                            await new Promise(r => setTimeout(r, 10)); 
                         }
                         
                         progressText.innerText = "Done!";
-                        progressBar.style.background = "#10b981"; // Green on success
+                        progressBar.style.background = "#10b981";
 
                     } catch (e) {
                         console.error(e);

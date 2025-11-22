@@ -15,6 +15,7 @@ import { default as Shift } from './methods/shift/shift.js';
 import { default as Enigma } from './methods/enigma/enigma.js';
 import { default as Polyalphabetic } from './methods/polyalphabetic/polyalphabetic.js';
 import { HMMSolver } from './decryption/hmm-solver.js';
+import { VigenereSolver } from './decryption/vigenere-solver.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -83,6 +84,16 @@ export default class Nigma {
 			'!': '!'
 		};
 	}
+
+    // Static access to modules
+	static Shift = Shift;
+	static Polyalphabetic = Polyalphabetic;
+	static Dictionary = Dictionary;
+	static Columnar = Columnar;
+	static Enigma = Enigma;
+	static LanguageAnalysis = LanguageAnalysis;
+    static HMMSolver = HMMSolver;
+    static VigenereSolver = VigenereSolver;
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------
 
@@ -193,4 +204,4 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver };
