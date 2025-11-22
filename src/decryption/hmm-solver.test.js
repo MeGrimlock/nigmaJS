@@ -31,6 +31,21 @@ describe('HMMSolver Integration Tests', () => {
         await solver.initialize();
     });
 
+    test('should instantly solve short Caesar Shift "Hello World"', async () => {
+        const cipher = "Khoor Zruog"; // Hello World (ROT3)
+        const expected = "Hello World";
+        
+        // This should use the "Fast Path" for Caesar
+        const result = await solver.solve(cipher, 10);
+        
+        console.log(`Short Text Decryption: ${cipher} -> ${result}`);
+        
+        // Remove " (Caesar Shift Detected!)" suffix for comparison
+        const cleanResult = result.replace(/ \(Caesar Shift Detected!\)$/, "");
+        
+        expect(cleanResult.toUpperCase()).toBe(expected.toUpperCase());
+    });
+
     // Skipped because HMM training on CPU (Node.js environment) is extremely slow (timeout > 60s)
     // and prone to numerical instability without WebGL. 
     // This logic is verified to work in the browser demo.

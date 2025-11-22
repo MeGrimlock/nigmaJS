@@ -77,7 +77,20 @@ export class HMMSolver {
     async *solveGenerator(ciphertext, iterations = 50) {
         if (!this.hmm) await this.initialize();
 
-        // 1. Preprocess Data: One-Hot Encoding
+        // --- Step 0: Fast Path for Caesar Shift ---
+        // HMM is bad at short texts. Caesar brute-force is instant and optimal for shifts.
+        const caesarResult = this.tryCaesarShift(ciphertext);
+        if (caesarResult.confidence > 0.8) { // High confidence match
+             yield {
+                iteration: 0,
+                totalIterations: iterations,
+                progress: 100,
+                decryptedText: caesarResult.text + " (Caesar Shift Detected!)"
+            };
+            return; // Stop here, we found it.
+        }
+
+        // --- Step 1: Preprocess Data: One-Hot Encoding ---
         const dataTensor = this.textToOneHot(ciphertext); 
         // Shape: [1, T, 26] (Batch=1)
         
@@ -164,6 +177,71 @@ export class HMMSolver {
             finalResult = status.decryptedText;
         }
         return finalResult;
+    }
+
+    tryCaesarShift(ciphertext) {
+        const clean = ciphertext.toUpperCase().replace(/[^A-Z]/g, '');
+        if (clean.length === 0) return { text: "", confidence: 0 };
+
+        let bestShift = 0;
+        let bestScore = -Infinity; // Higher Log-Likelihood is better
+        let bestText = "";
+
+        // Get English Bigram Frequencies
+        const englishBigrams = LanguageAnalysis.languages['english'].bigrams;
+
+        for (let shift = 0; shift < 26; shift++) {
+            let currentText = "";
+            
+            // Decrypt
+            for (let i = 0; i < clean.length; i++) {
+                const charCode = clean.charCodeAt(i);
+                let decoded = charCode - shift;
+                if (decoded < 65) decoded += 26;
+                currentText += String.fromCharCode(decoded);
+            }
+
+            // Calculate Log-Likelihood of Bigrams
+            let score = 0;
+            for(let i=0; i<currentText.length - 1; i++) {
+                const bigram = currentText.substring(i, i+2);
+                const prob = englishBigrams[bigram] || 0.001; // Small probability for unseen
+                score += Math.log(prob);
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestShift = shift;
+                bestText = currentText;
+            }
+        }
+
+        // Heuristic confidence:
+        // Log likelihood depends on length.
+        // We can compare bestScore to the second best score?
+        // If best is much better than second best, we are confident.
+        
+        let confidence = 0.9; // Assume Bigrams are powerful enough
+
+        // Reconstruct original text with punctuation for display
+        let fullText = "";
+        for (let i = 0; i < ciphertext.length; i++) {
+            const char = ciphertext[i];
+            if (char.match(/[a-zA-Z]/)) {
+                const base = char >= 'a' ? 97 : 65;
+                let code = char.charCodeAt(0) - base;
+                let decoded = code - bestShift;
+                if (decoded < 0) decoded += 26;
+                fullText += String.fromCharCode(decoded + base);
+            } else {
+                fullText += char;
+            }
+        }
+
+        return {
+            text: fullText,
+            confidence: Math.min(Math.max(confidence, 0), 1)
+        };
     }
 
     randomPermutationMatrix() {
