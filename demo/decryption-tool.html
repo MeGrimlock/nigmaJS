@@ -34,22 +34,28 @@
             </button>
         </div>
 
-        <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
-            <h2>🔓 Decrypted Result (Live Preview)</h2>
-            <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
-        </div>
+            <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0;">🔓 Decrypted Result (Live Preview)</h2>
+                    <span id="methodBadge" style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--accent);">
+                        Method: HMM
+                    </span>
+                </div>
+                <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
+            </div>
 
-        <div class="input-card">
-            <h3>How it works</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem;">
-                This tool uses a <strong>Hidden Markov Model (HMM)</strong> with the <code>hidden-markov-model-tf</code> library.
-                <br><br>
-                1. It initializes a Transition Matrix from English bigrams.<br>
-                2. It uses One-Hot encoding to represent letters.<br>
-                3. It runs an Expectation-Maximization (Baum-Welch) loop to learn the emission probabilities (the key).<br>
-                4. It uses the Viterbi algorithm to decode the most likely plaintext.
-            </p>
-        </div>
+            <div class="input-card">
+                <h3>How it works</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+                    This tool uses a hybrid approach:
+                    <br><br>
+                    <strong>1. Brute Force (Caesar Shift):</strong> For short texts or simple shifts, it instantly checks all 26 possibilities using Bigram analysis.
+                    <br>
+                    <strong>2. Hidden Markov Models (HMM):</strong> For complex substitution ciphers on longer texts (>50 chars), it uses a probabilistic model to "learn" the key.
+                    <br><br>
+                    <em>Note: HMM requires enough text to analyze statistics. Short texts (like "Hello World") work best with the Brute Force method.</em>
+                </p>
+            </div>
     </div>
 
     <script src="../build/js/nigma.min.js"></script>
@@ -62,6 +68,7 @@
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
+            const methodBadge = document.getElementById('methodBadge');
 
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
@@ -72,6 +79,7 @@
                 output.innerText = "";
                 container.style.display = 'block'; // Show container immediately
                 progressContainer.style.display = 'block';
+                methodBadge.innerText = "Method: Detecting...";
 
                 // Wait for UI update
                 setTimeout(async () => {
@@ -90,6 +98,16 @@
                             progressBar.style.width = `${status.progress}%`;
                             progressText.innerText = `Iteration ${status.iteration}/${status.totalIterations}`;
                             output.innerText = status.decryptedText;
+                            
+                            // Update Method Badge
+                            if (status.method) {
+                                methodBadge.innerText = `Method: ${status.method === 'caesar' ? 'Brute Force (Caesar)' : 'HMM (Substitution)'}`;
+                                if (status.method === 'caesar') {
+                                    methodBadge.style.color = '#10b981'; // Green
+                                } else {
+                                    methodBadge.style.color = '#f59e0b'; // Orange
+                                }
+                            }
                             
                             // Scroll result into view if needed
                             if (status.iteration === 1) container.scrollIntoView({ behavior: 'smooth' });

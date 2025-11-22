@@ -85,9 +85,23 @@ export class HMMSolver {
                 iteration: 0,
                 totalIterations: iterations,
                 progress: 100,
-                decryptedText: caesarResult.text + " (Caesar Shift Detected!)"
+                decryptedText: caesarResult.text + " (Caesar Shift Detected!)",
+                method: 'caesar'
             };
             return; // Stop here, we found it.
+        }
+
+        // If text is too short for HMM and not Caesar, warn user but try anyway
+        const cleanLen = ciphertext.replace(/[^A-Z]/gi, '').length;
+        if (cleanLen < 40) {
+             yield {
+                iteration: 0,
+                totalIterations: iterations,
+                progress: 0,
+                decryptedText: "⚠️ Text too short for statistical analysis (HMM). Results will likely be poor.",
+                method: 'hmm'
+            };
+            // Continue but expect garbage
         }
 
         // --- Step 1: Preprocess Data: One-Hot Encoding ---
@@ -157,7 +171,8 @@ export class HMMSolver {
                 iteration: i + 1,
                 totalIterations: iterations,
                 progress: ((i + 1) / iterations) * 100,
-                decryptedText: currentResult
+                decryptedText: currentResult,
+                method: 'hmm'
             };
 
             // Cleanup tensors
