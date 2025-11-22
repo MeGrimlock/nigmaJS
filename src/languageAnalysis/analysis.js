@@ -62,28 +62,31 @@ export class LanguageAnalysis {
         if (!dictionaries[language]) return 0;
 
         // Split by non-word characters to get tokens
-        // We keep accents for checking against dictionary if possible, 
-        // but our dictionary Set is UPPERCASE and Spanish normalized (no accents).
-        
-        // Clean and normalize text for checking
         const clean = text.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        // Keep pure alphabetic tokens
         const tokens = clean.split(/[^A-Z]+/);
         
-        let validCount = 0;
-        let totalCount = 0;
+        let validChars = 0;
+        let totalChars = 0;
 
         const dict = dictionaries[language];
 
         for (const token of tokens) {
-            if (token.length < 2) continue; // Ignore single letters or empty
-            totalCount++;
+            if (token.length === 0) continue;
+            totalChars += token.length;
+            
+            // Filter out single letters (except 'A' or 'I' in English, 'Y' in Spanish?)
+            // Actually, simplistic approach: check dictionary.
+            // But 1-letter words match too easily randomly.
+            if (token.length < 2) continue; 
+
             if (dict.has(token)) {
-                validCount++;
+                validChars += token.length;
             }
         }
 
-        if (totalCount === 0) return 0;
-        return validCount / totalCount;
+        if (totalChars === 0) return 0;
+        return validChars / totalChars;
     }
 
     /**

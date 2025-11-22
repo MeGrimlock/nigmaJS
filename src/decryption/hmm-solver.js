@@ -250,20 +250,24 @@ export class HMMSolver {
         // Bigrams are good, but Dictionary is better for avoiding false positives 
         // like "ARSEB DHESW" which might have okay bigrams but are nonsense.
         
-        // Check vocabulary score (0.0 to 1.0)
+        // Check vocabulary score (0.0 to 1.0) - Based on CHARACTER coverage
         const vocabScore = LanguageAnalysis.getWordCountScore(fullText, this.language);
         
         let confidence = 0.5; // Baseline for "Best Bigram Match"
 
-        if (vocabScore > 0.5) {
-            // If > 50% of words are real, we are VERY confident
+        if (vocabScore > 0.85) {
+            // Almost entirely valid words -> Certain match
             confidence = 1.0;
-        } else if (vocabScore > 0.3) {
-            // Some words found
-            confidence = 0.85;
-        } else if (vocabScore === 0 && bestScore > -300) { // Arbitrary low log-likelihood check
-            // If NO words found, downgrade confidence massively unless bigrams are PERFECT
-            // "ARSEB DHESW" has no words -> confidence drops
+        } else if (vocabScore > 0.6) {
+            // Majority of characters are valid words
+            confidence = 0.9;
+        } else if (vocabScore > 0.4) {
+            // Some valid words, but significant noise.
+            // Could be Caesar with proper nouns or typos.
+            // But for auto-detection, we prefer to be cautious.
+            confidence = 0.6; // Below 0.8 threshold -> Won't trigger Fast Path automatically
+        } else if (vocabScore === 0 && bestScore > -300) { 
+             // No words found. Downgrade.
             confidence = 0.1; 
         } else {
             // Low vocab score

@@ -46,6 +46,21 @@ describe('HMMSolver Integration Tests', () => {
         expect(cleanResult.toUpperCase()).toBe(expected.toUpperCase());
     });
 
+    test('should NOT flag random text with numbers as Caesar Shift (False Positive Prevention)', async () => {
+        const cipher = "HOL3LR2ELWOD1"; 
+        
+        // Check the first result yielded. If it's Caesar Fast Path, it yields immediately at iter 0.
+        const generator = solver.solveGenerator(cipher, 2);
+        const firstResult = (await generator.next()).value;
+        
+        console.log("First Result Method:", firstResult.method);
+
+        // If method is 'caesar', it failed the test.
+        // It should be 'hmm' (or undefined/start) because confidence was low.
+        expect(firstResult.method).not.toBe('caesar');
+        expect(firstResult.decryptedText).not.toContain("(Caesar Shift Detected!)");
+    });
+
     // Skipped because HMM training on CPU (Node.js environment) is extremely slow (timeout > 60s)
     // and prone to numerical instability without WebGL. 
     // This logic is verified to work in the browser demo.
