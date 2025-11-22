@@ -1,490 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NigmaJS Interactive Demo</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    /* index.html specific styles */
-    .input-section {
-      margin-bottom: 3rem;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NigmaJS - Cryptography Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="navbar.css">
+    <style>
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #a78bfa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
 
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-    }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
 
-    .card h3 {
-      margin-top: 0;
-      color: var(--accent);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-    }
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 1rem;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
 
-    .card-content {
-      margin-top: 1rem;
-    }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
 
-    .output {
-      background-color: rgba(0, 0, 0, 0.2);
-      padding: 0.75rem;
-      border-radius: 0.375rem;
-      font-family: 'Fira Code', monospace;
-      word-break: break-all;
-      min-height: 2rem;
-      margin-top: 1rem;
-    }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
 
-    .controls {
-      margin-bottom: 1rem;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
 
-    input[type="number"],
-    input[type="text"] {
-      width: 80px;
-    }
-  </style>
+        .feature-desc {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .btn-feature {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .btn-feature:hover {
+            background: var(--accent-hover);
+        }
+        
+        /* Override accent colors for variety */
+        .card-chain .btn-feature { background: #f59e0b; }
+        .card-chain .btn-feature:hover { background: #d97706; }
+        
+        .card-decrypt .btn-feature { background: #10b981; }
+        .card-decrypt .btn-feature:hover { background: #059669; }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+    </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>NigmaJS Demo</h1>
+    <!-- Navbar injected by navbar.js -->
 
-    <div class="input-section">
-      <label for="mainInput">Enter text to encrypt:</label>
-      <textarea id="mainInput" placeholder="Type something secret...">Hello World 123</textarea>
+    <div class="hero">
+        <h1>NigmaJS</h1>
+        <p>
+            A comprehensive JavaScript library for historical and modern cryptography. 
+            From Caesar ciphers to Hidden Markov Models, explore the art of secret writing directly in your browser.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="https://github.com/MeGrimlock/nigmaJS" class="btn-feature" style="background: #334155;">View on GitHub</a>
+            <a href="demo.html" class="btn-feature">Get Started</a>
+        </div>
     </div>
 
-    <div class="grid">
-      <!-- Caesar -->
-      <div class="card">
-        <h3>Caesar Shift</h3>
-        <div class="controls">
-          <label>Shift:</label>
-          <input type="number" id="caesarShift" value="3">
+    <div class="features-grid">
+        <!-- Demo 1 -->
+        <div class="feature-card">
+            <div class="feature-icon">🔤</div>
+            <div class="feature-title">Basic Ciphers</div>
+            <p class="feature-desc">
+                Explore individual implementations of classic ciphers like Vigenère, Rail Fence, Playfair, and more. Test encryption and decryption instantly.
+            </p>
+            <a href="demo.html" class="btn-feature">Try Basic Demo</a>
         </div>
-        <label>Encoded:</label>
-        <div class="output" id="caesarOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="caesarDecoded"></div>
-      </div>
 
-      <!-- Atbash -->
-      <div class="card">
-        <h3>Atbash</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="atbashOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="atbashDecoded"></div>
+        <!-- Demo 2 -->
+        <div class="feature-card card-chain">
+            <div class="feature-icon">🔗</div>
+            <div class="feature-title">Cipher Chain</div>
+            <p class="feature-desc">
+                Combine multiple ciphers in a sequence. Visualize how frequency analysis changes as you layer different encryption methods.
+            </p>
+            <a href="chain-demo.html" class="btn-feature">Build Chain</a>
         </div>
-      </div>
 
-      <!-- Morse -->
-      <div class="card">
-        <h3>Morse Code</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="morseOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="morseDecoded"></div>
+        <!-- Demo 3 -->
+        <div class="feature-card">
+            <div class="feature-icon">🌍</div>
+            <div class="feature-title">Language Guesser</div>
+            <p class="feature-desc">
+                Detect the language of an encrypted text using N-gram frequency analysis and shape comparison. Supports English, Spanish, French, and more.
+            </p>
+            <a href="language-guesser.html" class="btn-feature">Detect Language</a>
         </div>
-      </div>
 
-      <!-- ROT13 -->
-      <div class="card">
-        <h3>ROT13</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="rot13Output"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="rot13Decoded"></div>
+        <!-- Demo 4 -->
+        <div class="feature-card card-decrypt">
+            <div class="feature-icon">🔓</div>
+            <div class="feature-title">Decryption Tool</div>
+            <p class="feature-desc">
+                Automated cryptanalysis tool. Uses Brute Force for Caesar shifts and Hidden Markov Models (HMM) to break substitution ciphers without a key.
+            </p>
+            <a href="decryption-tool.html" class="btn-feature">Start Hacking</a>
         </div>
-      </div>
 
-      <!-- ROT5 -->
-      <div class="card">
-        <h3>ROT5</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="rot5Output"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="rot5Decoded"></div>
+        <!-- NPM Package -->
+        <div class="feature-card" style="border-color: #cb3837;">
+            <div class="feature-icon">📦</div>
+            <div class="feature-title">NPM Package</div>
+            <p class="feature-desc">
+                Use NigmaJS in your own projects. Lightweight, modular, and zero-dependency core.
+                <br>
+                <code style="background: #333; padding: 4px 8px; border-radius: 4px; display: block; margin-top: 8px; font-size: 0.9rem;">npm install nigmajs</code>
+            </p>
+            <a href="https://www.npmjs.com/package/nigmajs" target="_blank" class="btn-feature" style="background: #cb3837;">View on NPM</a>
         </div>
-      </div>
-
-      <!-- ROT18 -->
-      <div class="card">
-        <h3>ROT18</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="rot18Output"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="rot18Decoded"></div>
-        </div>
-      </div>
-
-      <!-- ROT47 -->
-      <div class="card">
-        <h3>ROT47</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="rot47Output"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="rot47Decoded"></div>
-        </div>
-      </div>
-
-      <!-- AMSCO -->
-      <div class="card">
-        <h3>AMSCO</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="amscoKey" value="132">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="amscoOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="amscoDecoded"></div>
-      </div>
-
-      <!-- Autokey -->
-      <div class="card">
-        <h3>Autokey</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="autokeyKey" value="SECRET">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="autokeyOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="autokeyDecoded"></div>
-      </div>
-
-      <!-- Baconian -->
-      <div class="card">
-        <h3>Baconian</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="baconianOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="baconianDecoded"></div>
-        </div>
-      </div>
-
-      <!-- Simple Substitution -->
-      <div class="card">
-        <h3>Simple Substitution</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="simpleSubKey" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" style="width: 200px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="simpleSubOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="simpleSubDecoded"></div>
-      </div>
-
-      <!-- Enigma -->
-      <div class="card">
-        <h3>Enigma Machine</h3>
-        <div class="controls" style="flex-wrap: wrap;">
-          <div>
-            <label>Rotors:</label>
-            <input type="text" id="enigmaRotors" value="123" maxlength="3" style="width: 60px;">
-          </div>
-          <div>
-            <label>Ring:</label>
-            <input type="text" id="enigmaRing" value="AAA" maxlength="3" style="width: 60px;">
-          </div>
-          <div>
-            <label>Key:</label>
-            <input type="text" id="enigmaKey" value="AAA" maxlength="3" style="width: 60px;">
-          </div>
-          <div style="width: 100%;">
-            <label>Plugs:</label>
-            <input type="text" id="enigmaPlugs" value="PO ML IU KJ NH YT GB VF RE DC" style="width: 100%;">
-          </div>
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="enigmaOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="enigmaDecoded"></div>
-      </div>
-
-      <!-- Vigenère -->
-      <div class="card">
-        <h3>Vigenère</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="vigenereKey" value="KEY">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="vigenereOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="vigenereDecoded"></div>
-      </div>
-
-      <!-- Polybius -->
-      <div class="card">
-        <h3>Polybius Square</h3>
-        <div class="controls">
-          <label>Keyword (optional):</label>
-          <input type="text" id="polybiusKey" value="" placeholder="Leave empty for default">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="polybiusOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="polybiusDecoded"></div>
-      </div>
-
-      <!-- Quagmire I -->
-      <div class="card">
-        <h3>Quagmire I</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="quagmire1Key" value="KEY">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="quagmire1Output"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="quagmire1Decoded"></div>
-      </div>
-
-      <!-- Quagmire II -->
-      <div class="card">
-        <h3>Quagmire II</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="quagmire2Key" value="KEY" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Indicator:</label>
-          <input type="text" id="quagmire2Indicator" value="A" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="quagmire2Output"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="quagmire2Decoded"></div>
-      </div>
-
-      <!-- Quagmire III -->
-      <div class="card">
-        <h3>Quagmire III</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="quagmire3Key" value="KEY" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Indicator:</label>
-          <input type="text" id="quagmire3Indicator" value="A" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="quagmire3Output"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="quagmire3Decoded"></div>
-      </div>
-
-      <!-- Quagmire IV -->
-      <div class="card">
-        <h3>Quagmire IV</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="quagmire4Key" value="KEY" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Indicator:</label>
-          <input type="text" id="quagmire4Indicator" value="ABC" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="quagmire4Output"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="quagmire4Decoded"></div>
-      </div>
-
-      <!-- Beaufort -->
-      <div class="card">
-        <h3>Beaufort</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="beaufortKey" value="KEY">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="beaufortOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="beaufortDecoded"></div>
-      </div>
-
-      <!-- Porta -->
-      <div class="card">
-        <h3>Porta</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="portaKey" value="KEY">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="portaOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="portaDecoded"></div>
-      </div>
-
-      <!-- Gronsfeld -->
-      <div class="card">
-        <h3>Gronsfeld</h3>
-        <div class="controls">
-          <label>Numeric Key:</label>
-          <input type="text" id="gronsfeldKey" value="12345" placeholder="e.g., 12345">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="gronsfeldOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="gronsfeldDecoded"></div>
-      </div>
-
-      <!-- Bifid -->
-      <div class="card">
-        <h3>Bifid</h3>
-        <div class="controls">
-          <label>Keyword (optional):</label>
-          <input type="text" id="bifidKey" value="" placeholder="Leave empty for default">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="bifidOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="bifidDecoded"></div>
-      </div>
-
-      <!-- Rail Fence -->
-      <div class="card">
-        <h3>Rail Fence</h3>
-        <div class="controls">
-          <label>Number of Rails:</label>
-          <input type="number" id="railFenceRails" value="3" min="2" style="width: 80px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="railFenceOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="railFenceDecoded"></div>
-      </div>
-
-      <!-- Playfair -->
-      <div class="card">
-        <h3>Playfair</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="playfairKey" value="KEYWORD">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="playfairOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="playfairDecoded"></div>
-      </div>
-
-      <!-- Four-Square -->
-      <div class="card">
-        <h3>Four-Square</h3>
-        <div class="controls">
-          <label>Keyword 1:</label>
-          <input type="text" id="fourSquareKey1" value="EXAMPLE" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Keyword 2:</label>
-          <input type="text" id="fourSquareKey2" value="KEYWORD" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="fourSquareOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="fourSquareDecoded"></div>
-      </div>
-
-      <!-- Two-Square -->
-      <div class="card">
-        <h3>Two-Square</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="twoSquareKey" value="KEYWORD">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="twoSquareOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="twoSquareDecoded"></div>
-      </div>
-
-      <!-- ADFGVX -->
-      <div class="card">
-        <h3>ADFGVX</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="adfgvxKey" value="KEYWORD" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Transposition Key:</label>
-          <input type="text" id="adfgvxTransKey" value="KEY" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="adfgvxOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="adfgvxDecoded"></div>
-      </div>
-
-      <!-- ADFGX -->
-      <div class="card">
-        <h3>ADFGX</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="adfgxKey" value="KEYWORD" style="width: 100px;">
-        </div>
-        <div class="controls">
-          <label>Transposition Key:</label>
-          <input type="text" id="adfgxTransKey" value="KEY" style="width: 100px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="adfgxOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="adfgxDecoded"></div>
-      </div>
-
-      <!-- Route -->
-      <div class="card">
-        <h3>Route</h3>
-        <div class="controls">
-          <label>Rows:</label>
-          <input type="number" id="routeRows" value="5" min="2" style="width: 60px;">
-        </div>
-        <div class="controls">
-          <label>Columns:</label>
-          <input type="number" id="routeCols" value="5" min="2" style="width: 60px;">
-        </div>
-        <div class="controls">
-          <label>Route:</label>
-          <select id="routePattern" style="width: 100px;">
-            <option value="spiral">Spiral</option>
-            <option value="zigzag">Zigzag</option>
-            <option value="column">Column</option>
-          </select>
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="routeOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="routeDecoded"></div>
-      </div>
     </div>
-  </div>
 
-  <script src="../build/js/nigma.min.js"></script>
-  <script src="app.js"></script>
+    <footer>
+        <p>NigmaJS Project &copy; 2025</p>
+        <p style="font-size: 0.9rem;">Built with ❤️ and JavaScript</p>
+    </footer>
+
+    <script src="navbar.js"></script>
 </body>
-
 </html>
+

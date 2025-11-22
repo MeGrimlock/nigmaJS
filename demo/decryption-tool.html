@@ -6,9 +6,11 @@
     <title>NigmaJS - HMM Decryption Tool</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="guesser.css">
+    <link rel="stylesheet" href="navbar.css">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
 </head>
 <body>
+    <!-- Navbar injected by navbar.js -->
     <div class="container">
         <header class="guesser-header">
             <h1>🔓 HMM Decryption Tool</h1>
@@ -59,6 +61,7 @@
     </div>
 
     <script src="../build/js/nigma.min.js"></script>
+    <script src="navbar.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const btnSolve = document.getElementById('btnSolve');
