@@ -18,14 +18,25 @@
         <div class="input-card">
             <h2>📝 Ciphered Text</h2>
             <textarea id="cipherInput" placeholder="Paste ciphertext here (must be simple substitution)..."></textarea>
+            
+            <div id="progressContainer" style="margin-top: 1rem; display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-muted);">Decrypting...</span>
+                    <span id="progressText" style="color: var(--accent);">0%</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s;"></div>
+                </div>
+            </div>
+
             <button id="btnSolve" class="tab-btn active" style="margin-top: 1rem; width: 100%; text-align: center;">
                 🚀 Attempt Decryption
             </button>
         </div>
 
         <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
-            <h2>🔓 Decrypted Result</h2>
-            <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; color: #e2e8f0;"></p>
+            <h2>🔓 Decrypted Result (Live Preview)</h2>
+            <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
         </div>
 
         <div class="input-card">
@@ -48,15 +59,19 @@
             const input = document.getElementById('cipherInput');
             const output = document.getElementById('decryptedOutput');
             const container = document.getElementById('resultsContainer');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
 
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
                 if (!text) return;
 
-                btnSolve.innerText = "⏳ Solving... (This may take a moment)";
+                btnSolve.innerText = "⏳ Solving...";
                 btnSolve.disabled = true;
                 output.innerText = "";
-                container.style.display = 'none';
+                container.style.display = 'block'; // Show container immediately
+                progressContainer.style.display = 'block';
 
                 // Wait for UI update
                 setTimeout(async () => {
@@ -69,10 +84,20 @@
                         const solver = new HMMSolver('english');
                         await solver.initialize();
                         
-                        const result = await solver.solve(text, 50); // 50 iterations
+                        // Use Generator for progress updates
+                        for await (const status of solver.solveGenerator(text, 100)) {
+                            // Update UI
+                            progressBar.style.width = `${status.progress}%`;
+                            progressText.innerText = `Iteration ${status.iteration}/${status.totalIterations}`;
+                            output.innerText = status.decryptedText;
+                            
+                            // Scroll result into view if needed
+                            if (status.iteration === 1) container.scrollIntoView({ behavior: 'smooth' });
+                        }
                         
-                        output.innerText = result;
-                        container.style.display = 'block';
+                        progressText.innerText = "Done!";
+                        progressBar.style.background = "#10b981"; // Green on success
+
                     } catch (e) {
                         console.error(e);
                         alert("Error: " + e.message);

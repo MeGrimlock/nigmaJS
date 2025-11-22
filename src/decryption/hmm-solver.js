@@ -67,18 +67,16 @@ export class HMMSolver {
 
     /**
      * Solves the substitution cipher using custom EM loop (freezing A)
+     * Generator function to yield progress and intermediate results
      * @param {string} ciphertext 
      * @param {number} iterations 
      */
-    async solve(ciphertext, iterations = 50) {
+    async *solveGenerator(ciphertext, iterations = 50) {
         if (!this.hmm) await this.initialize();
 
         // 1. Preprocess Data: One-Hot Encoding
         const dataTensor = this.textToOneHot(ciphertext); 
         // Shape: [1, T, 26] (Batch=1)
-        
-        // 2. Custom Training Loop
-        // We cannot use hmm.fit() because it updates A. We want A fixed.
         
         // Transpose for internal logic: (T, N, D)
         const processedData = dataTensor.transpose([1, 0, 2]);
@@ -94,35 +92,59 @@ export class HMMSolver {
             const [gamma, xi] = this.hmm._expectation(pdf);
 
             // d. Maximization (Update Mu, Sigma)
-            // We ignore the returned A and Pi, and use our fixed ones
             const [newPi, newA, newMu, newSigma] = this.hmm._maximization(processedData, gamma, xi);
+
+            // Regularize Sigma to prevent singularity
+            const epsilon = 1e-2;
+            const eye = tf.eye(26).expandDims(0).tile([26, 1, 1]);
+            const regSigma = newSigma.add(eye.mul(epsilon));
 
             // e. Update Parameters (Freeze A!)
             await this.hmm.setParameters({
-                pi: newPi, // We can update Pi (start probs)
-                A: this.fixedA, // KEEP A FIXED to Language Model
-                mu: newMu,     // Update Emissions (The Key!)
-                Sigma: newSigma // Update Variance
+                pi: newPi, 
+                A: this.fixedA, // KEEP A FIXED
+                mu: newMu,     
+                Sigma: regSigma
             });
             
-            // Dispose tensors to prevent leak
-            if (i % 10 === 0) console.log(`Iteration ${i+1}/${iterations}`);
-            tf.dispose([pdf, gamma, xi, newPi, newA, newMu, newSigma]);
-        }
+            // Yield Progress every iteration (or fewer for speed)
+            // We perform a Viterbi decode periodically to show "current best guess"
+            // Decode takes time, so maybe not every single frame if it's slow, but for demo it's fine.
+            
+            // 3. Decode (Viterbi Inference) - Intermediate
+            const hiddenStates = this.hmm.inference(dataTensor); 
+            const stateIndices = await hiddenStates.array();
+            const decodedIndices = stateIndices[0];
+            let currentResult = "";
+            for(const idx of decodedIndices) {
+                currentResult += this.chars[idx];
+            }
 
-        // 3. Decode (Viterbi Inference)
-        // Now that Mu is optimized, find best state sequence
-        const hiddenStates = this.hmm.inference(dataTensor); // Shape [1, T]
-        const stateIndices = await hiddenStates.array();
-        
-        // 4. Convert Indices back to Text
-        const decodedIndices = stateIndices[0];
-        let result = "";
-        for(const idx of decodedIndices) {
-            result += this.chars[idx];
-        }
+            // Yield status
+            yield {
+                iteration: i + 1,
+                totalIterations: iterations,
+                progress: ((i + 1) / iterations) * 100,
+                decryptedText: currentResult
+            };
 
-        return result;
+            // Cleanup tensors
+            tf.dispose([pdf, gamma, xi, newPi, newA, newMu, newSigma, regSigma, eye, hiddenStates]);
+            
+            // Allow UI to breathe
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+    }
+
+    /**
+     * Legacy solve method (wrapper for generator)
+     */
+    async solve(ciphertext, iterations = 50) {
+        let finalResult = "";
+        for await (const status of this.solveGenerator(ciphertext, iterations)) {
+            finalResult = status.decryptedText;
+        }
+        return finalResult;
     }
 
     textToOneHot(text) {
