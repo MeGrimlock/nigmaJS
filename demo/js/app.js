@@ -581,6 +581,14 @@ document.addEventListener('DOMContentLoaded', () => {
   routeCols.addEventListener('input', update);
   routePattern.addEventListener('input', update);
 
-  // Initial call
-  update();
+  // Initial call with check
+  function checkLibrary() {
+    if (window.nigmajs) {
+      update();
+    } else {
+      // Retry
+      setTimeout(checkLibrary, 200);
+    }
+  }
+  checkLibrary();
 });

@@ -675,21 +675,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStats();
 
     // Wait for library to load then init chart
-    setTimeout(() => {
+    function checkLibrary() {
         if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
             initChart();
-            // If there is default text, run initial analysis
             if (plaintext.value) {
-                // Create a temporary chart update with input text as output just to show initial state
                 updateChartData(plaintext.value, plaintext.value);
             }
         } else {
-            console.warn('NigmaJS or LanguageAnalysis not loaded yet');
-            // Retry once
-            setTimeout(() => {
-                initChart();
-                if (plaintext.value) updateChartData(plaintext.value, plaintext.value);
-            }, 1000);
+            console.warn('NigmaJS not loaded. Retrying...');
+            setTimeout(checkLibrary, 500);
         }
-    }, 500);
+    }
+    
+    checkLibrary();
 });

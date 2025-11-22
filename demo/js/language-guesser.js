@@ -262,14 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
             clearInterval(checkInterval);
             initializeApp();
-        } else if (checkCount > 50) { // 5 seconds timeout
+        } else if (checkCount > 100) { // 10 seconds timeout (increased for slow connections)
             clearInterval(checkInterval);
             console.error("NigmaJS failed to load.");
             const errorMsg = document.createElement('div');
-            errorMsg.style.color = 'red';
+            errorMsg.style.color = '#ef4444';
             errorMsg.style.textAlign = 'center';
             errorMsg.style.padding = '20px';
-            errorMsg.innerHTML = "❌ Error: Failed to load NigmaJS library. Please check console for details.";
+            errorMsg.style.background = 'rgba(239, 68, 68, 0.1)';
+            errorMsg.style.borderRadius = '0.5rem';
+            errorMsg.style.margin = '1rem';
+            errorMsg.innerHTML = "<strong>❌ Error:</strong> Library failed to load.<br>Please check your internet connection or if 'js/nigma.min.js' exists.";
+            chartsContainer.innerHTML = ''; // Clear loading spinner if any
             chartsContainer.appendChild(errorMsg);
         }
     }, 100);
