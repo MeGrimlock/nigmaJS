@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import HMM from 'hidden-markov-model-tf';
 import { LanguageAnalysis } from '../languageAnalysis/analysis.js';
+import 'regenerator-runtime/runtime';
 
 export class HMMSolver {
     constructor(language = 'english') {
@@ -15,10 +16,10 @@ export class HMMSolver {
 
     /**
      * Prepare the HMM with fixed Language Transition Matrix
+     * @param {string} ciphertext - Optional, used for smart initialization based on frequency
      */
-    async initialize() {
+    async initialize(ciphertext = null) {
         // 1. Get Language Matrix (Transition Probabilities)
-        // This returns a 26x26 JS object/array
         const transMatrixObj = LanguageAnalysis.getLanguageTransitionMatrix(this.language);
         const transArr = this.objToMatrix(transMatrixObj);
         
@@ -29,30 +30,21 @@ export class HMMSolver {
         const piArr = new Array(26).fill(1/26);
         const pi = tf.tensor1d(piArr);
 
-        // Mu: Emissions (Means) - Initialize with Permutation Prior
-        // Initialize near a random permutation matrix to assume 1-to-1 mapping (approx)
-        // This prevents "Mode Collapse" where all emissions converge to the same letter (e.g. AAAAA...)
-        const noise = tf.randomUniform([26, 26], 0, 0.1);
-        const permutation = this.randomPermutationMatrix();
-        // Weighted sum: 90% Permutation + 10% Noise
-        const mu = permutation.mul(0.9).add(noise);
+        // Mu: Emissions (Means)
+        let mu;
+        if (ciphertext && ciphertext.length > 50) {
+            // SMART INITIALIZATION: Frequency Matching
+            // Map most frequent cipher char to most frequent language char ('E')
+            mu = this.frequencyBasedInitialization(ciphertext);
+        } else {
+            // Fallback: Random Permutation
+            const noise = tf.randomUniform([26, 26], 0, 0.1);
+            const permutation = this.randomPermutationMatrix();
+            mu = permutation.mul(0.9).add(noise);
+        }
         
         // Sigma: Covariance (Small variance)
-        // We want "sharp" emissions (letters are discrete)
-        // Reduced from 0.1 to 0.01 to reduce overlap
         const sigmaVal = 0.01;
-        const sigmaArr = [];
-        for(let i=0; i<26; i++) {
-            const row = [];
-            for(let j=0; j<26; j++) {
-                const col = new Array(26).fill(0);
-                col[j] = sigmaVal;
-                row.push(col);
-            }
-            sigmaArr.push(row);
-        }
-        // Dimensions: [States, Dim, Dim] -> [26, 26, 26] diagonal matrices
-        // But simpler: Just Identity * 0.1 for each state
         const Sigma = tf.eye(26).mul(sigmaVal).expandDims(0).tile([26, 1, 1]);
 
         this.hmm = new HMM({
@@ -68,6 +60,51 @@ export class HMMSolver {
         });
     }
 
+    frequencyBasedInitialization(text) {
+        // 1. Calculate Ciphertext Frequencies
+        const freqs = {};
+        const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
+        for (const char of clean) freqs[char] = (freqs[char] || 0) + 1;
+        
+        // Sort Cipher Chars by Frequency (Desc)
+        const sortedCipher = Object.keys(freqs).sort((a, b) => freqs[b] - freqs[a]);
+        // Fill missing chars at the end
+        this.chars.split('').forEach(c => {
+            if (!freqs[c]) sortedCipher.push(c);
+        });
+
+        // 2. Get Language Frequencies (English)
+        // ETAOIN SHRDLU...
+        const langFreqs = LanguageAnalysis.languages[this.language].monograms;
+        const sortedLang = Object.keys(langFreqs).sort((a, b) => langFreqs[b] - langFreqs[a]);
+
+        // 3. Create Permutation Map
+        // State (Lang Char) -> Emission (Cipher Char)
+        // Map 'E' (Lang[0]) to 'X' (Cipher[0])
+        const indices = new Array(26).fill(0);
+        
+        for (let i = 0; i < 26; i++) {
+            const langChar = sortedLang[i];    // e.g. 'E'
+            const cipherChar = sortedCipher[i]; // e.g. 'X'
+            
+            const stateIdx = this.charMap[langChar];
+            const emissionIdx = this.charMap[cipherChar];
+            
+            // State `stateIdx` should emit `emissionIdx`
+            indices[stateIdx] = emissionIdx;
+        }
+
+        // 4. Create Tensor
+        const buffer = tf.buffer([26, 26]);
+        for (let i = 0; i < 26; i++) {
+            buffer.set(1, i, indices[i]);
+        }
+        
+        // Add small noise to allow HMM to correct mistakes
+        const noise = tf.randomUniform([26, 26], 0, 0.15);
+        return buffer.toTensor().mul(0.85).add(noise);
+    }
+
     /**
      * Solves the substitution cipher using custom EM loop (freezing A)
      * Generator function to yield progress and intermediate results
@@ -75,12 +112,12 @@ export class HMMSolver {
      * @param {number} iterations 
      */
     async *solveGenerator(ciphertext, iterations = 50) {
-        if (!this.hmm) await this.initialize();
+        // Re-initialize with ciphertext for smart frequency matching
+        await this.initialize(ciphertext);
 
         // --- Step 0: Fast Path for Caesar Shift ---
-        // HMM is bad at short texts. Caesar brute-force is instant and optimal for shifts.
         const caesarResult = this.tryCaesarShift(ciphertext);
-        if (caesarResult.confidence > 0.8) { // High confidence match
+        if (caesarResult.confidence > 0.8) {
              yield {
                 iteration: 0,
                 totalIterations: iterations,
@@ -88,10 +125,9 @@ export class HMMSolver {
                 decryptedText: caesarResult.text + " (Caesar Shift Detected!)",
                 method: 'caesar'
             };
-            return; // Stop here, we found it.
+            return;
         }
 
-        // If text is too short for HMM and not Caesar, warn user but try anyway
         const cleanLen = ciphertext.replace(/[^A-Z]/gi, '').length;
         if (cleanLen < 40) {
              yield {
@@ -101,14 +137,10 @@ export class HMMSolver {
                 decryptedText: "⚠️ Text too short for statistical analysis (HMM). Results will likely be poor.",
                 method: 'hmm'
             };
-            // Continue but expect garbage
         }
 
         // --- Step 1: Preprocess Data: One-Hot Encoding ---
         const dataTensor = this.textToOneHot(ciphertext); 
-        // Shape: [1, T, 26] (Batch=1)
-        
-        // Transpose for internal logic: (T, N, D)
         const processedData = dataTensor.transpose([1, 0, 2]);
 
         for(let i=0; i<iterations; i++) {
@@ -125,22 +157,16 @@ export class HMMSolver {
             const [newPi, newA, newMu, newSigma] = this.hmm._maximization(processedData, gamma, xi);
 
             // Force Mu to be doubly stochastic (approx 1-to-1 mapping)
-            // We apply a few iterations of Sinkhorn normalization (row/col normalization)
-            // This prevents mode collapse where all states map to 'A' or 'E'.
             let balancedMu = newMu;
             for(let k=0; k<5; k++) {
-                // Normalize rows (States sum to 1)
                 const rowSum = balancedMu.sum(1, true);
-                balancedMu = balancedMu.div(rowSum.add(1e-8)); // Add epsilon
-                
-                // Normalize cols (Emissions sum to 1)
+                balancedMu = balancedMu.div(rowSum.add(1e-8));
                 const colSum = balancedMu.sum(0, true);
                 balancedMu = balancedMu.div(colSum.add(1e-8));
             }
-            // Final row norm to ensure valid probability
             balancedMu = balancedMu.div(balancedMu.sum(1, true));
 
-            // Regularize Sigma to prevent singularity
+            // Regularize Sigma
             const epsilon = 1e-2;
             const eye = tf.eye(26).expandDims(0).tile([26, 1, 1]);
             const regSigma = newSigma.add(eye.mul(epsilon));
@@ -153,30 +179,38 @@ export class HMMSolver {
                 Sigma: regSigma
             });
             
-            // Yield Progress every iteration (or fewer for speed)
-            // We perform a Viterbi decode periodically to show "current best guess"
-            // Decode takes time, so maybe not every single frame if it's slow, but for demo it's fine.
-            
             // 3. Decode (Viterbi Inference) - Intermediate
-            const hiddenStates = this.hmm.inference(dataTensor); 
-            const stateIndices = await hiddenStates.array();
-            const decodedIndices = stateIndices[0];
-            let currentResult = "";
-            for(const idx of decodedIndices) {
-                currentResult += this.chars[idx];
+            // Skip Viterbi on every frame if CPU bound (e.g. in Jest)
+            // But yield progress always
+            if (i % 5 === 0 || i === iterations - 1) {
+                const hiddenStates = this.hmm.inference(dataTensor); 
+                const stateIndices = await hiddenStates.array();
+                const decodedIndices = stateIndices[0];
+                let currentResult = "";
+                for(const idx of decodedIndices) {
+                    currentResult += this.chars[idx];
+                }
+                
+                yield {
+                    iteration: i + 1,
+                    totalIterations: iterations,
+                    progress: ((i + 1) / iterations) * 100,
+                    decryptedText: currentResult,
+                    method: 'hmm'
+                };
+                tf.dispose(hiddenStates);
+            } else {
+                 yield {
+                    iteration: i + 1,
+                    totalIterations: iterations,
+                    progress: ((i + 1) / iterations) * 100,
+                    decryptedText: "Optimizing...", // Placeholder to save Viterbi cost
+                    method: 'hmm'
+                };
             }
 
-            // Yield status
-            yield {
-                iteration: i + 1,
-                totalIterations: iterations,
-                progress: ((i + 1) / iterations) * 100,
-                decryptedText: currentResult,
-                method: 'hmm'
-            };
-
             // Cleanup tensors
-            tf.dispose([pdf, gamma, xi, newPi, newA, newMu, newSigma, regSigma, eye, hiddenStates]);
+            tf.dispose([pdf, gamma, xi, newPi, newA, newMu, newSigma, regSigma, eye]);
             
             // Allow UI to breathe
             await new Promise(resolve => setTimeout(resolve, 0));
@@ -189,7 +223,9 @@ export class HMMSolver {
     async solve(ciphertext, iterations = 50) {
         let finalResult = "";
         for await (const status of this.solveGenerator(ciphertext, iterations)) {
-            finalResult = status.decryptedText;
+            if (status.decryptedText !== "Optimizing...") {
+                finalResult = status.decryptedText;
+            }
         }
         return finalResult;
     }
@@ -199,16 +235,12 @@ export class HMMSolver {
         if (clean.length === 0) return { text: "", confidence: 0 };
 
         let bestShift = 0;
-        let bestScore = -Infinity; // Higher Log-Likelihood is better
+        let bestScore = -Infinity; 
         let bestText = "";
-
-        // Get English Bigram Frequencies
         const englishBigrams = LanguageAnalysis.languages['english'].bigrams;
 
         for (let shift = 0; shift < 26; shift++) {
             let currentText = "";
-            
-            // Decrypt
             for (let i = 0; i < clean.length; i++) {
                 const charCode = clean.charCodeAt(i);
                 let decoded = charCode - shift;
@@ -216,11 +248,10 @@ export class HMMSolver {
                 currentText += String.fromCharCode(decoded);
             }
 
-            // Calculate Log-Likelihood of Bigrams
             let score = 0;
             for(let i=0; i<currentText.length - 1; i++) {
                 const bigram = currentText.substring(i, i+2);
-                const prob = englishBigrams[bigram] || 0.001; // Small probability for unseen
+                const prob = englishBigrams[bigram] || 0.001; 
                 score += Math.log(prob);
             }
 
@@ -231,7 +262,6 @@ export class HMMSolver {
             }
         }
 
-        // Reconstruct original text with punctuation for display
         let fullText = "";
         for (let i = 0; i < ciphertext.length; i++) {
             const char = ciphertext[i];
@@ -246,38 +276,16 @@ export class HMMSolver {
             }
         }
 
-        // --- VALIDATION WITH DICTIONARY (Gold Standard) ---
-        // Bigrams are good, but Dictionary is better for avoiding false positives 
-        // like "ARSEB DHESW" which might have okay bigrams but are nonsense.
-        
-        // Check vocabulary score (0.0 to 1.0) - Based on CHARACTER coverage
         const vocabScore = LanguageAnalysis.getWordCountScore(fullText, this.language);
-        
-        let confidence = 0.5; // Baseline for "Best Bigram Match"
+        let confidence = 0.5;
 
-        if (vocabScore > 0.85) {
-            // Almost entirely valid words -> Certain match
-            confidence = 1.0;
-        } else if (vocabScore > 0.6) {
-            // Majority of characters are valid words
-            confidence = 0.9;
-        } else if (vocabScore > 0.4) {
-            // Some valid words, but significant noise.
-            // Could be Caesar with proper nouns or typos.
-            // But for auto-detection, we prefer to be cautious.
-            confidence = 0.6; // Below 0.8 threshold -> Won't trigger Fast Path automatically
-        } else if (vocabScore === 0 && bestScore > -300) { 
-             // No words found. Downgrade.
-            confidence = 0.1; 
-        } else {
-            // Low vocab score
-            confidence = 0.2;
-        }
+        if (vocabScore > 0.85) confidence = 1.0;
+        else if (vocabScore > 0.6) confidence = 0.9;
+        else if (vocabScore > 0.4) confidence = 0.6;
+        else if (vocabScore === 0 && bestScore > -300) confidence = 0.1; 
+        else confidence = 0.2;
 
-        // Force confidence 0 if text is short and no words match
-        if (clean.length < 20 && vocabScore === 0) {
-            confidence = 0;
-        }
+        if (clean.length < 20 && vocabScore === 0) confidence = 0;
 
         return {
             text: fullText,
@@ -286,9 +294,7 @@ export class HMMSolver {
     }
 
     randomPermutationMatrix() {
-        // Create a 26x26 permutation matrix
         const indices = Array.from({length: 26}, (_, i) => i);
-        // Shuffle indices (Fisher-Yates)
         for (let i = indices.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -296,7 +302,6 @@ export class HMMSolver {
         
         const buffer = tf.buffer([26, 26]);
         for (let i = 0; i < 26; i++) {
-            // State i maps to Emission indices[i]
             buffer.set(1, i, indices[i]);
         }
         return buffer.toTensor();
@@ -311,12 +316,10 @@ export class HMMSolver {
             const idx = this.charMap[char];
             buffer.set(1, 0, t, idx);
         }
-        
         return buffer.toTensor();
     }
 
     objToMatrix(obj) {
-        // Convert { A: {A:0.1, B:0.2...}...} to 2D array
         const arr = [];
         for(let i=0; i<26; i++) {
             const row = [];
@@ -330,4 +333,3 @@ export class HMMSolver {
         return arr;
     }
 }
-
