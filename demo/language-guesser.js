@@ -256,10 +256,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const markovStandardCanvas = document.getElementById('markovStandardChart');
     
     // Wait for NigmaJS to load
+    let checkCount = 0;
     const checkInterval = setInterval(() => {
+        checkCount++;
         if (window.nigmajs && window.nigmajs.LanguageAnalysis) {
             clearInterval(checkInterval);
             initializeApp();
+        } else if (checkCount > 50) { // 5 seconds timeout
+            clearInterval(checkInterval);
+            console.error("NigmaJS failed to load.");
+            const errorMsg = document.createElement('div');
+            errorMsg.style.color = 'red';
+            errorMsg.style.textAlign = 'center';
+            errorMsg.style.padding = '20px';
+            errorMsg.innerHTML = "❌ Error: Failed to load NigmaJS library. Please check console for details.";
+            chartsContainer.appendChild(errorMsg);
         }
     }, 100);
 

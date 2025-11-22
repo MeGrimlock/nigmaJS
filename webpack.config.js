@@ -31,9 +31,13 @@ module.exports = {
   resolve: {
     fallback: {
       "buffer": require.resolve("buffer/"),
-      "stream": false,
-      "crypto": false,
-      "process": false
+      "stream": require.resolve("stream-browserify"),
+      "crypto": require.resolve("crypto-browserify"),
+      "process": require.resolve("process/browser"),
+      "vm": require.resolve("vm-browserify"),
+      "fs": false,
+      "path": false,
+      "os": false
     }
   },
   plugins: [
