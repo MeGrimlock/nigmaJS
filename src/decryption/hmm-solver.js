@@ -19,6 +19,9 @@ export class HMMSolver {
      * @param {string} ciphertext - Optional, used for smart initialization based on frequency
      */
     async initialize(ciphertext = null) {
+        // Ensure dictionary is loaded for Fast Path validation
+        await LanguageAnalysis.loadDictionary(this.language, 'data/'); // Assume files are in demo/data/
+
         // 1. Get Language Matrix (Transition Probabilities)
         const transMatrixObj = LanguageAnalysis.getLanguageTransitionMatrix(this.language);
         const transArr = this.objToMatrix(transMatrixObj);

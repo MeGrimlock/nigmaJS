@@ -654,6 +654,52 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateChartData(inputText, outputText);
 
+        // --- Security Score Calculation ---
+        const ioc = LanguageAnalysis.calculateIoC(outputText); // Random ~1.0, English ~1.73
+        const entropy = LanguageAnalysis.calculateEntropy(outputText); // Random ~4.7, English ~4.1
+        
+        // 1. Entropy Score (Map 4.0-4.7 to 0-100)
+        let entropyScore = Math.max(0, Math.min(100, (entropy - 3.8) / (4.7 - 3.8) * 100));
+        
+        // 2. IoC Score (Map 1.73-1.0 to 0-100, Lower is better for encryption)
+        // If IoC is close to 1.0 (Random), score is 100. If close to 1.73 (English), score is 0.
+        let iocScore = Math.max(0, Math.min(100, (1.8 - ioc) / (1.8 - 1.0) * 100));
+
+        // 3. Chi-Squared against Uniform (Flatness)
+        // A perfect cipher has frequencies 1/26 for all letters.
+        // Calculate Chi-Sq against Uniform Distribution
+        const len = outputText.replace(/[^A-Z]/gi, '').length;
+        let uniformChi = 0;
+        if (len > 0) {
+            const freqs = LanguageAnalysis.getLetterFrequencies(outputText);
+            const expected = 100 / 26; // 3.84%
+            Object.values(freqs).forEach(obs => {
+                uniformChi += Math.pow(obs - expected, 2) / expected;
+            });
+            // Add penalty for missing letters (which have 0 freq but expected 3.84)
+            const missing = 26 - Object.keys(freqs).length;
+            uniformChi += missing * (Math.pow(0 - expected, 2) / expected);
+        }
+        // Lower Chi means flatter. Map 0-100 range. 
+        // Typically Chi can be huge. < 50 is good. > 200 is bad.
+        let flatnessScore = Math.max(0, Math.min(100, (300 - uniformChi) / 3));
+
+        // Weighted Final Score
+        const totalScore = (entropyScore * 0.3) + (iocScore * 0.4) + (flatnessScore * 0.3);
+        
+        // Update UI
+        const bar = document.getElementById('securityBar');
+        const text = document.getElementById('securityScoreText');
+        if (bar && text) {
+            bar.style.width = `${totalScore}%`;
+            text.innerText = `${totalScore.toFixed(0)}%`;
+            
+            // Color
+            if (totalScore > 80) bar.style.background = '#10b981'; // Green
+            else if (totalScore > 50) bar.style.background = '#f59e0b'; // Orange
+            else bar.style.background = '#ef4444'; // Red
+        }
+
         // Update Scores Display
         const statsContainer = document.getElementById('analysisStats');
         const createStatBox = (label, score) => {

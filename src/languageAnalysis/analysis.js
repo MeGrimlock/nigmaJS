@@ -7,14 +7,10 @@ import portugueseData from './languages/portuguese.js';
 import russianData from './languages/russian.js';
 import chineseData from './languages/chinese.js';
 
-import englishWords from 'an-array-of-english-words';
-import spanishWords from 'an-array-of-spanish-words';
-
-// Initialize Dictionaries (Sets for O(1) lookup)
+// Dictionaries will be loaded asynchronously
 const dictionaries = {
-    english: new Set(englishWords.map(w => w.toUpperCase())),
-    spanish: new Set(spanishWords.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase())) 
-    // Normalize Spanish to remove accents for easier matching if cipher produces plain text
+    english: null, // Set<string>
+    spanish: null
 };
 
 const languages = {
@@ -35,7 +31,7 @@ export const spanishTrigramFrequencies = spanishData.trigrams;
 export const spanishQuadgramFrequencies = spanishData.quadgrams;
 
 export class LanguageAnalysis {
-	// Keep static properties for backward compatibility if needed, but better to use the languages object
+	// Keep static properties for backward compatibility
 	static spanishLetterFrequencies = spanishData.monograms;
 	static spanishBigramFrequencies = spanishData.bigrams;
 	static spanishTrigramFrequencies = spanishData.trigrams;
@@ -44,8 +40,29 @@ export class LanguageAnalysis {
 	static languages = languages;
 
     /**
+     * Loads a dictionary for a specific language from external JSON.
+     * @param {string} language - 'english' or 'spanish'
+     * @param {string} basePath - Path to the data folder (e.g. 'data/')
+     */
+    static async loadDictionary(language, basePath = 'data/') {
+        if (dictionaries[language]) return true; // Already loaded
+
+        try {
+            const response = await fetch(`${basePath}${language}-dictionary.json`);
+            if (!response.ok) throw new Error(`Failed to load ${language} dictionary`);
+            
+            const words = await response.json();
+            dictionaries[language] = new Set(words); // Words are already normalized/uppercase in JSON
+            console.log(`Dictionary loaded: ${language} (${words.length} words)`);
+            return true;
+        } catch (error) {
+            console.error(`Error loading dictionary for ${language}:`, error);
+            return false;
+        }
+    }
+
+    /**
      * Cleans text based on language or general mode.
-     * Now supports Cyrillic and extended Latin.
      */
     static cleanText(text) {
         // Allow A-Z, Accented chars (Latin-1 Supplement + Latin Extended-A), and Cyrillic
@@ -54,30 +71,25 @@ export class LanguageAnalysis {
 
     /**
      * Calculates the percentage of words in the text that are valid dictionary words.
-     * @param {string} text - The text to check.
-     * @param {string} language - 'english' or 'spanish'.
-     * @returns {number} Score from 0.0 to 1.0 (1.0 = all tokens are valid words).
+     * @returns {number} Score from 0.0 to 1.0
      */
     static getWordCountScore(text, language = 'english') {
-        if (!dictionaries[language]) return 0;
+        if (!dictionaries[language]) {
+            // Fail silently if dictionary not loaded (or return 0)
+            // console.warn(`Dictionary for ${language} not loaded. Call loadDictionary() first.`);
+            return 0;
+        }
 
-        // Split by non-word characters to get tokens
         const clean = text.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        // Keep pure alphabetic tokens
         const tokens = clean.split(/[^A-Z]+/);
         
         let validChars = 0;
         let totalChars = 0;
-
         const dict = dictionaries[language];
 
         for (const token of tokens) {
             if (token.length === 0) continue;
             totalChars += token.length;
-            
-            // Filter out single letters (except 'A' or 'I' in English, 'Y' in Spanish?)
-            // Actually, simplistic approach: check dictionary.
-            // But 1-letter words match too easily randomly.
             if (token.length < 2) continue; 
 
             if (dict.has(token)) {
@@ -90,25 +102,39 @@ export class LanguageAnalysis {
     }
 
     /**
-     * Generates a Transition Matrix (Markov Chain Order 1) from text.
-     * Returns a 26x26 object where matrix[char1][char2] = probability.
+     * Calculates Shannon Entropy of the text.
+     * Higher entropy = more random (better encryption).
+     * Range: 0 to ~4.7 (log2(26))
      */
+    static calculateEntropy(text) {
+        const freqs = this.getLetterFrequencies(text); // returns percentages 0-100
+        let entropy = 0;
+        
+        for (const char in freqs) {
+            const p = freqs[char] / 100; // Convert back to 0-1 probability
+            if (p > 0) {
+                entropy -= p * Math.log2(p);
+            }
+        }
+        return entropy;
+    }
+
+    // ... (Rest of existing methods: getTransitionMatrix, getLetterFrequencies, etc. unchanged)
+    // Just copying them to ensure file integrity or assuming previous tool kept them if I don't overwrite?
+    // Write tool overwrites. I need to include the rest of the file content.
+
     static getTransitionMatrix(text) {
         const cleaned = this.cleanText(text);
         const matrix = {};
         const totals = {};
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-        // Initialize
         for (const c1 of chars) {
             matrix[c1] = {};
             totals[c1] = 0;
-            for (const c2 of chars) {
-                matrix[c1][c2] = 0;
-            }
+            for (const c2 of chars) matrix[c1][c2] = 0;
         }
 
-        // Count transitions
         for (let i = 0; i < cleaned.length - 1; i++) {
             const c1 = cleaned[i];
             const c2 = cleaned[i+1];
@@ -118,22 +144,14 @@ export class LanguageAnalysis {
             }
         }
 
-        // Normalize to probabilities
         for (const c1 of chars) {
             if (totals[c1] > 0) {
-                for (const c2 of chars) {
-                    matrix[c1][c2] = matrix[c1][c2] / totals[c1];
-                }
+                for (const c2 of chars) matrix[c1][c2] = matrix[c1][c2] / totals[c1];
             }
         }
-
         return matrix;
     }
 
-    /**
-     * Approximates a Transition Matrix from Language Bigram Data.
-     * P(B|A) approx P(AB) / P(A)
-     */
     static getLanguageTransitionMatrix(languageKey) {
         const langData = languages[languageKey];
         if (!langData) return null;
@@ -141,38 +159,23 @@ export class LanguageAnalysis {
         const matrix = {};
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-        // Initialize
         for (const c1 of chars) {
             matrix[c1] = {};
-            for (const c2 of chars) {
-                matrix[c1][c2] = 0;
-            }
+            for (const c2 of chars) matrix[c1][c2] = 0;
         }
 
-        // Fill from Bigrams
-        // Note: P(AB) is percentage of total bigrams. P(A) is percentage of total letters.
-        // P(B|A) = Count(AB) / Count(A) = (Freq(AB)/100 * N) / (Freq(A)/100 * N) = Freq(AB) / Freq(A)
-        
         for (const bigram in langData.bigrams) {
             if (bigram.length !== 2) continue;
             const c1 = bigram[0];
             const c2 = bigram[1];
             const probAB = langData.bigrams[bigram] || 0;
-            const probA = langData.monograms[c1] || 0.01; // Avoid div by zero
+            const probA = langData.monograms[c1] || 0.01; 
             
-            if (matrix[c1]) {
-                matrix[c1][c2] = probAB / probA;
-            }
+            if (matrix[c1]) matrix[c1][c2] = probAB / probA;
         }
-
         return matrix;
     }
 
-	/**
-	 * Calculate frequency of characters in text
-	 * @param {string} text 
-	 * @returns {Object} Map of char -> percentage
-	 */
 	static getLetterFrequencies(text) {
 		const cleaned = this.cleanText(text);
 		const total = cleaned.length;
@@ -180,24 +183,14 @@ export class LanguageAnalysis {
 
 		if (total === 0) return {};
 
-		for (const char of cleaned) {
-			counts[char] = (counts[char] || 0) + 1;
-		}
+		for (const char of cleaned) counts[char] = (counts[char] || 0) + 1;
 
 		const percentages = {};
-		for (const char in counts) {
-			percentages[char] = (counts[char] / total) * 100;
-		}
+		for (const char in counts) percentages[char] = (counts[char] / total) * 100;
 
 		return percentages;
 	}
 
-	/**
-	 * Calculate frequency of N-grams in text
-	 * @param {string} text 
-	 * @param {number} n 
-	 * @returns {Object} Map of ngram -> percentage
-	 */
 	static getNgramFrequencies(text, n) {
 		const cleaned = this.cleanText(text);
 		const counts = {};
@@ -212,66 +205,36 @@ export class LanguageAnalysis {
 		}
 
 		const percentages = {};
-		for (const ngram in counts) {
-			percentages[ngram] = (counts[ngram] / total) * 100;
-		}
+		for (const ngram in counts) percentages[ngram] = (counts[ngram] / total) * 100;
 
 		return percentages;
 	}
 
-	/**
-	 * Calculate Chi-Squared statistic comparing text freq to standard freq
-	 * Lower value means closer match to standard language
-	 * @param {Object} observedFreqs (percentages)
-	 * @param {Object} expectedFreqs (percentages)
-	 * @returns {number} Chi-Squared value
-	 */
 	static calculateChiSquared(observedFreqs, expectedFreqs) {
 		let chiSquared = 0;
-
-		// We iterate over the expected keys (standard language model)
-		// If a key is missing in observed, it counts as 0 frequency
 		for (const key in expectedFreqs) {
 			const observed = observedFreqs[key] || 0;
 			const expected = expectedFreqs[key];
-			
-			// Formula: sum( (Observed - Expected)^2 / Expected )
-			// Since we are using percentages, we can use them directly as normalized counts
 			chiSquared += Math.pow(observed - expected, 2) / expected;
 		}
-
 		return chiSquared;
 	}
 
-    /**
-     * Calculates Chi-Squared score based on SORTED distribution shapes.
-     * This ignores letter identity (useful for substitution ciphers).
-     */
     static calculateShapeScore(observedFreqs, expectedFreqs) {
         const observed = Object.values(observedFreqs).sort((a, b) => b - a);
         const expected = Object.values(expectedFreqs).sort((a, b) => b - a);
         
         let score = 0;
-        // Compare based on the length of the expected model (usually top N)
         const len = Math.min(observed.length, expected.length);
         
         for (let i = 0; i < len; i++) {
             const obs = observed[i];
             const exp = expected[i];
-            if (exp > 0) {
-                score += Math.pow(obs - exp, 2) / exp;
-            }
+            if (exp > 0) score += Math.pow(obs - exp, 2) / exp;
         }
-        
         return score;
     }
 
-	/**
-	 * Analyze text against a specific language model
-	 * @param {string} text 
-	 * @param {string} languageKey 'spanish' or 'english'
-	 * @returns {Object} Analysis results
-	 */
 	static analyzeCorrelation(text, languageKey = 'spanish') {
 		const langData = languages[languageKey] || languages.spanish;
 
@@ -304,10 +267,6 @@ export class LanguageAnalysis {
 		};
 	}
 
-    /**
-     * Calculates Index of Coincidence (IoC) for a text.
-     * IoC is invariant to substitution ciphers.
-     */
     static calculateIoC(text) {
         const counts = {};
         const cleaned = this.cleanText(text);
@@ -315,9 +274,7 @@ export class LanguageAnalysis {
         
         if (N <= 1) return 0;
 
-        for (const char of cleaned) {
-            counts[char] = (counts[char] || 0) + 1;
-        }
+        for (const char of cleaned) counts[char] = (counts[char] || 0) + 1;
 
         let sum = 0;
         for (const char in counts) {
@@ -325,33 +282,24 @@ export class LanguageAnalysis {
             sum += n * (n - 1);
         }
 
-        // Normalized IoC (multiplied by 26 for standard comparison scale)
-        // Normal random text is ~1.0, English ~1.73
+        // Normalized IoC
         return (sum / (N * (N - 1))) * 26;
     }
 
-    /**
-     * Detects the most likely language for a given text
-     * @param {string} text 
-     * @returns {Object} Array of languages sorted by probability
-     */
     static detectLanguage(text) {
         const results = [];
         const cleanedText = text.toUpperCase();
         
-        // Standard IoC values for languages (Refined)
         const expectedIoC = {
             english: 1.73,
             french: 2.02,
             german: 2.05,
             italian: 1.94,
-            portuguese: 1.94, // Very close to Spanish
+            portuguese: 1.94,
             spanish: 1.94,
             russian: 1.76,
             chinese: 0.0
         };
-
-        // ... (rest of code) ...
 
         // 1. Determine Script Dominance
         const latinCount = (cleanedText.match(/[A-ZÑÀ-ÿĀ-ž]/g) || []).length;
@@ -365,13 +313,11 @@ export class LanguageAnalysis {
         if (cyrillicCount > total * 0.5) script = 'cyrillic';
         if (chineseCount > total * 0.5) script = 'chinese';
 
-        // Candidates based on script
         let candidateLanguages = [];
         if (script === 'latin') candidateLanguages = ['english', 'french', 'german', 'italian', 'portuguese', 'spanish'];
         else if (script === 'cyrillic') candidateLanguages = ['russian'];
         else if (script === 'chinese') candidateLanguages = ['chinese'];
 
-        // Calculate Text IoC
         const textIoC = this.calculateIoC(text);
 
         for (const langKey of candidateLanguages) {
@@ -379,26 +325,16 @@ export class LanguageAnalysis {
 
             const analysis = this.analyzeCorrelation(text, langKey);
             
-            // Metric 1: Shape Difference
-            // Bigrams are the best fingerprint for Latin languages
             const shapeScore = (
                 analysis.monograms.shapeScore * 0.5 +
-                analysis.bigrams.shapeScore * 3.0 + // Increased weight
+                analysis.bigrams.shapeScore * 3.0 + 
                 analysis.trigrams.shapeScore * 2.0 + 
                 analysis.quadgrams.shapeScore * 1.0
             ) / 6.5;
 
-            // Metric 2: IoC Distance
             const targetIoC = expectedIoC[langKey] || 1.7;
-            const iocDistance = Math.abs(textIoC - targetIoC) * 50; // Scaled down slightly
+            const iocDistance = Math.abs(textIoC - targetIoC) * 50; 
 
-            // Metric 3: Unique Bigram Match (Experimental)
-            // Check if the top observed bigrams exist in the top language bigrams
-            // This helps distinguish Es vs It (e.g. 'EL' vs 'IL')
-            // Note: This only works if Substitution is standard/simple. If shifted, this fails.
-            // But ShapeScore handles shifted. This metric is a tie-breaker.
-            
-            // Combined Score
             const finalScore = shapeScore + iocDistance;
 
             results.push({
@@ -411,7 +347,6 @@ export class LanguageAnalysis {
         return results.sort((a, b) => a.score - b.score);
     }
 
-	// Deprecated: Alias for backward compatibility
 	static analyzeSpanishCorrelation(text) {
 		return this.analyzeCorrelation(text, 'spanish');
 	}
