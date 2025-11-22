@@ -1,6 +1,6 @@
 {
   "name": "nigmajs",
-  "version": "3.1.27",
+  "version": "3.1.29",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
   "exports": {
