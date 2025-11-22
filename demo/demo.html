@@ -17,6 +17,17 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .cipher-group-title {
+        grid-column: 1 / -1;
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--accent);
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 0.5rem;
+        font-size: 1.5rem;
     }
 
     .card:hover {
@@ -68,6 +79,8 @@
       <textarea id="mainInput" placeholder="Type something secret...">Hello World 123</textarea>
     </div>
 
+    <!-- Shift Ciphers -->
+    <h2 class="cipher-group-title">Shift Ciphers</h2>
     <div class="grid">
       <!-- Caesar -->
       <div class="card">
@@ -80,28 +93,6 @@
         <div class="output" id="caesarOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="caesarDecoded"></div>
-      </div>
-
-      <!-- Atbash -->
-      <div class="card">
-        <h3>Atbash</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="atbashOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="atbashDecoded"></div>
-        </div>
-      </div>
-
-      <!-- Morse -->
-      <div class="card">
-        <h3>Morse Code</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="morseOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="morseDecoded"></div>
-        </div>
       </div>
 
       <!-- ROT13 -->
@@ -147,84 +138,11 @@
           <div class="output" id="rot47Decoded"></div>
         </div>
       </div>
+    </div>
 
-      <!-- AMSCO -->
-      <div class="card">
-        <h3>AMSCO</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="amscoKey" value="132">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="amscoOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="amscoDecoded"></div>
-      </div>
-
-      <!-- Autokey -->
-      <div class="card">
-        <h3>Autokey</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="autokeyKey" value="SECRET">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="autokeyOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="autokeyDecoded"></div>
-      </div>
-
-      <!-- Baconian -->
-      <div class="card">
-        <h3>Baconian</h3>
-        <div class="card-content">
-          <label>Encoded:</label>
-          <div class="output" id="baconianOutput"></div>
-          <label>Decoded (Verify):</label>
-          <div class="output" id="baconianDecoded"></div>
-        </div>
-      </div>
-
-      <!-- Simple Substitution -->
-      <div class="card">
-        <h3>Simple Substitution</h3>
-        <div class="controls">
-          <label>Key:</label>
-          <input type="text" id="simpleSubKey" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" style="width: 200px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="simpleSubOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="simpleSubDecoded"></div>
-      </div>
-
-      <!-- Enigma -->
-      <div class="card">
-        <h3>Enigma Machine</h3>
-        <div class="controls" style="flex-wrap: wrap;">
-          <div>
-            <label>Rotors:</label>
-            <input type="text" id="enigmaRotors" value="123" maxlength="3" style="width: 60px;">
-          </div>
-          <div>
-            <label>Ring:</label>
-            <input type="text" id="enigmaRing" value="AAA" maxlength="3" style="width: 60px;">
-          </div>
-          <div>
-            <label>Key:</label>
-            <input type="text" id="enigmaKey" value="AAA" maxlength="3" style="width: 60px;">
-          </div>
-          <div style="width: 100%;">
-            <label>Plugs:</label>
-            <input type="text" id="enigmaPlugs" value="PO ML IU KJ NH YT GB VF RE DC" style="width: 100%;">
-          </div>
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="enigmaOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="enigmaDecoded"></div>
-      </div>
-
+    <!-- Polyalphabetic Ciphers -->
+    <h2 class="cipher-group-title">Polyalphabetic Ciphers</h2>
+    <div class="grid">
       <!-- Vigenère -->
       <div class="card">
         <h3>Vigenère</h3>
@@ -238,17 +156,43 @@
         <div class="output" id="vigenereDecoded"></div>
       </div>
 
-      <!-- Polybius -->
+      <!-- Beaufort -->
       <div class="card">
-        <h3>Polybius Square</h3>
+        <h3>Beaufort</h3>
         <div class="controls">
-          <label>Keyword (optional):</label>
-          <input type="text" id="polybiusKey" value="" placeholder="Leave empty for default">
+          <label>Keyword:</label>
+          <input type="text" id="beaufortKey" value="KEY">
         </div>
         <label>Encoded:</label>
-        <div class="output" id="polybiusOutput"></div>
+        <div class="output" id="beaufortOutput"></div>
         <label>Decoded (Verify):</label>
-        <div class="output" id="polybiusDecoded"></div>
+        <div class="output" id="beaufortDecoded"></div>
+      </div>
+
+      <!-- Porta -->
+      <div class="card">
+        <h3>Porta</h3>
+        <div class="controls">
+          <label>Keyword:</label>
+          <input type="text" id="portaKey" value="KEY">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="portaOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="portaDecoded"></div>
+      </div>
+
+      <!-- Gronsfeld -->
+      <div class="card">
+        <h3>Gronsfeld</h3>
+        <div class="controls">
+          <label>Numeric Key:</label>
+          <input type="text" id="gronsfeldKey" value="12345" placeholder="e.g., 12345">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="gronsfeldOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="gronsfeldDecoded"></div>
       </div>
 
       <!-- Quagmire I -->
@@ -315,43 +259,107 @@
         <div class="output" id="quagmire4Decoded"></div>
       </div>
 
-      <!-- Beaufort -->
+      <!-- Enigma -->
       <div class="card">
-        <h3>Beaufort</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="beaufortKey" value="KEY">
+        <h3>Enigma Machine</h3>
+        <div class="controls" style="flex-wrap: wrap;">
+          <div>
+            <label>Rotors:</label>
+            <input type="text" id="enigmaRotors" value="123" maxlength="3" style="width: 60px;">
+          </div>
+          <div>
+            <label>Ring:</label>
+            <input type="text" id="enigmaRing" value="AAA" maxlength="3" style="width: 60px;">
+          </div>
+          <div>
+            <label>Key:</label>
+            <input type="text" id="enigmaKey" value="AAA" maxlength="3" style="width: 60px;">
+          </div>
+          <div style="width: 100%;">
+            <label>Plugs:</label>
+            <input type="text" id="enigmaPlugs" value="PO ML IU KJ NH YT GB VF RE DC" style="width: 100%;">
+          </div>
         </div>
         <label>Encoded:</label>
-        <div class="output" id="beaufortOutput"></div>
+        <div class="output" id="enigmaOutput"></div>
         <label>Decoded (Verify):</label>
-        <div class="output" id="beaufortDecoded"></div>
+        <div class="output" id="enigmaDecoded"></div>
+      </div>
+    </div>
+
+    <!-- Dictionary & Substitution Ciphers -->
+    <h2 class="cipher-group-title">Dictionary & Substitution Ciphers</h2>
+    <div class="grid">
+      <!-- Simple Substitution -->
+      <div class="card">
+        <h3>Simple Substitution</h3>
+        <div class="controls">
+          <label>Key:</label>
+          <input type="text" id="simpleSubKey" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" style="width: 200px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="simpleSubOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="simpleSubDecoded"></div>
       </div>
 
-      <!-- Porta -->
+      <!-- Atbash -->
       <div class="card">
-        <h3>Porta</h3>
-        <div class="controls">
-          <label>Keyword:</label>
-          <input type="text" id="portaKey" value="KEY">
+        <h3>Atbash</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="atbashOutput"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="atbashDecoded"></div>
         </div>
-        <label>Encoded:</label>
-        <div class="output" id="portaOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="portaDecoded"></div>
       </div>
 
-      <!-- Gronsfeld -->
+      <!-- Morse -->
       <div class="card">
-        <h3>Gronsfeld</h3>
+        <h3>Morse Code</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="morseOutput"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="morseDecoded"></div>
+        </div>
+      </div>
+
+      <!-- Autokey -->
+      <div class="card">
+        <h3>Autokey</h3>
         <div class="controls">
-          <label>Numeric Key:</label>
-          <input type="text" id="gronsfeldKey" value="12345" placeholder="e.g., 12345">
+          <label>Key:</label>
+          <input type="text" id="autokeyKey" value="SECRET">
         </div>
         <label>Encoded:</label>
-        <div class="output" id="gronsfeldOutput"></div>
+        <div class="output" id="autokeyOutput"></div>
         <label>Decoded (Verify):</label>
-        <div class="output" id="gronsfeldDecoded"></div>
+        <div class="output" id="autokeyDecoded"></div>
+      </div>
+
+      <!-- Baconian -->
+      <div class="card">
+        <h3>Baconian</h3>
+        <div class="card-content">
+          <label>Encoded:</label>
+          <div class="output" id="baconianOutput"></div>
+          <label>Decoded (Verify):</label>
+          <div class="output" id="baconianDecoded"></div>
+        </div>
+      </div>
+
+      <!-- Polybius -->
+      <div class="card">
+        <h3>Polybius Square</h3>
+        <div class="controls">
+          <label>Keyword (optional):</label>
+          <input type="text" id="polybiusKey" value="" placeholder="Leave empty for default">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="polybiusOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="polybiusDecoded"></div>
       </div>
 
       <!-- Bifid -->
@@ -365,19 +373,6 @@
         <div class="output" id="bifidOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="bifidDecoded"></div>
-      </div>
-
-      <!-- Rail Fence -->
-      <div class="card">
-        <h3>Rail Fence</h3>
-        <div class="controls">
-          <label>Number of Rails:</label>
-          <input type="number" id="railFenceRails" value="3" min="2" style="width: 80px;">
-        </div>
-        <label>Encoded:</label>
-        <div class="output" id="railFenceOutput"></div>
-        <label>Decoded (Verify):</label>
-        <div class="output" id="railFenceDecoded"></div>
       </div>
 
       <!-- Playfair -->
@@ -456,6 +451,23 @@
         <label>Decoded (Verify):</label>
         <div class="output" id="adfgxDecoded"></div>
       </div>
+    </div>
+
+    <!-- Columnar & Transposition Ciphers -->
+    <h2 class="cipher-group-title">Columnar & Transposition Ciphers</h2>
+    <div class="grid">
+      <!-- Rail Fence -->
+      <div class="card">
+        <h3>Rail Fence</h3>
+        <div class="controls">
+          <label>Number of Rails:</label>
+          <input type="number" id="railFenceRails" value="3" min="2" style="width: 80px;">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="railFenceOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="railFenceDecoded"></div>
+      </div>
 
       <!-- Route -->
       <div class="card">
@@ -481,6 +493,19 @@
         <label>Decoded (Verify):</label>
         <div class="output" id="routeDecoded"></div>
       </div>
+
+      <!-- AMSCO -->
+      <div class="card">
+        <h3>AMSCO</h3>
+        <div class="controls">
+          <label>Key:</label>
+          <input type="text" id="amscoKey" value="132">
+        </div>
+        <label>Encoded:</label>
+        <div class="output" id="amscoOutput"></div>
+        <label>Decoded (Verify):</label>
+        <div class="output" id="amscoDecoded"></div>
+      </div>
     </div>
   </div>
 
@@ -490,3 +515,4 @@
 </body>
 
 </html>
+
