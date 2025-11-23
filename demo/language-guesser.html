@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NigmaJS - Language Guesser</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/guesser.css">
-    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/styles.css?v=3">
+    <link rel="stylesheet" href="css/guesser.css?v=3">
+    <link rel="stylesheet" href="css/navbar.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -42,6 +42,10 @@
                     <h2 style="margin-bottom: 0.5rem;">Detected Language: <span id="detectedLang" style="color: #fff;">...</span></h2>
                     <p style="color: #94a3b8; margin: 0;">Confidence Score: <span id="confidenceScore">...</span> (Lower is better)</p>
                 </div>
+            </div>
+            
+            <!-- Advanced Stats Container (Inserted by JS) -->
+            <div id="advancedStatsContainer" style="display: flex; gap: 1.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
             </div>
         </div>
 
@@ -83,9 +87,9 @@
         </div>
     </div>
 
-    <script src="js/nigma.min.js"></script>
-    <script src="js/navbar.js"></script>
-    <script src="js/language-guesser.js"></script>
+    <script src="js/nigma.min.js?v=3"></script>
+    <script src="js/navbar.js?v=3"></script>
+    <script src="js/language-guesser.js?v=3"></script>
 </body>
 </html>
 

@@ -649,16 +649,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputText = plaintext.value;
         if (!outputText || !inputText) return;
 
-        const { LanguageAnalysis } = window.nigmajs;
+        const { LanguageAnalysis, Stats } = window.nigmajs;
         const analysis = LanguageAnalysis.analyzeCorrelation(outputText, languageSelect.value);
         
         updateChartData(inputText, outputText);
 
         // --- Security Score Calculation ---
-        const ioc = LanguageAnalysis.calculateIoC(outputText); // Random ~1.0, English ~1.73
-        const entropy = LanguageAnalysis.calculateEntropy(outputText); // Random ~4.7, English ~4.1
+        // Use new Phase 1 Stats engine if available, fallback to legacy
+        let ioc = 0;
+        let entropy = 0;
+
+        if (Stats) {
+            // Stats.indexOfCoincidence returns normalized ~1.73 for English
+            ioc = Stats.indexOfCoincidence(outputText);
+            entropy = Stats.entropy(outputText);
+        } else {
+            // Legacy Fallback
+            ioc = LanguageAnalysis.calculateIoC(outputText); 
+            entropy = LanguageAnalysis.calculateEntropy(outputText);
+        }
         
         // 1. Entropy Score (Map 4.0-4.7 to 0-100)
+        // Higher entropy is better for encryption.
         let entropyScore = Math.max(0, Math.min(100, (entropy - 3.8) / (4.7 - 3.8) * 100));
         
         // 2. IoC Score (Map 1.73-1.0 to 0-100, Lower is better for encryption)

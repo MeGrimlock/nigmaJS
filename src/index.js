@@ -7,7 +7,10 @@ import Nigma, {
     Polyalphabetic,
     LanguageAnalysis,
     HMMSolver,
-    VigenereSolver
+    VigenereSolver,
+    Stats,
+    Scorers,
+    TextUtils
 } from './core/nigma.js';
 
 export default Nigma;
@@ -20,5 +23,8 @@ export {
     Polyalphabetic,
     LanguageAnalysis,
     HMMSolver,
-    VigenereSolver
+    VigenereSolver,
+    Stats,
+    Scorers,
+    TextUtils
 };

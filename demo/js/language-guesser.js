@@ -31,7 +31,9 @@ class FrequencyChart {
                         backgroundColor: langColor.bg,
                         borderColor: langColor.border,
                         borderWidth: 1,
-                        order: 2
+                        order: 2,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
                     },
                     {
                         label: 'Input Text (%)',
@@ -39,7 +41,9 @@ class FrequencyChart {
                         backgroundColor: 'rgba(16, 185, 129, 0.6)', // --success
                         borderColor: 'rgba(16, 185, 129, 1)',
                         borderWidth: 1,
-                        order: 1
+                        order: 1,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -55,7 +59,13 @@ class FrequencyChart {
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                        ticks: { 
+                            color: '#94a3b8', 
+                            font: { size: 9 }, 
+                            maxRotation: 45, 
+                            minRotation: 0,
+                            autoSkip: false 
+                        }
                     }
                 },
                 plugins: {
@@ -112,9 +122,11 @@ class FrequencyChart {
 
         const standardKeys = this.getTopKeys(this.standardData, 10);
         const inputKeys = this.getTopKeys(inputFreqs, 5);
-        const allKeys = new Set([...standardKeys, ...inputKeys]);
         
-        return Array.from(allKeys).sort((a, b) => {
+        // Use Set to merge and then take top 12 to avoid clutter
+        const allKeys = Array.from(new Set([...standardKeys, ...inputKeys])).slice(0, 12);
+        
+        return allKeys.sort((a, b) => {
             const stdA = this.standardData[a] || 0;
             const stdB = this.standardData[b] || 0;
             return stdB - stdA;
@@ -352,10 +364,14 @@ document.addEventListener('DOMContentLoaded', () => {
         markovVisualizerStandard.draw(null);
 
         // --- Event Listeners ---
+        let debounceTimer;
         cipherInput.addEventListener('input', (e) => {
-            const text = e.target.value;
-            updateAllCharts(text);
-            updateMarkov(text);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const text = e.target.value;
+                updateAllCharts(text);
+                updateMarkov(text);
+            }, 300); // Debounce 300ms
         });
 
         btnFreq.addEventListener('click', () => switchTab('freq'));
@@ -431,6 +447,71 @@ document.addEventListener('DOMContentLoaded', () => {
             if (winner.score < 50) confidenceScoreEl.style.color = '#10b981';
             else if (winner.score < 150) confidenceScoreEl.style.color = '#f59e0b';
             else confidenceScoreEl.style.color = '#ef4444';
+
+            // --- NEW: Show Advanced Stats (Phase 1) ---
+            const statsContainer = document.getElementById('advancedStatsContainer');
+            if (statsContainer) {
+                 const { Stats } = window.nigmajs;
+                 if (Stats) {
+                    const ioc = Stats.indexOfCoincidence(text);
+                    const entropy = Stats.entropy(text);
+                    
+                    // Change flex direction to column to stack sections
+                    statsContainer.style.flexDirection = 'column';
+                    
+                    let contentHTML = `
+                        <div style="display: flex; gap: 1.5rem;">
+                            <div class="stat-item">
+                                <div class="label">IoC</div>
+                                <div class="value">${ioc.toFixed(3)}</div>
+                                <div class="sub">Target ~1.73</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Entropy</div>
+                                <div class="value">${entropy.toFixed(3)}</div>
+                                <div class="sub">Target ~4.2</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // --- Probability Score (Phase 2) ---
+                    const { Scorers } = window.nigmajs;
+                    if (Scorers) {
+                        const ranking = Scorers.rankLanguages(text);
+                        // Calculate Probability from Log-Likelihoods
+                        // P(Li) = 10^(Si - Smax) / Sum(10^(Sj - Smax))
+                        const maxScore = ranking[0].score;
+                        let sumExp = 0;
+                        ranking.forEach(r => {
+                            r.exp = Math.pow(10, r.score - maxScore);
+                            sumExp += r.exp;
+                        });
+                        
+                        contentHTML += `
+                            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; width: 100%;">
+                                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.75rem;">Probabilities:</div>
+                                <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                        `;
+                        
+                        // Show all probabilities > 0.1%, sorted
+                        ranking.forEach(r => {
+                            const prob = (r.exp / sumExp) * 100;
+                            if (prob > 0.1) {
+                                contentHTML += `
+                                    <div class="lang-rank-item">
+                                        <div class="rank-lang">${capitalize(r.lang)} ${getFlag(r.lang)}</div>
+                                        <div class="rank-prob">${prob.toFixed(1)}%</div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        contentHTML += '</div></div>';
+                    }
+                    
+                    statsContainer.innerHTML = contentHTML;
+                 }
+            }
+
         } else {
             recommendationCard.style.display = 'none';
         }

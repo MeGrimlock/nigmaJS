@@ -1,66 +1,6 @@
-/* Language Guesser Specific Styles */
+/* Shared styles for NigmaJS demos */
 
-.guesser-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.input-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.input-card h2 {
-    color: var(--accent);
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-}
-
-textarea {
-    width: 100%;
-    min-height: 150px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    color: var(--text);
-    font-family: 'Fira Code', monospace;
-    resize: vertical;
-}
-
-textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-}
-
-/* View Controls */
-.tab-btn {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tab-btn:hover {
-    color: var(--text);
-    border-color: var(--accent);
-}
-
-.tab-btn.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-/* Charts Grid Layout */
+/* Charts Grid: Ensure charts have fixed height and don't grow indefinitely */
 .charts-grid {
     display: flex;
     flex-direction: column;
@@ -68,57 +8,131 @@ textarea:focus {
 }
 
 .chart-row {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 0.5rem;
     padding: 1rem;
-    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .row-title {
-    position: absolute;
-    top: -12px;
-    left: 20px;
-    background: var(--card-bg);
-    padding: 0 10px;
-    color: var(--accent);
+    color: #e2e8f0;
+    font-size: 1.2rem;
     font-weight: bold;
-    font-size: 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
 }
 
 .charts-flex {
     display: flex;
     gap: 1rem;
     overflow-x: auto;
+    padding-bottom: 1rem;
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) rgba(255,255,255,0.1);
+}
+
+.charts-flex::-webkit-scrollbar {
+    height: 8px;
+}
+.charts-flex::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+}
+.charts-flex::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+    border-radius: 4px;
 }
 
 .chart-wrapper {
-    flex: 1;
-    min-width: 300px;
-    height: 250px;
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
+    flex: 0 0 300px; /* Fixed width for each chart card */
+    height: 280px;   /* Fixed height to prevent growth */
+    background: rgba(15, 23, 42, 0.6);
     border-radius: 0.5rem;
     padding: 0.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Score Badge */
+.chart-wrapper canvas {
+    flex: 1; /* Fill available space */
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Repositioned Score Badge - Below Chart */
 .score-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
+    position: relative;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 0.75rem;
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 0.8rem;
     font-weight: bold;
-    z-index: 10;
-    border: 1px solid var(--border);
+    align-self: center;
 }
 
-.score-good { color: #10b981; border-color: #10b981; }
-.score-med { color: #f59e0b; border-color: #f59e0b; }
-.score-bad { color: #ef4444; border-color: #ef4444; }
+.score-good { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+.score-med { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+.score-bad { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
+.stat-item {
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    min-width: 100px;
+}
+.stat-item .label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 0.25rem;
+}
+.stat-item .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #e2e8f0;
+}
+.stat-item .sub {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+/* Language Ranking Item */
+.lang-rank-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    padding: 0.4rem 0.75rem;
+    min-width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.rank-lang {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.2rem;
+}
+
+.rank-prob {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #e2e8f0;
+}
+
+/* Scrollbar for horizontal ranking list */
+::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
