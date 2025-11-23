@@ -16,6 +16,7 @@ import { default as Enigma } from '../ciphers/enigma/enigma.js';
 import { default as Polyalphabetic } from '../ciphers/polyalphabetic/polyalphabetic.js';
 import { HMMSolver } from '../attacks/hmm-solver.js';
 import { VigenereSolver } from '../attacks/vigenere-solver.js';
+import { Stats } from '../analysis/stats.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -94,6 +95,21 @@ export default class Nigma {
 	static LanguageAnalysis = LanguageAnalysis;
     static HMMSolver = HMMSolver;
     static VigenereSolver = VigenereSolver;
+    static Stats = Stats;
+
+    /**
+     * Performs basic statistical analysis on a text.
+     * @param {string} text 
+     * @returns {Object} Basic stats (IoC, Entropy, Frequency)
+     */
+    static analyzeBasic(text) {
+        return {
+            length: text.length,
+            ioc: Stats.indexOfCoincidence(text),
+            entropy: Stats.entropy(text),
+            frequency: Stats.frequency(text)
+        };
+    }
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------
 
@@ -204,5 +220,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats };
 
