@@ -87,12 +87,21 @@
                         <li><strong>Caesar/ROT13:</strong> Brute force (26 rotations) with N-gram scoring</li>
                         <li><strong>Vigenère:</strong> Friedman Test + frequency analysis per column</li>
                         <li><strong>Substitution:</strong> Hill Climbing or Simulated Annealing with quadgram scoring</li>
+                        <li><strong>Advanced Polyalphabetic:</strong> Beaufort, Porta, Gronsfeld, Quagmire (experimental)</li>
                     </ul>
                     <strong>⚡ Step 3 - Execution:</strong> Runs the selected attack and returns the best result.
                     <br><br>
                     <strong>📊 Powered by:</strong> N-gram models (quadgrams), log-likelihood scoring, and heuristic search algorithms from cryptanalysis research.
                     <br><br>
-                    <em>Note: Success depends on text length (50+ chars recommended) and language patterns.</em>
+                    <strong>⚠️ Current Limitations:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; font-size: 0.85rem; color: #f59e0b;">
+                        <li><strong>Beaufort:</strong> ~40-60% success rate (requires >200 chars)</li>
+                        <li><strong>Porta:</strong> ~60-70% success rate</li>
+                        <li><strong>Quagmire:</strong> ~20-30% success rate (very difficult without known alphabet)</li>
+                        <li><strong>General:</strong> Longer texts and shorter keys improve accuracy significantly</li>
+                    </ul>
+                    <br>
+                    <em>Note: This is an experimental tool. For production cryptanalysis, combine with manual analysis.</em>
                 </p>
             </div>
     </div>

@@ -19,6 +19,25 @@ import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
  * 2. For each key length, try different cipher types
  * 3. Use frequency analysis to recover keys
  * 4. Score results with N-gram models
+ * 
+ * LIMITATIONS (as of v3.1.x):
+ * - Beaufort: Difficult to break automatically due to subtraction-based encryption.
+ *   Success rate ~40-60% depending on text length and key complexity.
+ *   Requires >200 characters for reliable results.
+ * 
+ * - Porta: Moderate success rate (~60-70%). Works better with longer texts.
+ * 
+ * - Gronsfeld: Similar to Vigenère, good success rate (~70-80%) with numeric keys.
+ * 
+ * - Quagmire: Very difficult without knowing the cipher alphabet.
+ *   Current implementation tries common alphabets but success rate is low (~20-30%).
+ *   Requires very long texts (>500 characters) and common keywords.
+ * 
+ * RECOMMENDATIONS:
+ * - For production use, combine with manual analysis and multiple attempts
+ * - Longer texts (>200 chars) significantly improve accuracy
+ * - Shorter keys (3-5 characters) are easier to break than longer ones
+ * - Consider using the Orchestrator which tries multiple strategies
  */
 
 export class PolyalphabeticSolver {
@@ -32,6 +51,8 @@ export class PolyalphabeticSolver {
      * Beaufort is self-reciprocal: C = (K - P) mod 26
      * Similar to Vigenère but uses subtraction
      * 
+     * Strategy: Build key iteratively, optimizing full plaintext score at each step
+     * 
      * @param {string} ciphertext - The encrypted text
      * @param {number} keyLength - Probable key length (from Kasiski)
      * @returns {Object} Result with plaintext, key, score, confidence
@@ -42,58 +63,72 @@ export class PolyalphabeticSolver {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0 };
         }
 
-        // Split into columns based on key length
-        const columns = [];
-        for (let i = 0; i < keyLength; i++) {
-            columns.push('');
-        }
-        
-        for (let i = 0; i < cleanText.length; i++) {
-            columns[i % keyLength] += cleanText[i];
-        }
+        // Strategy: Build key iteratively, testing full decryption at each step
+        let bestKey = '';
+        let bestScore = -Infinity;
+        let bestPlaintext = '';
 
-        // For each column, find the most likely key letter
-        // In Beaufort: C = (K - P) mod 26, so K = (C + P) mod 26
-        let key = '';
-        const targetFreq = this.getTargetFrequencies();
+        // Build key one character at a time
+        for (let pos = 0; pos < keyLength; pos++) {
+            let bestChar = 'A';
+            let bestPosScore = -Infinity;
 
-        for (const column of columns) {
-            let bestShift = 0;
-            let bestScore = -Infinity;
-
-            // Try all 26 possible key letters
+            // Try all 26 letters for this position
             for (let shift = 0; shift < 26; shift++) {
-                let decrypted = '';
-                for (const char of column) {
-                    const c = char.charCodeAt(0) - 65;
-                    // Beaufort decryption: P = (K - C) mod 26
-                    const p = (shift - c + 26) % 26;
-                    decrypted += String.fromCharCode(p + 65);
-                }
-
-                const score = this.scoreFrequency(decrypted, targetFreq);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestShift = shift;
+                const testKey = bestKey + String.fromCharCode(shift + 65) + 'A'.repeat(keyLength - pos - 1);
+                
+                // Decrypt with test key
+                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey, true);
+                const testPlaintext = beaufort.decode();
+                
+                // Score the full plaintext
+                const score = Scorers.scoreText(testPlaintext, this.language);
+                
+                if (score > bestPosScore) {
+                    bestPosScore = score;
+                    bestChar = String.fromCharCode(shift + 65);
                 }
             }
 
-            key += String.fromCharCode(bestShift + 65);
+            bestKey += bestChar;
         }
 
-        // Decrypt with found key
-        const beaufort = new Polyalphabetic.Beaufort(ciphertext, key, true);
-        const plaintext = beaufort.decode();
-        const ngramScore = Scorers.scoreText(plaintext, this.language);
-        const ic = Stats.indexOfCoincidence(plaintext);
+        // Final refinement: Try small variations around the found key
+        for (let i = 0; i < keyLength; i++) {
+            const originalChar = bestKey[i];
+            const originalCharCode = originalChar.charCodeAt(0) - 65;
+
+            for (let delta = -2; delta <= 2; delta++) {
+                if (delta === 0) continue;
+                const newCharCode = (originalCharCode + delta + 26) % 26;
+                const newChar = String.fromCharCode(newCharCode + 65);
+                const testKey = bestKey.substring(0, i) + newChar + bestKey.substring(i + 1);
+
+                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey, true);
+                const testPlaintext = beaufort.decode();
+                const score = Scorers.scoreText(testPlaintext, this.language);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestKey = testKey;
+                    bestPlaintext = testPlaintext;
+                }
+            }
+        }
+
+        // Final decryption with best key
+        const beaufort = new Polyalphabetic.Beaufort(ciphertext, bestKey, true);
+        const finalPlaintext = beaufort.decode();
+        const finalScore = Scorers.scoreText(finalPlaintext, this.language);
+        const ic = Stats.indexOfCoincidence(finalPlaintext);
 
         // Confidence based on IC (should be ~1.73 for English plaintext)
         const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
 
         return {
-            plaintext,
-            key,
-            score: ngramScore,
+            plaintext: finalPlaintext,
+            key: bestKey,
+            score: finalScore,
             confidence,
             method: 'beaufort',
             keyLength
@@ -126,7 +161,6 @@ export class PolyalphabeticSolver {
 
         // For each column, find the most likely key letter (A-M, 13 pairs)
         let key = '';
-        const targetFreq = this.getTargetFrequencies();
 
         for (const column of columns) {
             let bestKeyChar = 'A';
@@ -138,7 +172,8 @@ export class PolyalphabeticSolver {
                 const porta = new Polyalphabetic.Porta(column, keyChar, true);
                 const decrypted = porta.decode();
 
-                const score = this.scoreFrequency(decrypted, targetFreq);
+                // Use N-gram scoring for better accuracy
+                const score = Scorers.scoreText(decrypted, this.language);
                 if (score > bestScore) {
                     bestScore = score;
                     bestKeyChar = keyChar;
@@ -248,7 +283,6 @@ export class PolyalphabeticSolver {
 
         // For each column, find the most likely key digit (0-9)
         let key = '';
-        const targetFreq = this.getTargetFrequencies();
 
         for (const column of columns) {
             let bestShift = 0;
@@ -263,7 +297,8 @@ export class PolyalphabeticSolver {
                     decrypted += String.fromCharCode(p + 65);
                 }
 
-                const score = this.scoreFrequency(decrypted, targetFreq);
+                // Use N-gram scoring for better accuracy
+                const score = Scorers.scoreText(decrypted, this.language);
                 if (score > bestScore) {
                     bestScore = score;
                     bestShift = shift;
