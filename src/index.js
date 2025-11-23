@@ -10,7 +10,9 @@ import Nigma, {
     VigenereSolver,
     Stats,
     Scorers,
-    TextUtils
+    TextUtils,
+    Kasiski,
+    CipherIdentifier
 } from './core/nigma.js';
 
 export default Nigma;
@@ -26,5 +28,7 @@ export {
     VigenereSolver,
     Stats,
     Scorers,
-    TextUtils
+    TextUtils,
+    Kasiski,
+    CipherIdentifier
 };

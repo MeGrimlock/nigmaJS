@@ -42,6 +42,14 @@
             <h2>📝 Ciphered Text</h2>
             <textarea id="cipherInput" placeholder="Paste ciphertext here (must be simple substitution)..."></textarea>
             
+            <!-- Cipher Type Detection -->
+            <div id="cipherDetectionContainer" style="margin-top: 1rem; display: none; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-left: 4px solid #8b5cf6; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #a78bfa; font-size: 1rem;">🔍 Cipher Detection</h3>
+                <div id="cipherDetectionContent" style="font-size: 0.9rem; color: #e2e8f0;">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+
             <div id="progressContainer" style="margin-top: 1rem; display: none;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span style="color: var(--text-muted);">Decrypting...</span>
@@ -109,6 +117,8 @@
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             const methodBadge = document.getElementById('methodBadge');
+            const cipherDetectionContainer = document.getElementById('cipherDetectionContainer');
+            const cipherDetectionContent = document.getElementById('cipherDetectionContent');
 
             // Helper: Apply decrypted letters back to original layout (preserving spaces/numbers)
             function matchLayout(original, cleanDecrypted) {
@@ -136,6 +146,68 @@
 
             // Helper: Random Char for Matrix Effect
             const randomChar = () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+
+            // Cipher Detection on Input Change (with debounce)
+            let detectionTimeout;
+            input.addEventListener('input', () => {
+                clearTimeout(detectionTimeout);
+                detectionTimeout = setTimeout(() => {
+                    const text = input.value.trim();
+                    if (text.length < 20) {
+                        cipherDetectionContainer.style.display = 'none';
+                        return;
+                    }
+
+                    try {
+                        const { CipherIdentifier } = window.nigmajs;
+                        if (!CipherIdentifier) return;
+
+                        const result = CipherIdentifier.identify(text);
+                        
+                        // Build HTML for detection results
+                        let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                        
+                        // Stats
+                        html += `<div style="display: flex; gap: 1rem; font-size: 0.85rem; color: #94a3b8;">
+                            <span><strong>Length:</strong> ${result.stats.length}</span>
+                            <span><strong>IC:</strong> ${result.stats.ic}</span>
+                            <span><strong>Entropy:</strong> ${result.stats.entropy}</span>
+                        </div>`;
+                        
+                        // Top Candidates
+                        html += '<div style="margin-top: 0.5rem;"><strong style="color: #a78bfa;">Probable Cipher Types:</strong></div>';
+                        html += '<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">';
+                        
+                        result.families.slice(0, 3).forEach((family, index) => {
+                            const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            const confidencePercent = (family.confidence * 100).toFixed(0);
+                            const confidenceColor = family.confidence > 0.7 ? '#10b981' : family.confidence > 0.4 ? '#f59e0b' : '#94a3b8';
+                            
+                            html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                <div>
+                                    <span style="margin-right: 0.5rem;">${icon}</span>
+                                    <strong style="color: #e2e8f0;">${family.type.replace(/-/g, ' ').toUpperCase()}</strong>
+                                    ${family.suggestedKeyLength ? `<span style="color: #94a3b8; font-size: 0.8rem; margin-left: 0.5rem;">(Key Length: ~${family.suggestedKeyLength})</span>` : ''}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 60px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                        <div style="width: ${confidencePercent}%; height: 100%; background: ${confidenceColor};"></div>
+                                    </div>
+                                    <span style="color: ${confidenceColor}; font-size: 0.85rem; font-weight: bold;">${confidencePercent}%</span>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        html += '</div></div>';
+                        
+                        cipherDetectionContent.innerHTML = html;
+                        cipherDetectionContainer.style.display = 'block';
+                    } catch (e) {
+                        console.error('Cipher detection error:', e);
+                        cipherDetectionContainer.style.display = 'none';
+                    }
+                }, 500); // 500ms debounce
+            });
 
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;

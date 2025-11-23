@@ -19,6 +19,8 @@ import { VigenereSolver } from '../attacks/vigenere-solver.js';
 import { Stats } from '../analysis/stats.js';
 import { Scorers } from '../language/scorers.js';
 import { TextUtils } from './text-utils.js';
+import { Kasiski } from '../analysis/kasiski.js';
+import { CipherIdentifier } from '../analysis/identifier.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -100,6 +102,8 @@ export default class Nigma {
     static Stats = Stats;
     static Scorers = Scorers;
     static TextUtils = TextUtils;
+    static Kasiski = Kasiski;
+    static CipherIdentifier = CipherIdentifier;
 
     /**
      * Performs basic statistical analysis on a text.
@@ -113,6 +117,15 @@ export default class Nigma {
             entropy: Stats.entropy(text),
             frequency: Stats.frequency(text)
         };
+    }
+
+    /**
+     * Identifies the probable cipher type(s) for a given ciphertext.
+     * @param {string} text - The ciphertext to analyze.
+     * @returns {Object} An object containing cipher families with confidence scores.
+     */
+    static identifyCipher(text) {
+        return CipherIdentifier.identify(text);
     }
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------
@@ -224,5 +237,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats, Scorers, TextUtils };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier };
 
