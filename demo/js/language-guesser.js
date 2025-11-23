@@ -456,16 +456,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ioc = Stats.indexOfCoincidence(text);
                     const entropy = Stats.entropy(text);
                     
-                    statsContainer.innerHTML = `
-                        <div class="stat-item">
-                            <div class="label">IoC</div>
-                            <div class="value">${ioc.toFixed(3)}</div>
-                            <div class="sub">Target ~1.73</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="label">Entropy</div>
-                            <div class="value">${entropy.toFixed(3)}</div>
-                            <div class="sub">Target ~4.2</div>
+                    // Change flex direction to column to stack sections
+                    statsContainer.style.flexDirection = 'column';
+                    
+                    let contentHTML = `
+                        <div style="display: flex; gap: 1.5rem;">
+                            <div class="stat-item">
+                                <div class="label">IoC</div>
+                                <div class="value">${ioc.toFixed(3)}</div>
+                                <div class="sub">Target ~1.73</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Entropy</div>
+                                <div class="value">${entropy.toFixed(3)}</div>
+                                <div class="sub">Target ~4.2</div>
+                            </div>
                         </div>
                     `;
                     
@@ -482,25 +487,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             sumExp += r.exp;
                         });
                         
-                        // Append probabilities to stat items or create a new section
-                        let probHTML = '<div style="margin-left: 2rem; padding-left: 2rem; border-left: 1px solid rgba(255,255,255,0.1); display: flex; gap: 1rem;">';
+                        contentHTML += `
+                            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; width: 100%;">
+                                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.75rem;">Probabilities:</div>
+                                <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                        `;
                         
-                        // Show top 3 probabilities
-                        ranking.slice(0, 3).forEach(r => {
+                        // Show all probabilities > 0.1%, sorted
+                        ranking.forEach(r => {
                             const prob = (r.exp / sumExp) * 100;
-                            if (prob > 0.1) { // Filter negligible
-                                probHTML += `
-                                    <div class="stat-item">
-                                        <div class="label">${capitalize(r.lang)} ${getFlag(r.lang)}</div>
-                                        <div class="value">${prob.toFixed(1)}%</div>
-                                        <div class="sub">Probability</div>
+                            if (prob > 0.1) {
+                                contentHTML += `
+                                    <div class="lang-rank-item">
+                                        <div class="rank-lang">${capitalize(r.lang)} ${getFlag(r.lang)}</div>
+                                        <div class="rank-prob">${prob.toFixed(1)}%</div>
                                     </div>
                                 `;
                             }
                         });
-                        probHTML += '</div>';
-                        statsContainer.innerHTML += probHTML;
+                        contentHTML += '</div></div>';
                     }
+                    
+                    statsContainer.innerHTML = contentHTML;
                  }
             }
 
