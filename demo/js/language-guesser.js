@@ -431,6 +431,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (winner.score < 50) confidenceScoreEl.style.color = '#10b981';
             else if (winner.score < 150) confidenceScoreEl.style.color = '#f59e0b';
             else confidenceScoreEl.style.color = '#ef4444';
+
+            // --- NEW: Show Advanced Stats (Phase 1) ---
+            const statsContainer = document.getElementById('advancedStatsContainer');
+            if (statsContainer) {
+                 const { Stats } = window.nigmajs;
+                 if (Stats) {
+                    const ioc = Stats.indexOfCoincidence(text);
+                    const entropy = Stats.entropy(text);
+                    
+                    statsContainer.innerHTML = `
+                        <div class="stat-item">
+                            <div class="label">IoC</div>
+                            <div class="value">${ioc.toFixed(3)}</div>
+                            <div class="sub">Target ~1.73</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Entropy</div>
+                            <div class="value">${entropy.toFixed(3)}</div>
+                            <div class="sub">Target ~4.2</div>
+                        </div>
+                    `;
+                 }
+            }
+
         } else {
             recommendationCard.style.display = 'none';
         }

@@ -1,124 +1,21 @@
-/* Language Guesser Specific Styles */
-
-.guesser-header {
+.stat-item {
     text-align: center;
-    margin-bottom: 2rem;
-}
-
-.input-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.input-card h2 {
-    color: var(--accent);
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-}
-
-textarea {
-    width: 100%;
-    min-height: 150px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    color: var(--text);
-    font-family: 'Fira Code', monospace;
-    resize: vertical;
-}
-
-textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-}
-
-/* View Controls */
-.tab-btn {
+    background: rgba(255,255,255,0.05);
     padding: 0.5rem 1rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
     border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
 }
-
-.tab-btn:hover {
-    color: var(--text);
-    border-color: var(--accent);
-}
-
-.tab-btn.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-/* Charts Grid Layout */
-.charts-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.chart-row {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 1rem;
-    position: relative;
-}
-
-.row-title {
-    position: absolute;
-    top: -12px;
-    left: 20px;
-    background: var(--card-bg);
-    padding: 0 10px;
-    color: var(--accent);
-    font-weight: bold;
-    font-size: 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-}
-
-.charts-flex {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-}
-
-.chart-wrapper {
-    flex: 1;
-    min-width: 300px;
-    height: 250px;
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-}
-
-/* Score Badge */
-.score-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 4px 8px;
-    border-radius: 4px;
+.stat-item .label {
     font-size: 0.8rem;
-    font-weight: bold;
-    z-index: 10;
-    border: 1px solid var(--border);
+    color: #94a3b8;
+    margin-bottom: 0.25rem;
 }
-
-.score-good { color: #10b981; border-color: #10b981; }
-.score-med { color: #f59e0b; border-color: #f59e0b; }
-.score-bad { color: #ef4444; border-color: #ef4444; }
-
+.stat-item .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #e2e8f0;
+}
+.stat-item .sub {
+    font-size: 0.7rem;
+    color: #64748b;
+}

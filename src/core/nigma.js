@@ -17,6 +17,8 @@ import { default as Polyalphabetic } from '../ciphers/polyalphabetic/polyalphabe
 import { HMMSolver } from '../attacks/hmm-solver.js';
 import { VigenereSolver } from '../attacks/vigenere-solver.js';
 import { Stats } from '../analysis/stats.js';
+import { Scorers } from '../language/scorers.js';
+import { TextUtils } from './text-utils.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -96,6 +98,8 @@ export default class Nigma {
     static HMMSolver = HMMSolver;
     static VigenereSolver = VigenereSolver;
     static Stats = Stats;
+    static Scorers = Scorers;
+    static TextUtils = TextUtils;
 
     /**
      * Performs basic statistical analysis on a text.
@@ -220,5 +224,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats, Scorers, TextUtils };
 
