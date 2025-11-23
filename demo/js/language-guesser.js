@@ -352,10 +352,14 @@ document.addEventListener('DOMContentLoaded', () => {
         markovVisualizerStandard.draw(null);
 
         // --- Event Listeners ---
+        let debounceTimer;
         cipherInput.addEventListener('input', (e) => {
-            const text = e.target.value;
-            updateAllCharts(text);
-            updateMarkov(text);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const text = e.target.value;
+                updateAllCharts(text);
+                updateMarkov(text);
+            }, 300); // Debounce 300ms
         });
 
         btnFreq.addEventListener('click', () => switchTab('freq'));

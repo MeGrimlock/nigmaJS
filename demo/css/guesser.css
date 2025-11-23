@@ -1,3 +1,81 @@
+/* Charts Grid: Ensure charts have fixed height and don't grow indefinitely */
+.charts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-row {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.row-title {
+    color: #e2e8f0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.charts-flex {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) rgba(255,255,255,0.1);
+}
+
+.charts-flex::-webkit-scrollbar {
+    height: 8px;
+}
+.charts-flex::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+}
+.charts-flex::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+    border-radius: 4px;
+}
+
+.chart-wrapper {
+    flex: 0 0 300px; /* Fixed width for each chart card */
+    height: 250px;   /* Fixed height to prevent growth */
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-wrapper canvas {
+    flex: 1; /* Fill available space */
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.score-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.score-good { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+.score-med { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+.score-bad { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
 .stat-item {
     text-align: center;
     background: rgba(255,255,255,0.05);
