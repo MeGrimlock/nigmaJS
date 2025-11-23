@@ -40,6 +40,13 @@ h1 {
     -webkit-text-fill-color: transparent;
 }
 
+/* New Title Style */
+h2 {
+    color: var(--text);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
 .input-section {
     margin-bottom: 1.5rem;
 }
@@ -64,12 +71,13 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
-.card {
+.card, .input-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     padding: 1.5rem;
     transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 2rem;
 }
 
 label {
@@ -95,6 +103,28 @@ input[type="password"]:focus,
 select:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+/* Buttons (Tab Style) */
+.tab-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
 }
 
 /* Loading Overlay */

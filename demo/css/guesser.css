@@ -45,7 +45,7 @@
 
 .chart-wrapper {
     flex: 0 0 300px; /* Fixed width for each chart card */
-    height: 250px;   /* Fixed height to prevent growth */
+    height: 280px;   /* Increased slightly to fit badges below */
     background: rgba(15, 23, 42, 0.6);
     border-radius: 0.5rem;
     padding: 0.5rem;
@@ -60,16 +60,16 @@
     height: 100% !important;
 }
 
+/* Repositioned Score Badge - Below Chart */
 .score-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 0.7rem;
-    padding: 2px 6px;
+    position: relative;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 4px 8px;
     border-radius: 4px;
     font-weight: bold;
-    z-index: 10;
-    pointer-events: none;
+    align-self: center;
 }
 
 .score-good { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
@@ -82,6 +82,7 @@
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     border: 1px solid rgba(255,255,255,0.1);
+    min-width: 100px;
 }
 .stat-item .label {
     font-size: 0.8rem;
