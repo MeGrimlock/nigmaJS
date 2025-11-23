@@ -17,7 +17,8 @@ import Nigma, {
     CipherIdentifier,
     HillClimb,
     SimulatedAnnealing,
-    Scorer
+    Scorer,
+    DictionaryValidator
 } from './core/nigma.js';
 
 export default Nigma;
@@ -40,5 +41,6 @@ export {
     CipherIdentifier,
     HillClimb,
     SimulatedAnnealing,
-    Scorer
+    Scorer,
+    DictionaryValidator
 };

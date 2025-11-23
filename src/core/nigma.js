@@ -21,6 +21,7 @@ import { Orchestrator } from '../attacks/orchestrator.js';
 import { Stats } from '../analysis/stats.js';
 import { Scorers } from '../language/scorers.js';
 import { TextUtils } from './text-utils.js';
+import { DictionaryValidator } from '../language/dictionary-validator.js';
 import { Kasiski } from '../analysis/kasiski.js';
 import { CipherIdentifier } from '../analysis/identifier.js';
 import { HillClimb } from '../search/hillclimb.js';
@@ -106,9 +107,10 @@ export default class Nigma {
 	static VigenereSolver = VigenereSolver;
 	static PolyalphabeticSolver = PolyalphabeticSolver;
     static Orchestrator = Orchestrator;
-    static Stats = Stats;
-    static Scorers = Scorers;
-    static TextUtils = TextUtils;
+	static Stats = Stats;
+	static Scorers = Scorers;
+	static TextUtils = TextUtils;
+	static DictionaryValidator = DictionaryValidator;
     static Kasiski = Kasiski;
     static CipherIdentifier = CipherIdentifier;
     static HillClimb = HillClimb;
@@ -247,5 +249,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer, DictionaryValidator };
 

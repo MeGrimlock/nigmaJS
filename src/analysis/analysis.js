@@ -63,6 +63,24 @@ export class LanguageAnalysis {
     }
 
     /**
+     * Gets the loaded dictionary for a specific language.
+     * @param {string} language - 'english' or 'spanish'
+     * @returns {Set<string>|null} The dictionary Set, or null if not loaded
+     */
+    static getDictionary(language) {
+        return dictionaries[language] || null;
+    }
+
+    /**
+     * Checks if a dictionary is loaded for a specific language.
+     * @param {string} language - 'english' or 'spanish'
+     * @returns {boolean} True if dictionary is loaded
+     */
+    static isDictionaryLoaded(language) {
+        return dictionaries[language] !== null;
+    }
+
+    /**
      * Cleans text based on language or general mode.
      * Preserves accents for alphabet validation.
      */

@@ -7,6 +7,7 @@ import { HillClimb } from '../search/hillclimb.js';
 import { SimulatedAnnealing } from '../search/simulated-annealing.js';
 import { Scorer } from '../search/scorer.js';
 import { TextUtils } from '../core/text-utils.js';
+import { DictionaryValidator } from '../language/dictionary-validator.js';
 
 /**
  * Orchestrator: Intelligent attack coordinator for classical ciphers.
@@ -41,12 +42,14 @@ export class Orchestrator {
      * @param {Object} options - Orchestrator options.
      * @param {boolean} options.tryMultiple - Try multiple strategies and return best (default: true).
      * @param {number} options.maxTime - Maximum time in ms (default: 60000 = 1 minute).
-     * @returns {Object} Result with { plaintext, method, confidence, cipherType, score }.
+     * @param {boolean} options.useDictionary - Use dictionary validation (default: true).
+     * @returns {Object} Result with { plaintext, method, confidence, cipherType, score, dictionaryValidation }.
      */
     async autoDecrypt(ciphertext, options = {}) {
         const {
             tryMultiple = true,
-            maxTime = 60000
+            maxTime = 60000,
+            useDictionary = true
         } = options;
         
         const startTime = Date.now();
@@ -94,7 +97,30 @@ export class Orchestrator {
             }
         }
         
-        // Step 4: Return best result
+        // Step 4: Validate with dictionary (if enabled and results exist)
+        if (useDictionary && results.length > 0) {
+            console.log('[Orchestrator] Validating results with dictionary...');
+            const validator = new DictionaryValidator(this.language);
+            
+            try {
+                const validatedResults = await validator.validateMultiple(results);
+                // validatedResults are already sorted by updated confidence
+                
+                // Add dictionary validation info to top result
+                const bestResult = validatedResults[0];
+                console.log(`[Orchestrator] Best result after dictionary validation: confidence=${bestResult.confidence.toFixed(2)}, validWords=${bestResult.validation.metrics.validWords}`);
+                
+                return {
+                    ...bestResult,
+                    dictionaryValidation: bestResult.validation
+                };
+            } catch (error) {
+                console.warn('[Orchestrator] Dictionary validation failed:', error);
+                // Fall back to non-validated results
+            }
+        }
+        
+        // Step 5: Return best result (without dictionary validation)
         if (results.length === 0) {
             return {
                 plaintext: ciphertext,
