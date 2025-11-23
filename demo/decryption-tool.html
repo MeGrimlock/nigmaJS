@@ -78,15 +78,21 @@
             <div class="input-card">
                 <h3>How it works</h3>
                 <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
-                    This tool uses a multi-stage attack:
+                    This tool uses an <strong>Intelligent Orchestrator</strong> that automatically detects and attacks classical ciphers:
                     <br><br>
-                    <strong>1. Vigenère Analysis (Friedman Test):</strong> Checks for polyalphabetic patterns (Index of Coincidence). If detected, it finds the key length and solves each column as a Caesar shift.
+                    <strong>🔍 Step 1 - Detection:</strong> Analyzes Index of Coincidence (IC), Entropy, and Kasiski patterns to identify cipher type.
                     <br>
-                    <strong>2. Brute Force (Caesar Shift):</strong> Instantly checks all 26 simple shifts using Bigram analysis.
-                    <br>
-                    <strong>3. Hidden Markov Models (HMM):</strong> For complex substitution ciphers, it uses a probabilistic model to "learn" the key mapping from scratch.
+                    <strong>🎯 Step 2 - Strategy Selection:</strong> Chooses the optimal attack based on detection:
+                    <ul style="margin: 0.5rem 0 0.5rem 1.5rem; padding: 0;">
+                        <li><strong>Caesar/ROT13:</strong> Brute force (26 rotations) with N-gram scoring</li>
+                        <li><strong>Vigenère:</strong> Friedman Test + frequency analysis per column</li>
+                        <li><strong>Substitution:</strong> Hill Climbing or Simulated Annealing with quadgram scoring</li>
+                    </ul>
+                    <strong>⚡ Step 3 - Execution:</strong> Runs the selected attack and returns the best result.
                     <br><br>
-                    <em>Note: HMM requires enough text (>50 chars) to analyze statistics effectively.</em>
+                    <strong>📊 Powered by:</strong> N-gram models (quadgrams), log-likelihood scoring, and heuristic search algorithms from cryptanalysis research.
+                    <br><br>
+                    <em>Note: Success depends on text length (50+ chars recommended) and language patterns.</em>
                 </p>
             </div>
     </div>
@@ -227,97 +233,81 @@
                 // Wait for UI update
                 setTimeout(async () => {
                     try {
-                        const { HMMSolver, VigenereSolver } = window.nigmajs;
-                        if (!HMMSolver || !VigenereSolver) throw new Error("Library not loaded.");
+                        const { Orchestrator } = window.nigmajs;
+                        if (!Orchestrator) throw new Error("Orchestrator not loaded.");
 
-                        // --- 1. Try Vigenère Solver First ---
-                        const vigenereSolver = new VigenereSolver('english');
-                        const vResult = vigenereSolver.solve(text);
+                        // --- Use Orchestrator with Generator for Progress Tracking ---
+                        const orchestrator = new Orchestrator('english');
+                        let lastProgress = 0;
                         
-                        // If high confidence (IoC match) and key length > 1 (not Caesar)
-                        if (vResult.confidence > 0.85 && vResult.analysis.length > 1) {
-                            progressBar.style.width = '100%';
-                            progressText.innerText = 'Done!';
-                            output.innerText = matchLayout(text, vResult.plaintext);
-                            
-                            methodBadge.innerText = `Method: Vigenère (Key: ${vResult.key})`;
-                            methodBadge.style.color = '#8b5cf6'; // Purple
-                            methodBadge.style.borderColor = '#8b5cf6';
-                            
-                            container.scrollIntoView({ behavior: 'smooth' });
-                            btnSolve.innerText = "🚀 Attempt Decryption";
-                            btnSolve.disabled = false;
-                            return; // Stop here
-                        }
-
-                        // --- 2. Fallback to HMM (handles Caesar + Substitution) ---
-                        const solver = new HMMSolver('english');
-                        // Initialize with text to use Frequency Analysis Smart Init
-                        await solver.initialize(text);
-                        
-                        let finalCleanText = "";
-
-                        // Use Generator
-                        for await (const status of solver.solveGenerator(text, 150)) { // Increased iterations slightly
-                            // Update Progress
-                            progressBar.style.width = `${status.progress}%`;
-                            progressText.innerText = `Iteration ${status.iteration}/${status.totalIterations}`;
-                            
-                            // --- MATRIX EFFECT LOGIC ---
-                            const isFinished = status.progress >= 100;
-                            let displayStr = "";
-
-                            if (status.method === 'caesar' || isFinished) {
-                                // Done: Show clean result formatted nicely
-                                displayStr = matchLayout(text, status.decryptedText);
-                                finalCleanText = status.decryptedText;
-                            } else {
-                                // In Progress: Scramble Effect
-                                // 1. Get current best guess from HMM (stripped)
-                                const currentGuess = status.decryptedText === "Optimizing..." ? 
-                                    text.replace(/[^a-zA-Z]/g, '') : status.decryptedText;
-                                
-                                // 2. Add noise to the guess
-                                let noisyGuess = "";
-                                for(let i=0; i<currentGuess.length; i++) {
-                                    // 20% chance to show random char instead of guess (Flicker effect)
-                                    if (Math.random() < 0.2) {
-                                        noisyGuess += randomChar();
-                                    } else {
-                                        noisyGuess += currentGuess[i];
+                        for await (const status of orchestrator.autoDecryptGenerator(text, {
+                            tryMultiple: false // Use first strategy for speed
+                        })) {
+                            // Update progress based on stage
+                            if (status.stage === 'detection') {
+                                progressBar.style.width = '10%';
+                                progressText.innerText = `Detected: ${status.cipherType}`;
+                                methodBadge.innerText = `Cipher: ${status.cipherType.replace(/-/g, ' ').toUpperCase()}`;
+                            } else if (status.stage === 'strategy-selection') {
+                                progressBar.style.width = '20%';
+                                progressText.innerText = `Strategy: ${status.strategy}`;
+                                methodBadge.innerText = `Method: ${status.strategy}`;
+                            } else if (status.stage === 'solving') {
+                                // Show progress with matrix effect
+                                const progress = Math.min(status.progress || 20, 95);
+                                if (progress > lastProgress + 5) { // Update every 5%
+                                    progressBar.style.width = `${progress}%`;
+                                    progressText.innerText = `Solving... ${progress.toFixed(0)}%`;
+                                    
+                                    // Matrix effect on intermediate results
+                                    if (status.plaintext) {
+                                        let noisyGuess = "";
+                                        const cleanText = status.plaintext;
+                                        for(let i=0; i<cleanText.length; i++) {
+                                            if (Math.random() < 0.15) {
+                                                noisyGuess += randomChar();
+                                            } else {
+                                                noisyGuess += cleanText[i];
+                                            }
+                                        }
+                                        output.innerText = matchLayout(text, noisyGuess);
                                     }
+                                    
+                                    lastProgress = progress;
+                                    await new Promise(r => setTimeout(r, 10));
                                 }
-
-                                // 3. Map back to original layout
-                                displayStr = matchLayout(text, noisyGuess);
-                            }
-
-                            output.innerText = displayStr;
-                            
-                            // Update Method Badge
-                            if (status.method) {
-                                methodBadge.innerText = `Method: ${status.method === 'caesar' ? 'Brute Force (Caesar)' : 'HMM (Substitution)'}`;
-                                if (status.method === 'caesar') {
-                                    methodBadge.style.color = '#10b981'; 
+                            } else if (status.stage === 'complete') {
+                                // Final result
+                                progressBar.style.width = '100%';
+                                progressText.innerText = 'Done!';
+                                progressBar.style.background = "#10b981";
+                                
+                                output.innerText = matchLayout(text, status.plaintext);
+                                
+                                // Update badge with method and confidence
+                                const confidencePercent = (status.confidence * 100).toFixed(0);
+                                methodBadge.innerText = `Method: ${status.method.toUpperCase()} (${confidencePercent}% confidence)`;
+                                
+                                // Color based on confidence
+                                if (status.confidence > 0.7) {
+                                    methodBadge.style.color = '#10b981'; // Green
                                     methodBadge.style.borderColor = '#10b981';
-                                } else {
-                                    methodBadge.style.color = '#f59e0b';
+                                } else if (status.confidence > 0.4) {
+                                    methodBadge.style.color = '#f59e0b'; // Orange
                                     methodBadge.style.borderColor = '#f59e0b';
+                                } else {
+                                    methodBadge.style.color = '#ef4444'; // Red
+                                    methodBadge.style.borderColor = '#ef4444';
                                 }
+                                
+                                container.scrollIntoView({ behavior: 'smooth' });
                             }
-                            
-                            if (status.iteration === 1) container.scrollIntoView({ behavior: 'smooth' });
-                            
-                            // Allow UI render
-                            await new Promise(r => setTimeout(r, 10)); 
                         }
-                        
-                        progressText.innerText = "Done!";
-                        progressBar.style.background = "#10b981";
 
                     } catch (e) {
                         console.error(e);
                         alert("Error: " + e.message);
+                        output.innerText = "❌ Decryption failed. The cipher may be too complex or the text too short.";
                     } finally {
                         btnSolve.innerText = "🚀 Attempt Decryption";
                         btnSolve.disabled = false;
