@@ -2,6 +2,7 @@ import { Orchestrator } from './orchestrator.js';
 import Shift from '../ciphers/shift/shift.js';
 import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
 import { Scorer } from '../search/scorer.js';
+import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
 
 /**
  * Comprehensive Orchestrator Tests
@@ -276,6 +277,88 @@ describe('Orchestrator - Comprehensive Tests', () => {
             
             console.log(`Substitution decryption took ${elapsed}ms`);
         }, 60000);
+    });
+    
+    describe('Advanced Polyalphabetic Ciphers', () => {
+        it('should decrypt Beaufort cipher', async () => {
+            const plaintext = testTexts.english.medium;
+            const key = 'CRYPTO';
+            
+            const beaufort = new Polyalphabetic.Beaufort(plaintext, key);
+            const ciphertext = beaufort.encode();
+            
+            const orchestrator = new Orchestrator('english');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                maxTime: 60000
+            });
+            
+            expect(result.plaintext).toBeDefined();
+            expect(result.method).toBeDefined();
+            expect(result.score).toBeGreaterThan(-Infinity);
+            
+            console.log(`Beaufort: Method=${result.method}, Score=${result.score.toFixed(2)}, Confidence=${result.confidence.toFixed(2)}`);
+        }, 120000);
+        
+        it('should decrypt Porta cipher', async () => {
+            const plaintext = testTexts.english.medium;
+            const key = 'FORTIFICATION';
+            
+            const porta = new Polyalphabetic.Porta(plaintext, key);
+            const ciphertext = porta.encode();
+            
+            const orchestrator = new Orchestrator('english');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                maxTime: 60000
+            });
+            
+            expect(result.plaintext).toBeDefined();
+            expect(result.method).toBeDefined();
+            expect(result.score).toBeGreaterThan(-Infinity);
+            
+            console.log(`Porta: Method=${result.method}, Score=${result.score.toFixed(2)}, Confidence=${result.confidence.toFixed(2)}`);
+        }, 120000);
+        
+        it('should decrypt Gronsfeld cipher', async () => {
+            const plaintext = testTexts.english.medium;
+            const key = '31415';
+            
+            const gronsfeld = new Polyalphabetic.Gronsfeld(plaintext, key);
+            const ciphertext = gronsfeld.encode();
+            
+            const orchestrator = new Orchestrator('english');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                maxTime: 60000
+            });
+            
+            expect(result.plaintext).toBeDefined();
+            expect(result.method).toBeDefined();
+            expect(result.score).toBeGreaterThan(-Infinity);
+            
+            console.log(`Gronsfeld: Method=${result.method}, Score=${result.score.toFixed(2)}, Confidence=${result.confidence.toFixed(2)}`);
+        }, 120000);
+        
+        it('should attempt to decrypt Quagmire I cipher', async () => {
+            const plaintext = testTexts.english.long; // Quagmire needs more text
+            const key = 'SECRET';
+            const cipherAlphabet = 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+            
+            const quagmire = new Polyalphabetic.Quagmire1(plaintext, key, cipherAlphabet);
+            const ciphertext = quagmire.encode();
+            
+            const orchestrator = new Orchestrator('english');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                maxTime: 60000
+            });
+            
+            expect(result.plaintext).toBeDefined();
+            expect(result.method).toBeDefined();
+            
+            console.log(`Quagmire I: Method=${result.method}, Score=${result.score.toFixed(2)}, Confidence=${result.confidence.toFixed(2)}`);
+        }, 120000);
     });
 });
 

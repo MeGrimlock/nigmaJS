@@ -16,6 +16,7 @@ import { default as Enigma } from '../ciphers/enigma/enigma.js';
 import { default as Polyalphabetic } from '../ciphers/polyalphabetic/polyalphabetic.js';
 import { HMMSolver } from '../attacks/hmm-solver.js';
 import { VigenereSolver } from '../attacks/vigenere-solver.js';
+import { PolyalphabeticSolver } from '../attacks/polyalphabetic-solver.js';
 import { Orchestrator } from '../attacks/orchestrator.js';
 import { Stats } from '../analysis/stats.js';
 import { Scorers } from '../language/scorers.js';
@@ -101,8 +102,9 @@ export default class Nigma {
 	static Columnar = Columnar;
 	static Enigma = Enigma;
 	static LanguageAnalysis = LanguageAnalysis;
-    static HMMSolver = HMMSolver;
-    static VigenereSolver = VigenereSolver;
+	static HMMSolver = HMMSolver;
+	static VigenereSolver = VigenereSolver;
+	static PolyalphabeticSolver = PolyalphabeticSolver;
     static Orchestrator = Orchestrator;
     static Stats = Stats;
     static Scorers = Scorers;
@@ -245,5 +247,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer };
 

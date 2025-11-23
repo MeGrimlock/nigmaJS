@@ -2,6 +2,7 @@ import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
 import { HMMSolver } from './hmm-solver.js';
 import { VigenereSolver } from './vigenere-solver.js';
+import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
 import { HillClimb } from '../search/hillclimb.js';
 import { SimulatedAnnealing } from '../search/simulated-annealing.js';
 import { Scorer } from '../search/scorer.js';
@@ -131,7 +132,12 @@ export class Orchestrator {
                     name: 'Vigenère Solver (Friedman)',
                     execute: (text) => this._solveVigenere(text, topCandidate.suggestedKeyLength)
                 });
-                // Fallback to substitution if Vigenère fails
+                // Try advanced polyalphabetic ciphers (Beaufort, Porta, Gronsfeld, Quagmire)
+                strategies.push({
+                    name: 'Advanced Polyalphabetic (Beaufort/Porta/Gronsfeld/Quagmire)',
+                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
+                });
+                // Fallback to substitution if all polyalphabetic methods fail
                 strategies.push({
                     name: 'Hill Climbing (Fallback)',
                     execute: (text) => this._solveSubstitution(text, 'hillclimb')
@@ -260,6 +266,23 @@ export class Orchestrator {
             plaintext: result.plaintext,
             method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
             confidence: confidence,
+            score: result.score,
+            key: result.key
+        };
+    }
+    
+    /**
+     * Solve advanced polyalphabetic ciphers (Beaufort, Porta, Gronsfeld, Quagmire).
+     * @private
+     */
+    async _solveAdvancedPolyalphabetic(ciphertext) {
+        const polyalphabeticSolver = new PolyalphabeticSolver(this.language);
+        const result = polyalphabeticSolver.solve(ciphertext);
+        
+        return {
+            plaintext: result.plaintext,
+            method: result.method || 'polyalphabetic',
+            confidence: result.confidence || 0.5,
             score: result.score,
             key: result.key
         };
