@@ -73,6 +73,17 @@
                     </span>
                 </div>
                 <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
+                
+                <!-- Dictionary Validation Section -->
+                <div id="dictionaryValidationContainer" style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: #10b981; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📚 Dictionary Validation
+                        <span id="dictValidBadge" style="font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2);">VALID</span>
+                    </h3>
+                    <div id="dictionaryValidationContent" style="font-size: 0.9rem; color: #e2e8f0;">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
             </div>
 
             <div class="input-card">
@@ -90,8 +101,15 @@
                         <li><strong>Advanced Polyalphabetic:</strong> Beaufort, Porta, Gronsfeld, Quagmire (experimental)</li>
                     </ul>
                     <strong>⚡ Step 3 - Execution:</strong> Runs the selected attack and returns the best result.
-                    <br><br>
-                    <strong>📊 Powered by:</strong> N-gram models (quadgrams), log-likelihood scoring, and heuristic search algorithms from cryptanalysis research.
+                    <br>
+                    <strong>📚 Step 4 - Dictionary Validation:</strong> Validates the decrypted text against a 275k+ word English dictionary to measure confidence:
+                    <ul style="margin: 0.5rem 0 0.5rem 1.5rem; padding: 0;">
+                        <li><strong>Word Coverage:</strong> % of valid dictionary words found</li>
+                        <li><strong>Character Coverage:</strong> % of characters in valid words</li>
+                        <li><strong>Confidence Score:</strong> Weighted metric (0-100%) combining all factors</li>
+                    </ul>
+                    <br>
+                    <strong>📊 Powered by:</strong> N-gram models (quadgrams), log-likelihood scoring, heuristic search algorithms, and dictionary validation.
                     <br><br>
                     <strong>⚠️ Current Limitations:</strong>
                     <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; font-size: 0.85rem; color: #f59e0b;">
@@ -245,73 +263,113 @@
                         const { Orchestrator } = window.nigmajs;
                         if (!Orchestrator) throw new Error("Orchestrator not loaded.");
 
-                        // --- Use Orchestrator with Generator for Progress Tracking ---
+                        // --- Use Orchestrator with Dictionary Validation ---
                         const orchestrator = new Orchestrator('english');
                         let lastProgress = 0;
                         
-                        for await (const status of orchestrator.autoDecryptGenerator(text, {
-                            tryMultiple: false // Use first strategy for speed
-                        })) {
-                            // Update progress based on stage
-                            if (status.stage === 'detection') {
-                                progressBar.style.width = '10%';
-                                progressText.innerText = `Detected: ${status.cipherType}`;
-                                methodBadge.innerText = `Cipher: ${status.cipherType.replace(/-/g, ' ').toUpperCase()}`;
-                            } else if (status.stage === 'strategy-selection') {
-                                progressBar.style.width = '20%';
-                                progressText.innerText = `Strategy: ${status.strategy}`;
-                                methodBadge.innerText = `Method: ${status.strategy}`;
-                            } else if (status.stage === 'solving') {
-                                // Show progress with matrix effect
-                                const progress = Math.min(status.progress || 20, 95);
-                                if (progress > lastProgress + 5) { // Update every 5%
-                                    progressBar.style.width = `${progress}%`;
-                                    progressText.innerText = `Solving... ${progress.toFixed(0)}%`;
-                                    
-                                    // Matrix effect on intermediate results
-                                    if (status.plaintext) {
-                                        let noisyGuess = "";
-                                        const cleanText = status.plaintext;
-                                        for(let i=0; i<cleanText.length; i++) {
-                                            if (Math.random() < 0.15) {
-                                                noisyGuess += randomChar();
-                                            } else {
-                                                noisyGuess += cleanText[i];
-                                            }
-                                        }
-                                        output.innerText = matchLayout(text, noisyGuess);
-                                    }
-                                    
-                                    lastProgress = progress;
-                                    await new Promise(r => setTimeout(r, 10));
-                                }
-                            } else if (status.stage === 'complete') {
-                                // Final result
-                                progressBar.style.width = '100%';
-                                progressText.innerText = 'Done!';
-                                progressBar.style.background = "#10b981";
-                                
-                                output.innerText = matchLayout(text, status.plaintext);
-                                
-                                // Update badge with method and confidence
-                                const confidencePercent = (status.confidence * 100).toFixed(0);
-                                methodBadge.innerText = `Method: ${status.method.toUpperCase()} (${confidencePercent}% confidence)`;
-                                
-                                // Color based on confidence
-                                if (status.confidence > 0.7) {
-                                    methodBadge.style.color = '#10b981'; // Green
-                                    methodBadge.style.borderColor = '#10b981';
-                                } else if (status.confidence > 0.4) {
-                                    methodBadge.style.color = '#f59e0b'; // Orange
-                                    methodBadge.style.borderColor = '#f59e0b';
-                                } else {
-                                    methodBadge.style.color = '#ef4444'; // Red
-                                    methodBadge.style.borderColor = '#ef4444';
-                                }
-                                
-                                container.scrollIntoView({ behavior: 'smooth' });
-                            }
+                        // Use autoDecrypt (non-generator) for dictionary validation
+                        const result = await orchestrator.autoDecrypt(text, {
+                            tryMultiple: true, // Try multiple strategies for best result
+                            useDictionary: true // Enable dictionary validation
+                        });
+                        
+                        // Simulate progress for UI
+                        progressBar.style.width = '100%';
+                        progressText.innerText = 'Done!';
+                        progressBar.style.background = "#10b981";
+                        
+                        output.innerText = result.plaintext || "❌ Decryption failed.";
+                        
+                        // Update badge with method and confidence
+                        const confidencePercent = (result.confidence * 100).toFixed(0);
+                        methodBadge.innerText = `Method: ${result.method.toUpperCase()} (${confidencePercent}% confidence)`;
+                        
+                        // Color based on confidence
+                        if (result.confidence > 0.7) {
+                            methodBadge.style.color = '#10b981'; // Green
+                            methodBadge.style.borderColor = '#10b981';
+                        } else if (result.confidence > 0.4) {
+                            methodBadge.style.color = '#f59e0b'; // Orange
+                            methodBadge.style.borderColor = '#f59e0b';
+                        } else {
+                            methodBadge.style.color = '#ef4444'; // Red
+                            methodBadge.style.borderColor = '#ef4444';
                         }
+                        
+                        // Display Dictionary Validation if available
+                        const dictValidationContainer = document.getElementById('dictionaryValidationContainer');
+                        const dictValidationContent = document.getElementById('dictionaryValidationContent');
+                        const dictValidBadge = document.getElementById('dictValidBadge');
+                        
+                        if (result.dictionaryValidation) {
+                            const validation = result.dictionaryValidation;
+                            const metrics = validation.metrics;
+                            
+                            // Update badge
+                            if (validation.valid) {
+                                dictValidBadge.innerText = '✓ VALID';
+                                dictValidBadge.style.background = 'rgba(16, 185, 129, 0.3)';
+                                dictValidBadge.style.color = '#10b981';
+                            } else {
+                                dictValidBadge.innerText = '⚠ UNCERTAIN';
+                                dictValidBadge.style.background = 'rgba(245, 158, 11, 0.3)';
+                                dictValidBadge.style.color = '#f59e0b';
+                            }
+                            
+                            // Build metrics HTML
+                            let html = `<p style="color: #94a3b8; margin-bottom: 1rem;">${validation.summary}</p>`;
+                            
+                            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+                            
+                            // Valid Words
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Valid Words</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #10b981; margin-top: 0.25rem;">${metrics.validWords} / ${metrics.totalWords}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.wordCoverage}% coverage</div>
+                            </div>`;
+                            
+                            // Character Coverage
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Character Coverage</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6; margin-top: 0.25rem;">${metrics.charCoverage}%</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.validChars} / ${metrics.totalChars} chars</div>
+                            </div>`;
+                            
+                            // Average Word Length
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Avg Word Length</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6; margin-top: 0.25rem;">${metrics.avgWordLength}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">letters per word</div>
+                            </div>`;
+                            
+                            // Confidence Score
+                            const dictConfidencePercent = (validation.confidence * 100).toFixed(0);
+                            const dictConfidenceColor = validation.confidence > 0.7 ? '#10b981' : validation.confidence > 0.4 ? '#f59e0b' : '#ef4444';
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dictionary Score</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: ${dictConfidenceColor}; margin-top: 0.25rem;">${dictConfidencePercent}%</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">confidence</div>
+                            </div>`;
+                            
+                            html += '</div>';
+                            
+                            // Sample words found
+                            if (validation.foundWords && validation.foundWords.length > 0) {
+                                html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                        ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                    </div>
+                                </div>`;
+                            }
+                            
+                            dictValidationContent.innerHTML = html;
+                            dictValidationContainer.style.display = 'block';
+                        } else {
+                            dictValidationContainer.style.display = 'none';
+                        }
+                        
+                        container.scrollIntoView({ behavior: 'smooth' });
 
                     } catch (e) {
                         console.error(e);
