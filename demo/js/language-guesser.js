@@ -31,7 +31,9 @@ class FrequencyChart {
                         backgroundColor: langColor.bg,
                         borderColor: langColor.border,
                         borderWidth: 1,
-                        order: 2
+                        order: 2,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
                     },
                     {
                         label: 'Input Text (%)',
@@ -39,7 +41,9 @@ class FrequencyChart {
                         backgroundColor: 'rgba(16, 185, 129, 0.6)', // --success
                         borderColor: 'rgba(16, 185, 129, 1)',
                         borderWidth: 1,
-                        order: 1
+                        order: 1,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -55,7 +59,13 @@ class FrequencyChart {
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                        ticks: { 
+                            color: '#94a3b8', 
+                            font: { size: 9 }, 
+                            maxRotation: 45, 
+                            minRotation: 0,
+                            autoSkip: false 
+                        }
                     }
                 },
                 plugins: {
@@ -112,9 +122,11 @@ class FrequencyChart {
 
         const standardKeys = this.getTopKeys(this.standardData, 10);
         const inputKeys = this.getTopKeys(inputFreqs, 5);
-        const allKeys = new Set([...standardKeys, ...inputKeys]);
         
-        return Array.from(allKeys).sort((a, b) => {
+        // Use Set to merge and then take top 12 to avoid clutter
+        const allKeys = Array.from(new Set([...standardKeys, ...inputKeys])).slice(0, 12);
+        
+        return allKeys.sort((a, b) => {
             const stdA = this.standardData[a] || 0;
             const stdB = this.standardData[b] || 0;
             return stdB - stdA;
@@ -456,6 +468,39 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="sub">Target ~4.2</div>
                         </div>
                     `;
+                    
+                    // --- Probability Score (Phase 2) ---
+                    const { Scorers } = window.nigmajs;
+                    if (Scorers) {
+                        const ranking = Scorers.rankLanguages(text);
+                        // Calculate Probability from Log-Likelihoods
+                        // P(Li) = 10^(Si - Smax) / Sum(10^(Sj - Smax))
+                        const maxScore = ranking[0].score;
+                        let sumExp = 0;
+                        ranking.forEach(r => {
+                            r.exp = Math.pow(10, r.score - maxScore);
+                            sumExp += r.exp;
+                        });
+                        
+                        // Append probabilities to stat items or create a new section
+                        let probHTML = '<div style="margin-left: 2rem; padding-left: 2rem; border-left: 1px solid rgba(255,255,255,0.1); display: flex; gap: 1rem;">';
+                        
+                        // Show top 3 probabilities
+                        ranking.slice(0, 3).forEach(r => {
+                            const prob = (r.exp / sumExp) * 100;
+                            if (prob > 0.1) { // Filter negligible
+                                probHTML += `
+                                    <div class="stat-item">
+                                        <div class="label">${capitalize(r.lang)} ${getFlag(r.lang)}</div>
+                                        <div class="value">${prob.toFixed(1)}%</div>
+                                        <div class="sub">Probability</div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        probHTML += '</div>';
+                        statsContainer.innerHTML += probHTML;
+                    }
                  }
             }
 
