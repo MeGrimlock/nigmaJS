@@ -145,12 +145,15 @@ export class Orchestrator {
     _selectStrategies(topCandidate, stats) {
         const strategies = [];
         
+        // ALWAYS try Caesar first - it's fast and catches ROT13/simple shifts
+        strategies.push({
+            name: 'Brute Force (Caesar/ROT13)',
+            execute: (text) => this._bruteForceCaesar(text)
+        });
+        
         switch (topCandidate.type) {
             case 'caesar-shift':
-                strategies.push({
-                    name: 'Brute Force (Caesar)',
-                    execute: (text) => this._bruteForceCaesar(text)
-                });
+                // Already added Caesar above
                 break;
                 
             case 'vigenere-like':
@@ -209,12 +212,12 @@ export class Orchestrator {
     }
     
     /**
-     * Brute force attack for Caesar shift.
+     * Brute force attack for Caesar shift (including ROT13).
      * @private
      */
     async _bruteForceCaesar(ciphertext) {
         const cleaned = TextUtils.onlyLetters(ciphertext);
-        const scorer = new Scorer(this.language, 4);
+        const scorer = new Scorer(this.language, 4); // Use quadgrams
         
         let bestShift = 0;
         let bestScore = -Infinity;
@@ -222,27 +225,37 @@ export class Orchestrator {
         
         // Try all 26 shifts
         for (let shift = 0; shift < 26; shift++) {
-            const key = {};
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            
-            for (let i = 0; i < 26; i++) {
-                key[alphabet[i]] = alphabet[(i + shift) % 26];
+            let decrypted = '';
+            for (const char of cleaned) {
+                const charCode = char.charCodeAt(0);
+                const shifted = ((charCode - 65 - shift + 26) % 26) + 65;
+                decrypted += String.fromCharCode(shifted);
             }
             
-            const plaintext = scorer.applyKey(cleaned, key);
-            const score = scorer.score(plaintext);
+            const score = scorer.score(decrypted);
             
             if (score > bestScore) {
                 bestScore = score;
                 bestShift = shift;
-                bestPlaintext = plaintext;
+                bestPlaintext = decrypted;
             }
         }
         
+        // Calculate confidence based on score
+        // Good quadgram scores are typically > -3 for English
+        let confidence = 0.5;
+        if (bestScore > -3) {
+            confidence = 0.95;
+        } else if (bestScore > -4) {
+            confidence = 0.8;
+        } else if (bestScore > -5) {
+            confidence = 0.6;
+        }
+        
         return {
-            plaintext: bestPlaintext,
-            method: 'brute-force-caesar',
-            confidence: bestScore > -4 ? 0.9 : 0.5,
+            plaintext: TextUtils.matchLayout(ciphertext, bestPlaintext),
+            method: bestShift === 13 ? 'rot13' : 'caesar-shift',
+            confidence: confidence,
             score: bestScore,
             key: bestShift
         };
