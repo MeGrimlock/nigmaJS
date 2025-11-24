@@ -252,6 +252,7 @@
                 container.style.display = 'block'; 
                 progressContainer.style.display = 'block';
                 methodBadge.innerText = "Method: Detecting...";
+                progressText.innerText = "Decrypting...";
                 
                 // Reset Badge
                 methodBadge.style.color = 'var(--accent)';
@@ -265,7 +266,10 @@
 
                         // --- Use Orchestrator with Dictionary Validation ---
                         const orchestrator = new Orchestrator('english');
-                        let lastProgress = 0;
+                        
+                        // Update progress
+                        progressBar.style.width = '50%';
+                        progressText.innerText = "Analyzing cipher...";
                         
                         // Use autoDecrypt (non-generator) for dictionary validation
                         const result = await orchestrator.autoDecrypt(text, {
@@ -273,10 +277,20 @@
                             useDictionary: true // Enable dictionary validation
                         });
                         
-                        // Simulate progress for UI
+                        console.log('[Demo] Decryption result:', result);
+                        
+                        // Check if decryption was successful
+                        const isSuccess = result.plaintext && result.plaintext.length > 0 && result.method !== 'none';
+                        
+                        // Update progress based on success
                         progressBar.style.width = '100%';
-                        progressText.innerText = 'Done!';
-                        progressBar.style.background = "#10b981";
+                        if (isSuccess) {
+                            progressText.innerText = '✓ Decryption successful!';
+                            progressBar.style.background = "#10b981";
+                        } else {
+                            progressText.innerText = '✗ Decryption failed';
+                            progressBar.style.background = "#ef4444";
+                        }
                         
                         output.innerText = result.plaintext || "❌ Decryption failed.";
                         
@@ -301,7 +315,9 @@
                         const dictValidationContent = document.getElementById('dictionaryValidationContent');
                         const dictValidBadge = document.getElementById('dictValidBadge');
                         
-                        if (result.dictionaryValidation) {
+                        console.log('[Demo] Dictionary validation:', result.dictionaryValidation);
+                        
+                        if (result.dictionaryValidation && result.dictionaryValidation.metrics) {
                             const validation = result.dictionaryValidation;
                             const metrics = validation.metrics;
                             
@@ -366,7 +382,86 @@
                             dictValidationContent.innerHTML = html;
                             dictValidationContainer.style.display = 'block';
                         } else {
-                            dictValidationContainer.style.display = 'none';
+                            // Dictionary validation not available - show fallback message
+                            console.warn('[Demo] Dictionary validation not available in result');
+                            
+                            // Try to manually validate if we have the DictionaryValidator
+                            if (window.nigmajs.DictionaryValidator && isSuccess) {
+                                try {
+                                    const validator = new window.nigmajs.DictionaryValidator('english');
+                                    const manualValidation = await validator.validate(result.plaintext);
+                                    
+                                    console.log('[Demo] Manual validation:', manualValidation);
+                                    
+                                    if (manualValidation && manualValidation.metrics) {
+                                        const validation = manualValidation;
+                                        const metrics = validation.metrics;
+                                        
+                                        // Update badge
+                                        if (validation.valid) {
+                                            dictValidBadge.innerText = '✓ VALID';
+                                            dictValidBadge.style.background = 'rgba(16, 185, 129, 0.3)';
+                                            dictValidBadge.style.color = '#10b981';
+                                        } else {
+                                            dictValidBadge.innerText = '⚠ UNCERTAIN';
+                                            dictValidBadge.style.background = 'rgba(245, 158, 11, 0.3)';
+                                            dictValidBadge.style.color = '#f59e0b';
+                                        }
+                                        
+                                        // Build metrics HTML (same as above)
+                                        let html = `<p style="color: #94a3b8; margin-bottom: 1rem;">${validation.summary}</p>`;
+                                        
+                                        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Valid Words</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #10b981; margin-top: 0.25rem;">${metrics.validWords} / ${metrics.totalWords}</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.wordCoverage}% coverage</div>
+                                        </div>`;
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Character Coverage</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6; margin-top: 0.25rem;">${metrics.charCoverage}%</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.validChars} / ${metrics.totalChars} chars</div>
+                                        </div>`;
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Avg Word Length</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6; margin-top: 0.25rem;">${metrics.avgWordLength}</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">letters per word</div>
+                                        </div>`;
+                                        
+                                        const dictConfidencePercent = (validation.confidence * 100).toFixed(0);
+                                        const dictConfidenceColor = validation.confidence > 0.7 ? '#10b981' : validation.confidence > 0.4 ? '#f59e0b' : '#ef4444';
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dictionary Score</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: ${dictConfidenceColor}; margin-top: 0.25rem;">${dictConfidencePercent}%</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">confidence</div>
+                                        </div>`;
+                                        
+                                        html += '</div>';
+                                        
+                                        if (validation.foundWords && validation.foundWords.length > 0) {
+                                            html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                                    ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                                </div>
+                                            </div>`;
+                                        }
+                                        
+                                        dictValidationContent.innerHTML = html;
+                                        dictValidationContainer.style.display = 'block';
+                                    } else {
+                                        dictValidationContainer.style.display = 'none';
+                                    }
+                                } catch (validationError) {
+                                    console.error('[Demo] Manual validation failed:', validationError);
+                                    dictValidationContainer.style.display = 'none';
+                                }
+                            } else {
+                                dictValidationContainer.style.display = 'none';
+                            }
                         }
                         
                         container.scrollIntoView({ behavior: 'smooth' });
