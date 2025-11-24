@@ -78,7 +78,7 @@ export class PolyalphabeticSolver {
                 const testKey = bestKey + String.fromCharCode(shift + 65) + 'A'.repeat(keyLength - pos - 1);
                 
                 // Decrypt with test key
-                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey, true);
+                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
                 const testPlaintext = beaufort.decode();
                 
                 // Score the full plaintext
@@ -104,7 +104,7 @@ export class PolyalphabeticSolver {
                 const newChar = String.fromCharCode(newCharCode + 65);
                 const testKey = bestKey.substring(0, i) + newChar + bestKey.substring(i + 1);
 
-                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey, true);
+                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
                 const testPlaintext = beaufort.decode();
                 const score = Scorers.scoreText(testPlaintext, this.language);
 
@@ -117,7 +117,7 @@ export class PolyalphabeticSolver {
         }
 
         // Final decryption with best key
-        const beaufort = new Polyalphabetic.Beaufort(ciphertext, bestKey, true);
+        const beaufort = new Polyalphabetic.Beaufort(ciphertext, bestKey);
         const finalPlaintext = beaufort.decode();
         const finalScore = Scorers.scoreText(finalPlaintext, this.language);
         const ic = Stats.indexOfCoincidence(finalPlaintext);
@@ -169,7 +169,9 @@ export class PolyalphabeticSolver {
             // Try all 26 possible key letters (though only 13 are unique in Porta)
             for (let k = 0; k < 26; k++) {
                 const keyChar = String.fromCharCode(k + 65);
-                const porta = new Polyalphabetic.Porta(column, keyChar, true);
+                // Create Porta cipher for this column with this key character
+                // The column is already ciphertext, so we decode it
+                const porta = new Polyalphabetic.Porta(column, keyChar);
                 const decrypted = porta.decode();
 
                 // Use N-gram scoring for better accuracy
@@ -184,7 +186,7 @@ export class PolyalphabeticSolver {
         }
 
         // Decrypt with found key
-        const porta = new Polyalphabetic.Porta(ciphertext, key, true);
+        const porta = new Polyalphabetic.Porta(ciphertext, key);
         const plaintext = porta.decode();
         const ngramScore = Scorers.scoreText(plaintext, this.language);
         const ic = Stats.indexOfCoincidence(plaintext);
@@ -229,7 +231,7 @@ export class PolyalphabeticSolver {
         for (const keyword of commonKeywords) {
             for (const cipherAlphabet of commonAlphabets) {
                 try {
-                    const quagmire = new Polyalphabetic.Quagmire1(ciphertext, keyword, cipherAlphabet, true);
+                    const quagmire = new Polyalphabetic.Quagmire1(ciphertext, keyword, cipherAlphabet);
                     const plaintext = quagmire.decode();
                     const ngramScore = Scorers.scoreText(plaintext, this.language);
 
@@ -309,7 +311,7 @@ export class PolyalphabeticSolver {
         }
 
         // Decrypt with found key
-        const gronsfeld = new Polyalphabetic.Gronsfeld(ciphertext, key, true);
+        const gronsfeld = new Polyalphabetic.Gronsfeld(ciphertext, key);
         const plaintext = gronsfeld.decode();
         const ngramScore = Scorers.scoreText(plaintext, this.language);
         const ic = Stats.indexOfCoincidence(plaintext);
