@@ -2,6 +2,9 @@ import 'regenerator-runtime/runtime';
 import { TextUtils } from '../core/text-utils.js';
 import { LanguageAnalysis } from '../analysis/analysis.js';
 
+// Flag to check if we're in browser environment
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
 /**
  * DictionaryValidator
  * 
@@ -30,11 +33,27 @@ export class DictionaryValidator {
         if (this.dictionaryLoaded) return true;
         
         try {
-            await LanguageAnalysis.loadDictionary(this.language, basePath);
-            this.dictionaryLoaded = true;
-            return true;
+            // Try to load dictionary
+            const loaded = await LanguageAnalysis.loadDictionary(this.language, basePath);
+            if (loaded) {
+                this.dictionaryLoaded = true;
+                return true;
+            }
+            
+            // If loading failed in browser, try alternative path
+            if (isBrowser && !loaded) {
+                console.warn(`[DictionaryValidator] Failed to load from ${basePath}, trying alternative path...`);
+                const altLoaded = await LanguageAnalysis.loadDictionary(this.language, '../demo/data/');
+                if (altLoaded) {
+                    this.dictionaryLoaded = true;
+                    return true;
+                }
+            }
+            
+            console.error(`[DictionaryValidator] Could not load dictionary for ${this.language}`);
+            return false;
         } catch (error) {
-            console.error(`Failed to load dictionary for ${this.language}:`, error);
+            console.error(`[DictionaryValidator] Failed to load dictionary for ${this.language}:`, error);
             return false;
         }
     }
