@@ -337,32 +337,48 @@ export class PolyalphabeticSolver {
         
         // Use Kasiski to find probable key lengths
         const kasiskiResult = Kasiski.examine(cleanText);
-        const probableKeyLengths = kasiskiResult.suggestedKeyLengths.slice(0, 3); // Top 3
+        let probableKeyLengths = kasiskiResult.suggestedKeyLengths.slice(0, 3); // Top 3
 
         if (probableKeyLengths.length === 0) {
             // No repetitions found, might be monoalphabetic or very short key
-            probableKeyLengths.push({ keyLength: 3, score: 1 });
-            probableKeyLengths.push({ keyLength: 5, score: 1 });
-        }
-
-        let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
-
-        for (const { keyLength } of probableKeyLengths) {
-            // Try each cipher type
-            const results = [
-                this.solveBeaufort(ciphertext, keyLength),
-                this.solvePorta(ciphertext, keyLength),
-                this.solveGronsfeld(ciphertext, keyLength),
-                this.solveQuagmire(ciphertext, keyLength)
+            probableKeyLengths = [
+                { length: 3, score: 1 },
+                { length: 4, score: 1 },
+                { length: 5, score: 1 }
             ];
-
-            for (const result of results) {
-                if (result.score > bestResult.score) {
-                    bestResult = result;
-                }
-            }
         }
 
+        let allResults = [];
+
+        for (const keyLengthObj of probableKeyLengths) {
+            const keyLength = keyLengthObj.length || keyLengthObj.keyLength;
+            console.log(`[PolyalphabeticSolver] Trying key length ${keyLength}...`);
+            
+            // Try each cipher type - Porta FIRST (most commonly confused with Vigenère)
+            const portaResult = this.solvePorta(ciphertext, keyLength);
+            allResults.push({ ...portaResult, keyLength });
+            
+            const beaufortResult = this.solveBeaufort(ciphertext, keyLength);
+            allResults.push({ ...beaufortResult, keyLength });
+            
+            const gronsfeldResult = this.solveGronsfeld(ciphertext, keyLength);
+            allResults.push({ ...gronsfeldResult, keyLength });
+            
+            const quagmireResult = this.solveQuagmire(ciphertext, keyLength);
+            allResults.push({ ...quagmireResult, keyLength });
+        }
+
+        // Sort by score (higher is better for N-gram scoring)
+        allResults.sort((a, b) => b.score - a.score);
+        
+        // Log top 3 results for debugging
+        console.log('[PolyalphabeticSolver] Top 3 results:');
+        allResults.slice(0, 3).forEach((r, i) => {
+            console.log(`  ${i + 1}. ${r.method} (keyLength=${r.keyLength}): score=${r.score.toFixed(2)}, confidence=${r.confidence.toFixed(2)}, key=${r.key}`);
+        });
+
+        const bestResult = allResults[0] || { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        
         return bestResult;
     }
 

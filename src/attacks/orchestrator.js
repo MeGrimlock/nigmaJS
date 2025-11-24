@@ -108,7 +108,32 @@ export class Orchestrator {
                 
                 // Add dictionary validation info to top result
                 const bestResult = validatedResults[0];
-                console.log(`[Orchestrator] Best result after dictionary validation: confidence=${bestResult.confidence.toFixed(2)}, validWords=${bestResult.validation.metrics.validWords}`);
+                const dictConfidence = bestResult.validation.confidence;
+                const wordCoverage = parseFloat(bestResult.validation.metrics.wordCoverage) / 100;
+                
+                console.log(`[Orchestrator] Best result after dictionary validation: confidence=${bestResult.confidence.toFixed(2)}, validWords=${bestResult.validation.metrics.validWords}, wordCoverage=${wordCoverage.toFixed(2)}`);
+
+                // REJECT if dictionary validation is too low (< 30% word coverage)
+                // This prevents false positives like Vigenère decrypting Porta as gibberish
+                if (wordCoverage < 0.30 && dictConfidence < 0.40) {
+                    console.warn(`[Orchestrator] Best result rejected: word coverage too low (${(wordCoverage * 100).toFixed(0)}%). Trying next strategy...`);
+                    
+                    // Try to find a better result
+                    for (let i = 1; i < validatedResults.length; i++) {
+                        const altResult = validatedResults[i];
+                        const altCoverage = parseFloat(altResult.validation.metrics.wordCoverage) / 100;
+                        if (altCoverage >= 0.30 || altResult.validation.confidence >= 0.40) {
+                            console.log(`[Orchestrator] Using alternative result: ${altResult.method} with ${(altCoverage * 100).toFixed(0)}% coverage`);
+                            return {
+                                ...altResult,
+                                dictionaryValidation: altResult.validation
+                            };
+                        }
+                    }
+                    
+                    // No good result found - return best with warning
+                    console.warn('[Orchestrator] No result passed dictionary validation threshold');
+                }
                 
                 return {
                     ...bestResult,
@@ -157,14 +182,16 @@ export class Orchestrator {
                 break;
                 
             case 'vigenere-like':
+                // IMPORTANT: Try advanced polyalphabetic FIRST (Porta, Beaufort, Gronsfeld)
+                // These are more specific and should be tested before generic Vigenère
+                strategies.push({
+                    name: 'Advanced Polyalphabetic (Porta/Beaufort/Gronsfeld/Quagmire)',
+                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
+                });
+                // Then try standard Vigenère (most common polyalphabetic)
                 strategies.push({
                     name: 'Vigenère Solver (Friedman)',
                     execute: (text) => this._solveVigenere(text, topCandidate.suggestedKeyLength)
-                });
-                // Try advanced polyalphabetic ciphers (Beaufort, Porta, Gronsfeld, Quagmire)
-                strategies.push({
-                    name: 'Advanced Polyalphabetic (Beaufort/Porta/Gronsfeld/Quagmire)',
-                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
                 });
                 // Fallback to substitution if all polyalphabetic methods fail
                 strategies.push({
