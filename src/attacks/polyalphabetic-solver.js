@@ -149,58 +149,93 @@ export class PolyalphabeticSolver {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0 };
         }
 
-        // Split into columns
-        const columns = [];
-        for (let i = 0; i < keyLength; i++) {
-            columns.push('');
-        }
+        // Strategy 1: Try common short keys first (faster)
+        // IMPORTANT: Include 'KEY' as first option since it's very common
+        const commonKeys = ['KEY', 'THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WAY', 'WHO', 'BOY', 'DID', 'ITS', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE'];
         
-        for (let i = 0; i < cleanText.length; i++) {
-            columns[i % keyLength] += cleanText[i];
-        }
-
-        // For each column, find the most likely key letter (A-M, 13 pairs)
-        let key = '';
-
-        for (const column of columns) {
-            let bestKeyChar = 'A';
-            let bestScore = -Infinity;
-
-            // Try all 26 possible key letters (though only 13 are unique in Porta)
-            for (let k = 0; k < 26; k++) {
-                const keyChar = String.fromCharCode(k + 65);
-                // Create Porta cipher for this column with this key character
-                // The column is already ciphertext, so we decode it
-                const porta = new Polyalphabetic.Porta(column, keyChar);
-                const decrypted = porta.decode();
-
-                // Use N-gram scoring for better accuracy
-                const score = Scorers.scoreText(decrypted, this.language);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestKeyChar = keyChar;
+        let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'porta', keyLength };
+        
+        // Try common keys of the right length
+        for (const testKey of commonKeys) {
+            if (testKey.length === keyLength) {
+                try {
+                    // Porta cipher works on the full ciphertext (preserves punctuation)
+                    const porta = new Polyalphabetic.Porta(ciphertext, testKey);
+                    const plaintext = porta.decode();
+                    
+                    // Score only the letters (for N-gram scoring)
+                    const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+                    const score = Scorers.scoreText(cleanPlaintext, this.language);
+                    
+                    if (score > bestResult.score) {
+                        const ic = Stats.indexOfCoincidence(plaintext);
+                        const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+                        bestResult = { 
+                            plaintext,  // Keep full text with punctuation
+                            key: testKey, 
+                            score, 
+                            confidence, 
+                            method: 'porta', 
+                            keyLength 
+                        };
+                        console.log(`[Porta] Found better key: ${testKey}, score=${score.toFixed(2)}, confidence=${confidence.toFixed(2)}`);
+                    }
+                } catch (error) {
+                    console.warn(`[Porta] Error with key ${testKey}:`, error);
                 }
             }
-
-            key += bestKeyChar;
         }
 
-        // Decrypt with found key
-        const porta = new Polyalphabetic.Porta(ciphertext, key);
-        const plaintext = porta.decode();
-        const ngramScore = Scorers.scoreText(plaintext, this.language);
-        const ic = Stats.indexOfCoincidence(plaintext);
+        // Strategy 2: If common keys didn't work well, try brute force column-by-column
+        // But only if the best score is still very low
+        if (bestResult.score < -5) {
+            // Split into columns
+            const columns = [];
+            for (let i = 0; i < keyLength; i++) {
+                columns.push('');
+            }
+            
+            for (let i = 0; i < cleanText.length; i++) {
+                columns[i % keyLength] += cleanText[i];
+            }
 
-        const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+            // For each column, find the most likely key letter
+            let key = '';
 
-        return {
-            plaintext,
-            key,
-            score: ngramScore,
-            confidence,
-            method: 'porta',
-            keyLength
-        };
+            for (const column of columns) {
+                let bestKeyChar = 'A';
+                let bestScore = -Infinity;
+
+                // Try all 26 possible key letters (though only 13 are unique in Porta)
+                for (let k = 0; k < 26; k++) {
+                    const keyChar = String.fromCharCode(k + 65);
+                    const porta = new Polyalphabetic.Porta(column, keyChar);
+                    const decrypted = porta.decode();
+                    const score = Scorers.scoreText(decrypted, this.language);
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestKeyChar = keyChar;
+                    }
+                }
+
+                key += bestKeyChar;
+            }
+
+            // Decrypt with found key
+            const porta = new Polyalphabetic.Porta(ciphertext, key);
+            const plaintext = porta.decode();
+            const ngramScore = Scorers.scoreText(plaintext, this.language);
+            
+            // Only use this result if it's better than common keys
+            if (ngramScore > bestResult.score) {
+                const ic = Stats.indexOfCoincidence(plaintext);
+                const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+                bestResult = { plaintext, key, score: ngramScore, confidence, method: 'porta', keyLength };
+            }
+        }
+
+        return bestResult;
     }
 
     /**

@@ -316,27 +316,67 @@
                         cipherDetectionContent.innerHTML = cipherHtml;
                         
                         // Language Probability
-                        const langRanking = Scorers.rankLanguages(text);
-                        let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
-                        
-                        langRanking.slice(0, 5).forEach((lang, index) => {
-                            const langName = lang.lang.charAt(0).toUpperCase() + lang.lang.slice(1);
-                            const maxScore = langRanking[0].score;
-                            const minScore = langRanking[langRanking.length - 1].score;
-                            const normalizedScore = ((lang.score - minScore) / (maxScore - minScore)) * 100;
-                            const probability = normalizedScore.toFixed(0);
-                            const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
+                        try {
+                            const langRanking = Scorers.rankLanguages(text);
+                            let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
                             
-                            langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-                                <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
-                                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                    <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-                                        <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
-                                    </div>
-                                    <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
-                                </div>
-                            </div>`;
-                        });
+                            if (!langRanking || langRanking.length === 0) {
+                                langHtml += '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">No language data available</div>';
+                            } else {
+                                // Filter out invalid scores (NaN, undefined, null)
+                                const validRanking = langRanking.filter(lang => 
+                                    lang && 
+                                    typeof lang.score === 'number' && 
+                                    !isNaN(lang.score) && 
+                                    isFinite(lang.score)
+                                );
+                                
+                                if (validRanking.length === 0) {
+                                    langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to analyze language</div>';
+                                } else {
+                                    const maxScore = validRanking[0].score;
+                                    const minScore = validRanking[validRanking.length - 1].score;
+                                    const scoreRange = maxScore - minScore;
+                                    
+                                    validRanking.slice(0, 5).forEach((lang, index) => {
+                                        const langName = lang.lang ? lang.lang.charAt(0).toUpperCase() + lang.lang.slice(1) : 'Unknown';
+                                        
+                                        // Calculate probability with proper validation
+                                        let probability = '0';
+                                        if (scoreRange > 0.001) { // Avoid division by zero and very small ranges
+                                            const normalizedScore = ((lang.score - minScore) / scoreRange) * 100;
+                                            probability = Math.max(0, Math.min(100, normalizedScore)).toFixed(0);
+                                        } else {
+                                            // All scores are very similar, distribute evenly
+                                            probability = Math.round(100 / validRanking.length).toString();
+                                        }
+                                        
+                                        // Ensure probability is a valid number
+                                        if (isNaN(probability) || !isFinite(parseFloat(probability))) {
+                                            probability = '0';
+                                        }
+                                        
+                                        const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
+                                    
+                                        langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                                            <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
+                                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                                <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                                    <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
+                                                </div>
+                                                <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
+                                            </div>
+                                        </div>`;
+                                    });
+                                }
+                            }
+                            
+                            langHtml += '</div>';
+                            languageProbContent.innerHTML = langHtml;
+                        } catch (langError) {
+                            console.error('Language probability error:', langError);
+                            languageProbContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Language analysis error</div>';
+                        }
                         
                         langHtml += '</div>';
                         languageProbContent.innerHTML = langHtml;
