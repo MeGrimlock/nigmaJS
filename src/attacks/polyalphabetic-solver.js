@@ -309,7 +309,35 @@ export class PolyalphabeticSolver {
     solveQuagmire(ciphertext, keyLength) {
         const cleanText = TextUtils.onlyLetters(ciphertext);
         if (cleanText.length < 100) { // Quagmire needs more text
-            return { plaintext: '', key: '', score: -Infinity, confidence: 0 };
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        }
+
+        // Try Quagmire 1, 2, 3, and 4
+        const quagmire1Result = this.solveQuagmire1(ciphertext, keyLength);
+        const quagmire2Result = this.solveQuagmire2(ciphertext, keyLength);
+        const quagmire3Result = this.solveQuagmire3(ciphertext, keyLength);
+        const quagmire4Result = this.solveQuagmire4(ciphertext, keyLength);
+
+        // Return the best result
+        const allResults = [quagmire1Result, quagmire2Result, quagmire3Result, quagmire4Result]
+            .filter(r => r && r.score > -Infinity);
+        
+        if (allResults.length === 0) {
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        }
+
+        allResults.sort((a, b) => b.score - a.score);
+        return allResults[0];
+    }
+
+    /**
+     * Attempts to solve Quagmire I cipher
+     * @private
+     */
+    solveQuagmire1(ciphertext, keyLength) {
+        const cleanText = TextUtils.onlyLetters(ciphertext);
+        if (cleanText.length < 100) {
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
         }
 
         // For Quagmire, we need to find both the keyword AND the cipher alphabet
