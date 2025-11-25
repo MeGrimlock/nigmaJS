@@ -100,7 +100,7 @@ export class Orchestrator {
         console.log(`[Orchestrator] Detected: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
         
         // Step 2: Select attack strategy based on detection
-        const strategies = this._selectStrategies(topCandidate, detection.stats);
+        const strategies = this._selectStrategies(topCandidate, detection.stats, ciphertext);
         
         // Step 3: Execute strategies
         const results = [];
@@ -229,14 +229,17 @@ export class Orchestrator {
      * Selects appropriate attack strategies based on cipher detection.
      * @private
      */
-    _selectStrategies(topCandidate, stats) {
+    _selectStrategies(topCandidate, stats, ciphertext = '') {
         const strategies = [];
+        
+        // Check if text contains non-letter ASCII (for ROT47 detection)
+        const hasNonLetterASCII = ciphertext && /[!-~]/.test(ciphertext) && /[^A-Za-z\s]/.test(ciphertext);
         
         switch (topCandidate.type) {
             case 'caesar-shift':
                 // For Caesar, try ROT47 first (if text contains printable ASCII beyond letters)
                 // ROT47 handles all printable ASCII (33-126), not just letters
-                const hasNonLetterASCII = /[!-~]/.test(text) && /[^A-Za-z\s]/.test(text);
+                if (hasNonLetterASCII) {
                 if (hasNonLetterASCII) {
                     // Get language candidates from detection (if available)
                     // This allows trying multiple languages if first one fails
@@ -296,7 +299,6 @@ export class Orchestrator {
                     execute: (text) => this._bruteForceCaesar(text)
                 });
                 // Also try ROT47 if text contains non-letter ASCII
-                const hasNonLetterASCII = /[!-~]/.test(text) && /[^A-Za-z\s]/.test(text);
                 if (hasNonLetterASCII) {
                     strategies.push({
                         name: 'Brute Force (ROT47)',
@@ -779,7 +781,7 @@ export class Orchestrator {
         };
         
         // Step 2: Select strategies
-        const strategies = this._selectStrategies(topCandidate, detection.stats);
+        const strategies = this._selectStrategies(topCandidate, detection.stats, ciphertext);
         
         yield {
             stage: 'strategies-selected',
