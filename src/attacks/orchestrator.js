@@ -71,9 +71,15 @@ export class Orchestrator {
                 // Detect language using statistical analysis + dictionary validation
                 const langResults = LanguageAnalysis.detectLanguage(ciphertext);
                 
+                // Store language detection results for use in ROT brute force
+                this.languageDetectionResults = langResults;
+                
                 if (langResults && langResults.length > 0) {
                     const detectedLang = langResults[0].language;
                     console.log(`[Orchestrator] Detected language: ${detectedLang} (confidence: ${langResults[0].score.toFixed(2)})`);
+                    if (langResults.length > 1) {
+                        console.log(`[Orchestrator] Top language candidates: ${langResults.slice(0, 3).map(r => `${r.language} (${(r.score || 0).toFixed(1)})`).join(', ')}`);
+                    }
                     this.language = detectedLang;
                 } else {
                     console.warn('[Orchestrator] Could not detect language, defaulting to english');
@@ -693,12 +699,19 @@ export class Orchestrator {
             
             try {
                 const langResults = await LanguageAnalysis.detectLanguage(ciphertext);
+                
+                // Store language detection results for use in ROT brute force
+                this.languageDetectionResults = langResults;
+                
                 if (langResults && langResults.length > 0) {
                     const detectedLang = langResults[0].language;
                     this.language = detectedLang;
+                    const candidates = langResults.length > 1 
+                        ? ` (candidates: ${langResults.slice(0, 3).map(r => r.language).join(', ')})`
+                        : '';
                     yield {
                         stage: 'language-detected',
-                        message: `Language detected: ${detectedLang}`,
+                        message: `Language detected: ${detectedLang}${candidates}`,
                         language: detectedLang,
                         progress: 8
                     };
