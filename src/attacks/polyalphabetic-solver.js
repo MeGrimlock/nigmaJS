@@ -326,20 +326,31 @@ export class PolyalphabeticSolver {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
         }
 
-        // Sort by score, but if scores are very close (within 5%), prefer more specific methods (4 > 3 > 2 > 1)
+        // Sort by score, but if scores are very close, prefer simpler methods (3 > 4 > 2 > 1)
+        // Quagmire 3 is simpler and more common than Quagmire 4, so prefer it when scores are equal
         allResults.sort((a, b) => {
             const scoreDiff = b.score - a.score;
-            // If scores are very close (within 5% of the higher score), prefer higher Quagmire number
-            if (Math.abs(scoreDiff) < Math.abs(b.score * 0.05)) {
-                const methodPriority = { quagmire4: 4, quagmire3: 3, quagmire2: 2, quagmire1: 1 };
+            // If scores are very close (within 0.5 points or 1% of the higher score), prefer simpler methods
+            const threshold = Math.max(0.5, Math.abs(b.score * 0.01));
+            if (Math.abs(scoreDiff) < threshold) {
+                // When scores are very close, prefer Quagmire 3 over 4 (simpler and more common)
+                // Priority: quagmire3 > quagmire4 > quagmire2 > quagmire1
+                const methodPriority = { quagmire3: 4, quagmire4: 3, quagmire2: 2, quagmire1: 1 };
                 const aPriority = methodPriority[a.method] || 0;
                 const bPriority = methodPriority[b.method] || 0;
-                return bPriority - aPriority; // Higher number = more specific = better
+                // If scores are exactly equal (within 0.01), definitely use priority
+                if (Math.abs(scoreDiff) < 0.01) {
+                    return bPriority - aPriority; // Higher priority = simpler = better when scores equal
+                }
+                // If scores are very close, use priority as tiebreaker
+                const priorityDiff = bPriority - aPriority;
+                // Combine score difference with priority (small weight for priority)
+                return scoreDiff + (priorityDiff * 0.01); // Priority has 1% weight
             }
             return scoreDiff;
         });
         
-        console.log(`[PolyalphabeticSolver] Quagmire results: ${allResults.map(r => `${r.method}(${r.score.toFixed(2)})`).join(', ')}`);
+        console.log(`[PolyalphabeticSolver] Quagmire results: ${allResults.map(r => `${r.method}(${r.score.toFixed(2)}, key=${r.key})`).join(', ')}`);
         return allResults[0];
     }
 
@@ -455,6 +466,7 @@ export class PolyalphabeticSolver {
         }
 
         const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA', 'AUTOMOBILE'];
+        // For Quagmire 3, try KEY first (most common), then others
         const commonIndicators = ['KEY', 'A', 'B', 'C', 'ABC'];
         
         let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire3' };
@@ -501,6 +513,7 @@ export class PolyalphabeticSolver {
         }
 
         const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA'];
+        // For Quagmire 4, try ABC first (most common), then KEY, then others
         const commonIndicators = ['ABC', 'KEY', 'A', 'B', 'C'];
         const commonCipherAlphabets = ['', 'ZYXWVUTSRQPONMLKJIHGFEDCBA']; // Empty = use keyword-based
         
