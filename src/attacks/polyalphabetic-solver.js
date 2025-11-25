@@ -3,6 +3,7 @@ import { TextUtils } from '../core/text-utils.js';
 import { Stats } from '../analysis/stats.js';
 import { Kasiski } from '../analysis/kasiski.js';
 import { Scorers } from '../language/scorers.js';
+import { LanguageAnalysis } from '../analysis/analysis.js';
 import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
 
 /**
@@ -47,6 +48,59 @@ export class PolyalphabeticSolver {
     }
 
     /**
+     * Validates partially decrypted text against dictionary.
+     * Returns a score (0-1) indicating how many words are valid.
+     * @private
+     * @param {string} text - Partially decrypted text to validate
+     * @returns {number} Validation score (0-1, higher is better)
+     */
+    _validatePartialKey(text) {
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        if (!dict) return 0; // No dictionary available
+        
+        // Extract words from text
+        const words = text.toUpperCase()
+            .split(/\s+/)
+            .map(w => TextUtils.onlyLetters(w))
+            .filter(w => w.length >= 3); // Only consider words >= 3 chars
+        
+        if (words.length === 0) return 0;
+        
+        // Count valid words
+        let validWords = 0;
+        for (const word of words) {
+            if (dict.has(word)) {
+                validWords++;
+            }
+        }
+        
+        // Return percentage of valid words
+        return validWords / words.length;
+    }
+
+    /**
+     * Scores text using N-gram scoring + dictionary validation (hybrid).
+     * @private
+     * @param {string} cleanText - Clean text (letters only) for N-gram scoring
+     * @param {string} fullText - Full text (with punctuation) for dictionary validation
+     * @returns {number} Combined score (higher is better)
+     */
+    _scoreWithDictionary(cleanText, fullText) {
+        // N-gram score (primary)
+        const ngramScore = Scorers.scoreText(cleanText, this.language);
+        
+        // Dictionary validation score (bonus)
+        const dictScore = this._validatePartialKey(fullText);
+        
+        // Combine: 70% N-gram, 30% dictionary
+        // Dictionary score is 0-1, convert to bonus: if 0.8 valid, add 0.8 * 100 = 80 to score
+        const dictBonus = dictScore * 100;
+        
+        // Final score: N-gram score + dictionary bonus
+        return ngramScore + dictBonus;
+    }
+
+    /**
      * Attempts to solve Beaufort cipher
      * Beaufort is self-reciprocal: C = (K - P) mod 26
      * Similar to Vigenère but uses subtraction
@@ -81,8 +135,8 @@ export class PolyalphabeticSolver {
                 const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
                 const testPlaintext = beaufort.decode();
                 
-                // Score the full plaintext
-                const score = Scorers.scoreText(testPlaintext, this.language);
+                // Score using hybrid method (N-gram + dictionary)
+                const score = this._scoreWithDictionary(testPlaintext, testPlaintext);
                 
                 if (score > bestPosScore) {
                     bestPosScore = score;
@@ -106,7 +160,8 @@ export class PolyalphabeticSolver {
 
                 const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
                 const testPlaintext = beaufort.decode();
-                const score = Scorers.scoreText(testPlaintext, this.language);
+                // Score using hybrid method (N-gram + dictionary)
+                const score = this._scoreWithDictionary(testPlaintext, testPlaintext);
 
                 if (score > bestScore) {
                     bestScore = score;
@@ -119,7 +174,8 @@ export class PolyalphabeticSolver {
         // Final decryption with best key
         const beaufort = new Polyalphabetic.Beaufort(ciphertext, bestKey);
         const finalPlaintext = beaufort.decode();
-        const finalScore = Scorers.scoreText(finalPlaintext, this.language);
+        // Score using hybrid method (N-gram + dictionary)
+        const finalScore = this._scoreWithDictionary(finalPlaintext, finalPlaintext);
         const ic = Stats.indexOfCoincidence(finalPlaintext);
 
         // Confidence based on IC (should be ~1.73 for English plaintext)
@@ -163,9 +219,9 @@ export class PolyalphabeticSolver {
                     const porta = new Polyalphabetic.Porta(ciphertext, testKey);
                     const plaintext = porta.decode();
                     
-                    // Score only the letters (for N-gram scoring)
+                    // Score using hybrid method (N-gram + dictionary)
                     const cleanPlaintext = TextUtils.onlyLetters(plaintext);
-                    const score = Scorers.scoreText(cleanPlaintext, this.language);
+                    const score = this._scoreWithDictionary(cleanPlaintext, plaintext);
                     
                     if (score > bestResult.score) {
                         const ic = Stats.indexOfCoincidence(plaintext);
@@ -211,7 +267,9 @@ export class PolyalphabeticSolver {
                     const keyChar = String.fromCharCode(k + 65);
                     const porta = new Polyalphabetic.Porta(column, keyChar);
                     const decrypted = porta.decode();
-                    const score = Scorers.scoreText(decrypted, this.language);
+                    // Use hybrid scoring (N-gram + dictionary)
+                    const cleanDecrypted = TextUtils.onlyLetters(decrypted);
+                    const score = this._scoreWithDictionary(cleanDecrypted, decrypted);
                     
                     if (score > bestScore) {
                         bestScore = score;
@@ -225,13 +283,15 @@ export class PolyalphabeticSolver {
             // Decrypt with found key
             const porta = new Polyalphabetic.Porta(ciphertext, key);
             const plaintext = porta.decode();
-            const ngramScore = Scorers.scoreText(plaintext, this.language);
+            // Score using hybrid method (N-gram + dictionary)
+            const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+            const hybridScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
             
             // Only use this result if it's better than common keys
-            if (ngramScore > bestResult.score) {
+            if (hybridScore > bestResult.score) {
                 const ic = Stats.indexOfCoincidence(plaintext);
                 const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
-                bestResult = { plaintext, key, score: ngramScore, confidence, method: 'porta', keyLength };
+                bestResult = { plaintext, key, score: hybridScore, confidence, method: 'porta', keyLength };
             }
         }
 
@@ -268,7 +328,9 @@ export class PolyalphabeticSolver {
                 try {
                     const quagmire = new Polyalphabetic.Quagmire1(ciphertext, keyword, cipherAlphabet);
                     const plaintext = quagmire.decode();
-                    const ngramScore = Scorers.scoreText(plaintext, this.language);
+                    // Score using hybrid method (N-gram + dictionary)
+                    const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+                    const ngramScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
 
                     if (ngramScore > bestResult.score) {
                         const ic = Stats.indexOfCoincidence(plaintext);
@@ -334,8 +396,8 @@ export class PolyalphabeticSolver {
                     decrypted += String.fromCharCode(p + 65);
                 }
 
-                // Use N-gram scoring for better accuracy
-                const score = Scorers.scoreText(decrypted, this.language);
+                // Use hybrid scoring (N-gram + dictionary) for better accuracy
+                const score = this._scoreWithDictionary(decrypted, decrypted);
                 if (score > bestScore) {
                     bestScore = score;
                     bestShift = shift;
@@ -348,7 +410,9 @@ export class PolyalphabeticSolver {
         // Decrypt with found key
         const gronsfeld = new Polyalphabetic.Gronsfeld(ciphertext, key);
         const plaintext = gronsfeld.decode();
-        const ngramScore = Scorers.scoreText(plaintext, this.language);
+        // Score using hybrid method (N-gram + dictionary)
+        const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+        const ngramScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
         const ic = Stats.indexOfCoincidence(plaintext);
 
         const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
@@ -393,16 +457,24 @@ export class PolyalphabeticSolver {
             
             // Try each cipher type - Porta FIRST (most commonly confused with Vigenère)
             const portaResult = this.solvePorta(ciphertext, keyLength);
-            allResults.push({ ...portaResult, keyLength });
+            if (portaResult && portaResult.score > -Infinity) {
+                allResults.push({ ...portaResult, keyLength });
+            }
             
             const beaufortResult = this.solveBeaufort(ciphertext, keyLength);
-            allResults.push({ ...beaufortResult, keyLength });
+            if (beaufortResult && beaufortResult.score > -Infinity) {
+                allResults.push({ ...beaufortResult, keyLength });
+            }
             
             const gronsfeldResult = this.solveGronsfeld(ciphertext, keyLength);
-            allResults.push({ ...gronsfeldResult, keyLength });
+            if (gronsfeldResult && gronsfeldResult.score > -Infinity) {
+                allResults.push({ ...gronsfeldResult, keyLength });
+            }
             
             const quagmireResult = this.solveQuagmire(ciphertext, keyLength);
-            allResults.push({ ...quagmireResult, keyLength });
+            if (quagmireResult && quagmireResult.score > -Infinity) {
+                allResults.push({ ...quagmireResult, keyLength });
+            }
         }
 
         // Sort by score (higher is better for N-gram scoring)
@@ -414,7 +486,23 @@ export class PolyalphabeticSolver {
             console.log(`  ${i + 1}. ${r.method} (keyLength=${r.keyLength}): score=${r.score.toFixed(2)}, confidence=${r.confidence.toFixed(2)}, key=${r.key}`);
         });
 
-        const bestResult = allResults[0] || { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        // Ensure we always return a valid result with method defined
+        if (allResults.length === 0) {
+            return { 
+                plaintext: '', 
+                key: '', 
+                score: -Infinity, 
+                confidence: 0, 
+                method: 'none',
+                keyLength: probableKeyLengths[0]?.length || probableKeyLengths[0]?.keyLength || 0
+            };
+        }
+        
+        const bestResult = allResults[0];
+        // Ensure method is always defined
+        if (!bestResult.method) {
+            bestResult.method = 'unknown';
+        }
         
         return bestResult;
     }
