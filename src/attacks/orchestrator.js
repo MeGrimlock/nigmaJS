@@ -289,12 +289,36 @@ export class Orchestrator {
                 break;
                 
             case 'monoalphabetic-substitution':
-                // Try Hill Climbing first (faster)
+                // For monoalphabetic, try Caesar/ROT brute force FIRST
+                // This is faster and more accurate for simple shifts like ROT13
+                strategies.push({
+                    name: 'Brute Force (Caesar/ROT13)',
+                    execute: (text) => this._bruteForceCaesar(text)
+                });
+                // Also try ROT47 if text contains non-letter ASCII
+                const hasNonLetterASCII = /[!-~]/.test(text) && /[^A-Za-z\s]/.test(text);
+                if (hasNonLetterASCII) {
+                    strategies.push({
+                        name: 'Brute Force (ROT47)',
+                        execute: async (text) => {
+                            // Get language candidates from detection (if available)
+                            let languageCandidates = [this.language];
+                            if (this.autoDetectLanguage && this.languageDetectionResults) {
+                                languageCandidates = this.languageDetectionResults
+                                    .slice(0, 3) // Try top 3 languages
+                                    .map(r => r.language);
+                                console.log(`[Orchestrator] ROT47 will try languages: ${languageCandidates.join(', ')}`);
+                            }
+                            return await this._bruteForceROT47(text, languageCandidates);
+                        }
+                    });
+                }
+                // Then try Hill Climbing (for complex substitutions)
                 strategies.push({
                     name: 'Hill Climbing',
                     execute: (text) => this._solveSubstitution(text, 'hillclimb')
                 });
-                // Then Simulated Annealing (more thorough)
+                // Finally try Simulated Annealing (most thorough but slowest)
                 strategies.push({
                     name: 'Simulated Annealing',
                     execute: (text) => this._solveSubstitution(text, 'annealing')
