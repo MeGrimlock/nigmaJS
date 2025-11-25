@@ -1,5 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
+import { LanguageAnalysis } from '../analysis/analysis.js';
 import { HMMSolver } from './hmm-solver.js';
 import { VigenereSolver } from './vigenere-solver.js';
 import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
@@ -29,10 +30,11 @@ import { DictionaryValidator } from '../language/dictionary-validator.js';
 export class Orchestrator {
     /**
      * Creates an orchestrator.
-     * @param {string} language - Target language ('english', 'spanish', etc.)
+     * @param {string} language - Target language ('english', 'spanish', etc.) or 'auto' for automatic detection
      */
     constructor(language = 'english') {
         this.language = language;
+        this.autoDetectLanguage = (language === 'auto' || !language);
     }
     
     /**
@@ -53,6 +55,35 @@ export class Orchestrator {
         } = options;
         
         const startTime = Date.now();
+        
+        // Step 0: Auto-detect language if needed (BEFORE cipher detection for better accuracy)
+        if (this.autoDetectLanguage) {
+            console.log('[Orchestrator] Auto-detecting language...');
+            try {
+                // Try to load dictionaries for better detection (non-blocking)
+                const candidateLanguages = ['english', 'spanish', 'french', 'german', 'italian', 'portuguese'];
+                for (const lang of candidateLanguages) {
+                    // Try to load dictionary, but don't wait if it fails
+                    LanguageAnalysis.loadDictionary(lang, 'data/').catch(() => {});
+                    LanguageAnalysis.loadDictionary(lang, '../demo/data/').catch(() => {});
+                }
+                
+                // Detect language using statistical analysis + dictionary validation
+                const langResults = LanguageAnalysis.detectLanguage(ciphertext);
+                
+                if (langResults && langResults.length > 0) {
+                    const detectedLang = langResults[0].language;
+                    console.log(`[Orchestrator] Detected language: ${detectedLang} (confidence: ${langResults[0].score.toFixed(2)})`);
+                    this.language = detectedLang;
+                } else {
+                    console.warn('[Orchestrator] Could not detect language, defaulting to english');
+                    this.language = 'english';
+                }
+            } catch (error) {
+                console.warn('[Orchestrator] Language detection failed:', error.message);
+                this.language = 'english'; // Fallback to english
+            }
+        }
         
         // Step 1: Detect cipher type
         const detection = CipherIdentifier.identify(ciphertext);
