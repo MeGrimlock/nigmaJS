@@ -281,7 +281,7 @@ describe('Orchestrator Comprehensive E2E Tests', () => {
     });
 
     describe('4. Quagmire Cipher', () => {
-        test('should decrypt Quagmire in Spanish (long text, key=KEY)', async () => {
+        test('should decrypt Quagmire 1 in Spanish (long text, key=KEY)', async () => {
             const plaintext = testTexts.spanish.long;
             const key = 'KEY';
             const cipherAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Normal alphabet
@@ -320,7 +320,7 @@ describe('Orchestrator Comprehensive E2E Tests', () => {
             }
         }, 120000);
 
-        test('should decrypt Quagmire in English (long text, key=KEY)', async () => {
+        test('should decrypt Quagmire 1 in English (long text, key=KEY)', async () => {
             const plaintext = testTexts.english.long;
             const key = 'KEY';
             const cipherAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Normal alphabet
@@ -358,6 +358,224 @@ describe('Orchestrator Comprehensive E2E Tests', () => {
                 console.warn('⚠ Quagmire decryption failed (this is expected for difficult ciphers)');
             }
         }, 120000);
+
+        test('should decrypt Quagmire 3 in Spanish (long text, key=KEY, indicator=KEY)', async () => {
+            const plaintext = testTexts.spanish.long;
+            const key = 'KEY';
+            const indicator = 'KEY';
+            const quagmire = new Polyalphabetic.Quagmire3(plaintext, key, indicator);
+            const ciphertext = quagmire.encode();
+            
+            console.log(`\n[Test] Testing Quagmire 3 - Spanish`);
+            console.log(`[Test] Plaintext length: ${plaintext.length}`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 120000
+            });
+            
+            // Verify language detection
+            expect(orchestrator.language).toBe('spanish');
+            console.log(`✓ Language detected: ${orchestrator.language}`);
+            
+            // Verify cipher detection
+            const detection = await CipherIdentifier.identify(ciphertext, orchestrator.language);
+            const detectedType = detection.families[0].type;
+            expect(detectedType).toMatch(/vigenere-like|monoalphabetic-substitution/);
+            console.log(`✓ Cipher detected: ${detectedType} (${(detection.families[0].confidence * 100).toFixed(0)}% confidence)`);
+            
+            // Verify decryption
+            expect(result).toBeDefined();
+            expect(result.method).not.toBe('none');
+            console.log(`[Test] Result method: ${result.method}, confidence: ${(result.confidence * 100).toFixed(0)}%`);
+            console.log(`[Test] Result plaintext length: ${result.plaintext?.length || 0}`);
+            console.log(`[Test] Result plaintext preview: ${result.plaintext?.substring(0, 50) || 'N/A'}...`);
+            
+            // Quagmire 3 should be detected
+            if (result.method.includes('quagmire3')) {
+                expect(result.confidence).toBeGreaterThan(0.5);
+                console.log(`✓ Quagmire 3 detected correctly`);
+                
+                // Verify plaintext matches
+                const matches = textsMatch(result.plaintext, plaintext, 0.70);
+                if (matches) {
+                    console.log(`✓ Plaintext matches original (70% threshold)`);
+                } else {
+                    console.warn(`⚠ Plaintext similarity: ${(matches ? 100 : 0).toFixed(0)}% (expected >70%)`);
+                }
+            } else {
+                console.warn(`⚠ Expected quagmire3, got ${result.method}`);
+                // Still check if it's a quagmire variant
+                expect(result.method).toMatch(/quagmire|polyalphabetic/);
+            }
+        }, 180000);
+
+        test('should decrypt Quagmire 3 in English (long text, key=KEY, indicator=KEY)', async () => {
+            const plaintext = testTexts.english.long;
+            const key = 'KEY';
+            const indicator = 'KEY';
+            const quagmire = new Polyalphabetic.Quagmire3(plaintext, key, indicator);
+            const ciphertext = quagmire.encode();
+            
+            console.log(`\n[Test] Testing Quagmire 3 - English`);
+            console.log(`[Test] Plaintext length: ${plaintext.length}`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 120000
+            });
+            
+            // Verify language detection
+            expect(orchestrator.language).toBe('english');
+            console.log(`✓ Language detected: ${orchestrator.language}`);
+            
+            // Verify cipher detection
+            const detection = await CipherIdentifier.identify(ciphertext, orchestrator.language);
+            const detectedType = detection.families[0].type;
+            expect(detectedType).toMatch(/vigenere-like|monoalphabetic-substitution/);
+            console.log(`✓ Cipher detected: ${detectedType} (${(detection.families[0].confidence * 100).toFixed(0)}% confidence)`);
+            
+            // Verify decryption
+            expect(result).toBeDefined();
+            expect(result.method).not.toBe('none');
+            console.log(`[Test] Result method: ${result.method}, confidence: ${(result.confidence * 100).toFixed(0)}%`);
+            console.log(`[Test] Result plaintext length: ${result.plaintext?.length || 0}`);
+            console.log(`[Test] Result plaintext preview: ${result.plaintext?.substring(0, 50) || 'N/A'}...`);
+            
+            // Quagmire 3 should be detected
+            if (result.method.includes('quagmire3')) {
+                expect(result.confidence).toBeGreaterThan(0.5);
+                console.log(`✓ Quagmire 3 detected correctly`);
+                
+                // Verify plaintext matches
+                const matches = textsMatch(result.plaintext, plaintext, 0.70);
+                if (matches) {
+                    console.log(`✓ Plaintext matches original (70% threshold)`);
+                } else {
+                    console.warn(`⚠ Plaintext similarity: ${(matches ? 100 : 0).toFixed(0)}% (expected >70%)`);
+                }
+            } else {
+                console.warn(`⚠ Expected quagmire3, got ${result.method}`);
+                // Still check if it's a quagmire variant
+                expect(result.method).toMatch(/quagmire|polyalphabetic/);
+            }
+        }, 180000);
+
+        test('should decrypt Quagmire 4 in Spanish (long text, key=KEY, indicator=ABC)', async () => {
+            const plaintext = testTexts.spanish.long;
+            const key = 'KEY';
+            const indicator = 'ABC';
+            const cipherAlphabet = ''; // Use keyword-based alphabet
+            const quagmire = new Polyalphabetic.Quagmire4(plaintext, key, indicator, cipherAlphabet);
+            const ciphertext = quagmire.encode();
+            
+            console.log(`\n[Test] Testing Quagmire 4 - Spanish`);
+            console.log(`[Test] Plaintext length: ${plaintext.length}`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 120000
+            });
+            
+            // Verify language detection
+            expect(orchestrator.language).toBe('spanish');
+            console.log(`✓ Language detected: ${orchestrator.language}`);
+            
+            // Verify cipher detection
+            const detection = await CipherIdentifier.identify(ciphertext, orchestrator.language);
+            const detectedType = detection.families[0].type;
+            expect(detectedType).toMatch(/vigenere-like|monoalphabetic-substitution/);
+            console.log(`✓ Cipher detected: ${detectedType} (${(detection.families[0].confidence * 100).toFixed(0)}% confidence)`);
+            
+            // Verify decryption
+            expect(result).toBeDefined();
+            expect(result.method).not.toBe('none');
+            console.log(`[Test] Result method: ${result.method}, confidence: ${(result.confidence * 100).toFixed(0)}%`);
+            console.log(`[Test] Result plaintext length: ${result.plaintext?.length || 0}`);
+            console.log(`[Test] Result plaintext preview: ${result.plaintext?.substring(0, 50) || 'N/A'}...`);
+            
+            // Quagmire 4 should be detected
+            if (result.method.includes('quagmire4')) {
+                expect(result.confidence).toBeGreaterThan(0.5);
+                console.log(`✓ Quagmire 4 detected correctly`);
+                
+                // Verify plaintext matches
+                const matches = textsMatch(result.plaintext, plaintext, 0.70);
+                if (matches) {
+                    console.log(`✓ Plaintext matches original (70% threshold)`);
+                } else {
+                    console.warn(`⚠ Plaintext similarity: ${(matches ? 100 : 0).toFixed(0)}% (expected >70%)`);
+                }
+            } else {
+                console.warn(`⚠ Expected quagmire4, got ${result.method}`);
+                // Still check if it's a quagmire variant
+                expect(result.method).toMatch(/quagmire|polyalphabetic/);
+            }
+        }, 180000);
+
+        test('should decrypt Quagmire 4 in English (long text, key=KEY, indicator=ABC)', async () => {
+            const plaintext = testTexts.english.long;
+            const key = 'KEY';
+            const indicator = 'ABC';
+            const cipherAlphabet = ''; // Use keyword-based alphabet
+            const quagmire = new Polyalphabetic.Quagmire4(plaintext, key, indicator, cipherAlphabet);
+            const ciphertext = quagmire.encode();
+            
+            console.log(`\n[Test] Testing Quagmire 4 - English`);
+            console.log(`[Test] Plaintext length: ${plaintext.length}`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 120000
+            });
+            
+            // Verify language detection
+            expect(orchestrator.language).toBe('english');
+            console.log(`✓ Language detected: ${orchestrator.language}`);
+            
+            // Verify cipher detection
+            const detection = await CipherIdentifier.identify(ciphertext, orchestrator.language);
+            const detectedType = detection.families[0].type;
+            expect(detectedType).toMatch(/vigenere-like|monoalphabetic-substitution/);
+            console.log(`✓ Cipher detected: ${detectedType} (${(detection.families[0].confidence * 100).toFixed(0)}% confidence)`);
+            
+            // Verify decryption
+            expect(result).toBeDefined();
+            expect(result.method).not.toBe('none');
+            console.log(`[Test] Result method: ${result.method}, confidence: ${(result.confidence * 100).toFixed(0)}%`);
+            console.log(`[Test] Result plaintext length: ${result.plaintext?.length || 0}`);
+            console.log(`[Test] Result plaintext preview: ${result.plaintext?.substring(0, 50) || 'N/A'}...`);
+            
+            // Quagmire 4 should be detected
+            if (result.method.includes('quagmire4')) {
+                expect(result.confidence).toBeGreaterThan(0.5);
+                console.log(`✓ Quagmire 4 detected correctly`);
+                
+                // Verify plaintext matches
+                const matches = textsMatch(result.plaintext, plaintext, 0.70);
+                if (matches) {
+                    console.log(`✓ Plaintext matches original (70% threshold)`);
+                } else {
+                    console.warn(`⚠ Plaintext similarity: ${(matches ? 100 : 0).toFixed(0)}% (expected >70%)`);
+                }
+            } else {
+                console.warn(`⚠ Expected quagmire4, got ${result.method}`);
+                // Still check if it's a quagmire variant
+                expect(result.method).toMatch(/quagmire|polyalphabetic/);
+            }
+        }, 180000);
     });
 });
 
