@@ -543,16 +543,38 @@
                             } else if (update.stage === 'complete') {
                                 addConsoleMessage(update.message, 'success');
                                 finalResult = update;
+                                console.log('[Demo] Final result received (complete):', {
+                                    method: update.method,
+                                    confidence: update.confidence,
+                                    plaintextLength: update.plaintext?.length || 0,
+                                    hasPlaintext: !!update.plaintext
+                                });
                             } else if (update.stage === 'failed') {
                                 addConsoleMessage(update.message, 'error');
                                 finalResult = update;
+                                console.log('[Demo] Final result received (failed):', {
+                                    method: update.method,
+                                    confidence: update.confidence,
+                                    plaintextLength: update.plaintext?.length || 0
+                                });
                             } else if (update.stage === 'timeout') {
                                 addConsoleMessage(update.message, 'warning');
                             }
                             
-                            // Update preview if we have plaintext
-                            if (update.plaintext && update.stage === 'solving') {
-                                output.innerText = update.plaintext;
+                            // Update preview if we have plaintext (from any stage)
+                            if (update.plaintext) {
+                                if (update.stage === 'solving' || update.stage === 'strategy-complete' || update.stage === 'complete') {
+                                    output.innerText = update.plaintext;
+                                }
+                                // Also update finalResult if it has plaintext and method
+                                if (update.plaintext && update.method && update.method !== 'none' && !finalResult) {
+                                    console.log('[Demo] Setting finalResult from update:', {
+                                        method: update.method,
+                                        confidence: update.confidence,
+                                        plaintextLength: update.plaintext.length
+                                    });
+                                    finalResult = update;
+                                }
                             }
                         }
                         
@@ -563,7 +585,14 @@
                             confidence: 0
                         };
                         
-                        console.log('[Demo] Decryption result:', result);
+                        console.log('[Demo] Decryption result:', {
+                            method: result.method,
+                            confidence: result.confidence,
+                            plaintextLength: result.plaintext?.length || 0,
+                            plaintextPreview: result.plaintext?.substring(0, 100) || 'N/A',
+                            hasPlaintext: !!result.plaintext,
+                            finalResultWasNull: !finalResult
+                        });
                         
                         // Check if decryption was successful
                         const isSuccess = result.plaintext && result.plaintext.length > 0 && result.method !== 'none';
