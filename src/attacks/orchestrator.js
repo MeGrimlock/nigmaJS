@@ -802,17 +802,19 @@ export class Orchestrator {
                         : new HillClimb(this.language);
                     
                     let lastYieldProgress = strategyProgress;
+                    let lastStatus = null;
                     for (const status of solver.solveGenerator(ciphertext, {
                         initMethod: 'frequency',
                         maxIterations: method === 'annealing' ? 20000 : 5000
                     })) {
+                        lastStatus = status; // Keep track of last status
                         const innerProgress = strategyProgress + (status.progress || 0) * 0.15; // Within strategy range
                         if (innerProgress > lastYieldProgress + 2) { // Yield every 2%
                             yield {
                                 stage: 'solving',
                                 message: `${strategy.name}: ${(status.progress || 0).toFixed(0)}% complete`,
                                 method: strategy.name,
-                                plaintext: status.plaintext,
+                                plaintext: status.plaintext || ciphertext,
                                 score: status.score,
                                 progress: innerProgress
                             };
@@ -820,14 +822,37 @@ export class Orchestrator {
                         }
                     }
                     
-                    // Final result from solver
-                    const confidence = Math.min(1, Math.max(0, (status.score + 7) / 4));
+                    // Final result from solver - use lastStatus if available, otherwise call solve() directly
+                    if (!lastStatus || !lastStatus.plaintext) {
+                        // Fallback: call solve() directly if generator didn't produce valid result
+                        const directResult = solver.solve(ciphertext, {
+                            initMethod: 'frequency',
+                            maxIterations: method === 'annealing' ? 20000 : 5000,
+                            restarts: 2
+                        });
+                        lastStatus = {
+                            plaintext: directResult.plaintext || ciphertext,
+                            score: directResult.score || -Infinity,
+                            key: directResult.key
+                        };
+                    }
+                    
+                    // Ensure plaintext exists
+                    const finalPlaintext = lastStatus.plaintext || ciphertext;
+                    const finalScore = lastStatus.score || -Infinity;
+                    
+                    // Calculate confidence based on score (handle NaN)
+                    let confidence = 0.5;
+                    if (!isNaN(finalScore) && isFinite(finalScore)) {
+                        confidence = Math.min(1, Math.max(0, (finalScore + 7) / 4));
+                    }
+                    
                     result = {
-                        plaintext: status.plaintext,
+                        plaintext: finalPlaintext,
                         method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
                         confidence: confidence,
-                        score: status.score,
-                        key: status.key
+                        score: finalScore,
+                        key: lastStatus.key
                     };
                 } else {
                     // For brute force or Vigenère, execute directly
