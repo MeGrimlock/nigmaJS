@@ -119,9 +119,32 @@ export class Orchestrator {
                 }
                 
                 // If we found a very good result, stop early
+                // BUT: Only stop if dictionary validation passes (if enabled)
+                // This prevents stopping on false positives like Quagmire decrypting Vigenère
                 if (result && result.confidence > 0.9) {
-                    console.log(`[Orchestrator] High confidence result found, stopping early`);
-                    break;
+                    // If dictionary validation is enabled, check word coverage before stopping
+                    if (useDictionary && result.plaintext) {
+                        try {
+                            const validator = new DictionaryValidator(this.language);
+                            const quickValidation = await validator.validate(result.plaintext);
+                            const wordCoverage = parseFloat(quickValidation.metrics.wordCoverage) / 100;
+                            
+                            // Only stop early if word coverage is good (>30%)
+                            if (wordCoverage >= 0.30 || quickValidation.confidence >= 0.40) {
+                                console.log(`[Orchestrator] High confidence result with good dictionary validation, stopping early`);
+                                break;
+                            } else {
+                                console.log(`[Orchestrator] High confidence but low dictionary validation (${(wordCoverage * 100).toFixed(0)}%), continuing...`);
+                            }
+                        } catch (e) {
+                            // Dictionary validation failed, use confidence only
+                            console.log(`[Orchestrator] High confidence result found, stopping early (dictionary validation skipped)`);
+                            break;
+                        }
+                    } else {
+                        console.log(`[Orchestrator] High confidence result found, stopping early`);
+                        break;
+                    }
                 }
                 
                 if (!tryMultiple) break; // Only try first strategy
@@ -214,16 +237,17 @@ export class Orchestrator {
                 
             case 'vigenere-like':
                 // For Vigenère, try Vigenère-specific methods FIRST
-                // IMPORTANT: Try advanced polyalphabetic FIRST (Porta, Beaufort, Gronsfeld)
-                // These are more specific and should be tested before generic Vigenère
-                strategies.push({
-                    name: 'Advanced Polyalphabetic (Porta/Beaufort/Gronsfeld/Quagmire)',
-                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
-                });
-                // Then try standard Vigenère (most common polyalphabetic)
+                // IMPORTANT: Try standard Vigenère FIRST (most common polyalphabetic)
+                // This ensures we try the correct cipher type before trying alternatives
                 strategies.push({
                     name: 'Vigenère Solver (Friedman)',
                     execute: (text) => this._solveVigenere(text, topCandidate.suggestedKeyLength)
+                });
+                // Then try advanced polyalphabetic (Porta, Beaufort, Gronsfeld, Quagmire)
+                // These are alternatives if Vigenère doesn't work
+                strategies.push({
+                    name: 'Advanced Polyalphabetic (Porta/Beaufort/Gronsfeld/Quagmire)',
+                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
                 });
                 // Fallback to substitution if all polyalphabetic methods fail
                 strategies.push({
