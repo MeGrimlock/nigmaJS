@@ -134,10 +134,11 @@ export default class Nigma {
     /**
      * Identifies the probable cipher type(s) for a given ciphertext.
      * @param {string} text - The ciphertext to analyze.
-     * @returns {Object} An object containing cipher families with confidence scores.
+     * @param {string} language - Target language for dictionary validation (default: 'english').
+     * @returns {Promise<Object>} An object containing cipher families with confidence scores.
      */
-    static identifyCipher(text) {
-        return CipherIdentifier.identify(text);
+    static async identifyCipher(text, language = 'english') {
+        return await CipherIdentifier.identify(text, language);
     }
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------

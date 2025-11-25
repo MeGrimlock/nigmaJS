@@ -5,12 +5,12 @@ import Columnar from '../ciphers/columnar/columnar.js';
 
 describe('Cipher Identifier', () => {
     describe('Caesar Shift Detection', () => {
-        it('should detect Caesar shift cipher', () => {
+        it('should detect Caesar shift cipher', async () => {
             const plaintext = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG AND RUNS AWAY INTO THE FOREST WHERE THE ANIMALS LIVE IN PEACE AND HARMONY WITH NATURE AND ALL THE CREATURES OF THE WILD';
             const caesar = new Shift.CaesarShift(plaintext, 7);
             const ciphertext = caesar.encode();
 
-            const result = CipherIdentifier.identify(ciphertext);
+            const result = await CipherIdentifier.identify(ciphertext);
 
             expect(result.families).toBeDefined();
             expect(result.families.length).toBeGreaterThan(0);
@@ -27,14 +27,14 @@ describe('Cipher Identifier', () => {
             expect(result.stats.ic).toBeGreaterThan(1.3);
         });
 
-        it('should detect monoalphabetic substitution (using Caesar as proxy)', () => {
+        it('should detect monoalphabetic substitution (using Caesar as proxy)', async () => {
             // Since MonoalphabeticSubstitution doesn't exist as a separate class,
             // we'll use Caesar shift as a proxy for monoalphabetic substitution
             const plaintext = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG AND RUNS AWAY INTO THE FOREST WHERE THE ANIMALS LIVE IN PEACE AND HARMONY WITH NATURE AND ALL THE CREATURES OF THE WILD';
             const caesar = new Shift.CaesarShift(plaintext, 13);
             const ciphertext = caesar.encode();
 
-            const result = CipherIdentifier.identify(ciphertext);
+            const result = await CipherIdentifier.identify(ciphertext);
 
             const topTypes = result.families.map(f => f.type);
             const hasMonoOrCaesar = topTypes.includes('caesar-shift') || topTypes.includes('monoalphabetic-substitution');
@@ -44,13 +44,13 @@ describe('Cipher Identifier', () => {
     });
 
     describe('Vigenère Detection', () => {
-        it('should detect Vigenère cipher with short key', () => {
+        it('should detect Vigenère cipher with short key', async () => {
             // Use repeated plaintext to ensure Kasiski can find repetitions
             const plaintext = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG THE QUICK BROWN FOX';
             const vigenere = new Polyalphabetic.Vigenere('KEY');
             const ciphertext = vigenere.encode(plaintext);
 
-            const result = CipherIdentifier.identify(ciphertext);
+            const result = await CipherIdentifier.identify(ciphertext);
 
             // Should detect 'vigenere-like' as a top candidate
             const vigenereFamily = result.families.find(f => f.type === 'vigenere-like');
@@ -67,12 +67,12 @@ describe('Cipher Identifier', () => {
             expect(result.stats.ic).toBeLessThan(1.6);
         });
 
-        it('should detect Vigenère cipher with longer key', () => {
+        it('should detect Vigenère cipher with longer key', async () => {
             const plaintext = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG AND RUNS AWAY INTO THE FOREST AND THEN COMES BACK TO THE VILLAGE WHERE EVERYONE IS WAITING';
             const vigenere = new Polyalphabetic.Vigenere('CRYPTO');
             const ciphertext = vigenere.encode(plaintext);
 
-            const result = CipherIdentifier.identify(ciphertext);
+            const result = await CipherIdentifier.identify(ciphertext);
 
             const vigenereFamily = result.families.find(f => f.type === 'vigenere-like');
             expect(vigenereFamily).toBeDefined();
@@ -81,12 +81,12 @@ describe('Cipher Identifier', () => {
     });
 
     describe('Transposition Detection', () => {
-        it('should detect transposition cipher (using Route as example)', () => {
+        it('should detect transposition cipher (using Route as example)', async () => {
             const plaintext = 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG AND RUNS AWAY INTO THE FOREST';
             const route = new Columnar.Route(plaintext, 5, 15, 'spiral');
             const ciphertext = route.encode();
 
-            const result = CipherIdentifier.identify(ciphertext);
+            const result = await CipherIdentifier.identify(ciphertext);
 
             // Transposition preserves letter frequency, so IC should be high
             expect(result.stats.ic).toBeGreaterThan(1.4);
@@ -99,17 +99,17 @@ describe('Cipher Identifier', () => {
     });
 
     describe('Edge Cases', () => {
-        it('should handle very short texts', () => {
+        it('should handle very short texts', async () => {
             const shortText = 'HELLO';
-            const result = CipherIdentifier.identify(shortText);
+            const result = await CipherIdentifier.identify(shortText);
 
             expect(result.families[0].type).toBe('unknown');
             expect(result.families[0].reason).toContain('too short');
         });
 
-        it('should handle random text', () => {
+        it('should handle random text', async () => {
             const randomText = 'QXZWPLKMJNHBGVFCDRTSEAYUIO';
-            const result = CipherIdentifier.identify(randomText);
+            const result = await CipherIdentifier.identify(randomText);
 
             // Random text should have low IC and be classified as 'random-unknown' or similar
             expect(result.stats.ic).toBeLessThan(1.5);

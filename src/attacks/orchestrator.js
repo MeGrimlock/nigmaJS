@@ -86,7 +86,7 @@ export class Orchestrator {
         }
         
         // Step 1: Detect cipher type
-        const detection = CipherIdentifier.identify(ciphertext);
+        const detection = await CipherIdentifier.identify(ciphertext, effectiveLanguage);
         const topCandidate = detection.families[0];
         
         console.log(`[Orchestrator] Detected: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
@@ -398,7 +398,7 @@ export class Orchestrator {
         } = options;
         
         // Detect cipher type
-        const detection = CipherIdentifier.identify(ciphertext);
+        const detection = await CipherIdentifier.identify(ciphertext, this.language === 'auto' ? 'english' : this.language);
         const topCandidate = detection.families[0];
         
         yield {

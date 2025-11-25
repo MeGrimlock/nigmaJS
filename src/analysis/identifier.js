@@ -1,6 +1,7 @@
 import { Stats } from './stats.js';
 import { Kasiski } from './kasiski.js';
 import { TextUtils } from '../core/text-utils.js';
+import { LanguageAnalysis } from './analysis.js';
 
 /**
  * Cipher Identifier: Analyzes ciphertext to suggest the type of cipher used.
@@ -10,9 +11,10 @@ export class CipherIdentifier {
     /**
      * Identifies the probable cipher type(s) for a given ciphertext.
      * @param {string} text - The ciphertext to analyze.
-     * @returns {Object} An object containing cipher families with confidence scores.
+     * @param {string} language - Target language for dictionary validation (default: 'english').
+     * @returns {Promise<Object>} An object containing cipher families with confidence scores.
      */
-    static identify(text) {
+    static async identify(text, language = 'english') {
         const cleaned = TextUtils.onlyLetters(text);
         const length = cleaned.length;
 
@@ -34,6 +36,32 @@ export class CipherIdentifier {
         const ic = Stats.indexOfCoincidence(text);
         const entropy = Stats.entropy(text);
         const kasiski = Kasiski.examine(text);
+        
+        // Dictionary validation: check if text contains valid words
+        // This helps distinguish between ciphertext and plaintext/weakly encrypted text
+        let dictionaryScore = 0;
+        try {
+            const dict = LanguageAnalysis.getDictionary(language);
+            if (dict) {
+                const words = text.toUpperCase()
+                    .split(/\s+/)
+                    .map(w => TextUtils.onlyLetters(w))
+                    .filter(w => w.length >= 3);
+                
+                if (words.length > 0) {
+                    let validWords = 0;
+                    for (const word of words) {
+                        if (dict.has(word)) {
+                            validWords++;
+                        }
+                    }
+                    dictionaryScore = validWords / words.length; // 0-1, higher = more valid words
+                }
+            }
+        } catch (error) {
+            // Dictionary not available, continue without dictionary validation
+            console.warn('[CipherIdentifier] Dictionary validation failed:', error);
+        }
 
         // Initialize confidence scores for each cipher family
         const scores = {
@@ -108,6 +136,30 @@ export class CipherIdentifier {
             scores['monoalphabetic-substitution'] += 0.7;
             // Penalize vigenere if IC is too high
             scores['vigenere-like'] -= 0.6;
+        }
+
+        // --- Heuristic 6: Dictionary Validation ---
+        // If text contains many valid words, it might be:
+        // 1. Plaintext (not encrypted)
+        // 2. Weakly encrypted (Caesar with small shift)
+        // 3. Partially decrypted
+        // High dictionary score + high IC → likely monoalphabetic or plaintext
+        // High dictionary score + low IC → might be transposition or partially decrypted
+        // Low dictionary score → likely properly encrypted ciphertext
+        if (dictionaryScore > 0.5) {
+            // Many valid words: likely weak cipher or plaintext
+            if (ic >= 1.5) {
+                scores['monoalphabetic-substitution'] += 0.4;
+                scores['caesar-shift'] += 0.3;
+            } else if (ic >= 1.2) {
+                scores['transposition'] += 0.3;
+            }
+            // Penalize strong ciphers if text has valid words
+            scores['random-unknown'] -= 0.3;
+        } else if (dictionaryScore < 0.2) {
+            // Few valid words: likely properly encrypted
+            scores['vigenere-like'] += 0.2;
+            scores['random-unknown'] += 0.2;
         }
 
         // Normalize scores to [0, 1] and filter out very low scores
