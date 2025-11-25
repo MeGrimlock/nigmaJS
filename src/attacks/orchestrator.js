@@ -232,9 +232,21 @@ export class Orchestrator {
                 // ROT47 handles all printable ASCII (33-126), not just letters
                 const hasNonLetterASCII = /[!-~]/.test(text) && /[^A-Za-z\s]/.test(text);
                 if (hasNonLetterASCII) {
+                    // Get language candidates from detection (if available)
+                    // This allows trying multiple languages if first one fails
                     strategies.push({
                         name: 'Brute Force (ROT47)',
-                        execute: (text) => this._bruteForceROT47(text)
+                        execute: async (text) => {
+                            // If we have language detection results, try top candidates
+                            let languageCandidates = [this.language];
+                            if (this.autoDetectLanguage && this.languageDetectionResults) {
+                                languageCandidates = this.languageDetectionResults
+                                    .slice(0, 3) // Try top 3 languages
+                                    .map(r => r.language);
+                                console.log(`[Orchestrator] ROT47 will try languages: ${languageCandidates.join(', ')}`);
+                            }
+                            return await this._bruteForceROT47(text, languageCandidates);
+                        }
                     });
                 }
                 // Then try standard Caesar brute force (letters only)
@@ -422,127 +434,167 @@ export class Orchestrator {
     /**
      * Brute force ROT (ASCII printable characters 33-126)
      * Tries all possible shifts (1-94) and stops early if high word coverage is found
+     * If no result found with primary language, tries other languages in order of probability
      * ROT shifts all printable ASCII characters, not just letters
      * @private
      */
-    async _bruteForceROT47(ciphertext) {
-        const scorer = new Scorer(this.language, 4); // Use quadgrams
-        const dict = LanguageAnalysis.getDictionary(this.language);
+    async _bruteForceROT47(ciphertext, languageCandidates = null) {
+        // If language candidates provided, try each language until we find a good result
+        const languagesToTry = languageCandidates || [this.language];
         
-        let bestShift = 0;
-        let bestScore = -Infinity;
-        let bestPlaintext = ciphertext;
-        let bestWordCoverage = 0;
+        let bestOverallResult = null;
+        let bestOverallScore = -Infinity;
         
-        // ROT uses ASCII printable range (33-126), so we need to try shifts 1-94
-        // Try all shifts sequentially, stopping early if we find high word coverage
-        const maxShift = 94; // ASCII printable range is 94 characters (33-126)
-        
-        for (let shift = 1; shift <= maxShift; shift++) {
-            // Decrypt using ROT logic (ASCII 33-126)
-            let decrypted = '';
-            for (let i = 0; i < ciphertext.length; i++) {
-                const char = ciphertext[i];
-                const code = char.charCodeAt(0);
-                
-                // Only shift printable ASCII (33-126)
-                if (code >= 33 && code <= 126) {
-                    // ROT: shift backwards by shift amount, wrapping at 94 characters
-                    let newCode = code - shift;
-                    while (newCode < 33) newCode += 94;
-                    while (newCode > 126) newCode -= 94;
-                    decrypted += String.fromCharCode(newCode);
-                } else {
-                    decrypted += char; // Keep non-printable as-is
-                }
-            }
+        for (const tryLanguage of languagesToTry) {
+            const scorer = new Scorer(tryLanguage, 4); // Use quadgrams
+            const dict = LanguageAnalysis.getDictionary(tryLanguage);
             
-            // Score the decrypted text
-            const cleanText = TextUtils.onlyLetters(decrypted);
-            if (cleanText.length < 10) continue; // Skip if too short
+            let bestShift = 0;
+            let bestScore = -Infinity;
+            let bestPlaintext = ciphertext;
+            let bestWordCoverage = 0;
             
-            const score = scorer.score(cleanText);
+            // ROT uses ASCII printable range (33-126), so we need to try shifts 1-94
+            // Try all shifts sequentially, stopping early if we find high word coverage
+            const maxShift = 94; // ASCII printable range is 94 characters (33-126)
             
-            // Dictionary validation - this is the key for early termination
-            let wordCoverage = 0;
-            if (dict) {
-                try {
-                    const words = decrypted.toUpperCase()
-                        .split(/\s+/)
-                        .map(w => TextUtils.onlyLetters(w))
-                        .filter(w => w.length >= 3);
+            console.log(`[Orchestrator] Trying ROT brute force with language: ${tryLanguage}`);
+            
+            for (let shift = 1; shift <= maxShift; shift++) {
+                // Decrypt using ROT logic (ASCII 33-126)
+                let decrypted = '';
+                for (let i = 0; i < ciphertext.length; i++) {
+                    const char = ciphertext[i];
+                    const code = char.charCodeAt(0);
                     
-                    if (words.length > 0) {
-                        let validWords = 0;
-                        for (const word of words) {
-                            if (dict.has(word)) {
-                                validWords++;
-                            }
-                        }
-                        wordCoverage = validWords / words.length;
+                    // Only shift printable ASCII (33-126)
+                    if (code >= 33 && code <= 126) {
+                        // ROT: shift backwards by shift amount, wrapping at 94 characters
+                        let newCode = code - shift;
+                        while (newCode < 33) newCode += 94;
+                        while (newCode > 126) newCode -= 94;
+                        decrypted += String.fromCharCode(newCode);
+                    } else {
+                        decrypted += char; // Keep non-printable as-is
                     }
-                } catch (error) {
-                    // Dictionary access failed, continue without dictionary validation
                 }
-            }
-            
-            // Combined score: N-gram + dictionary bonus
-            const dictBonus = wordCoverage * 50;
-            const combinedScore = score + dictBonus;
-            
-            // Update best if this is better
-            if (combinedScore > bestScore || (wordCoverage > bestWordCoverage && wordCoverage > 0.7)) {
-                bestScore = combinedScore;
-                bestShift = shift;
-                bestPlaintext = decrypted;
-                bestWordCoverage = wordCoverage;
                 
-                // Early termination: if we found >70% valid words, we're done!
-                // This assumes we detected the language correctly
-                if (wordCoverage > 0.70) {
-                    console.log(`[Orchestrator] Early termination: ROT shift ${shift} has ${(wordCoverage * 100).toFixed(0)}% valid words`);
-                    break; // Stop trying other shifts
+                // Score the decrypted text
+                const cleanText = TextUtils.onlyLetters(decrypted);
+                if (cleanText.length < 10) continue; // Skip if too short
+                
+                const score = scorer.score(cleanText);
+                
+                // Dictionary validation - this is the key for early termination
+                let wordCoverage = 0;
+                if (dict) {
+                    try {
+                        const words = decrypted.toUpperCase()
+                            .split(/\s+/)
+                            .map(w => TextUtils.onlyLetters(w))
+                            .filter(w => w.length >= 3);
+                        
+                        if (words.length > 0) {
+                            let validWords = 0;
+                            for (const word of words) {
+                                if (dict.has(word)) {
+                                    validWords++;
+                                }
+                            }
+                            wordCoverage = validWords / words.length;
+                        }
+                    } catch (error) {
+                        // Dictionary access failed, continue without dictionary validation
+                    }
                 }
+                
+                // Combined score: N-gram + dictionary bonus
+                const dictBonus = wordCoverage * 50;
+                const combinedScore = score + dictBonus;
+                
+                // Update best if this is better
+                if (combinedScore > bestScore || (wordCoverage > bestWordCoverage && wordCoverage > 0.7)) {
+                    bestScore = combinedScore;
+                    bestShift = shift;
+                    bestPlaintext = decrypted;
+                    bestWordCoverage = wordCoverage;
+                    
+                    // Early termination: if we found >70% valid words, we're done!
+                    // This assumes we detected the language correctly
+                    if (wordCoverage > 0.70) {
+                        console.log(`[Orchestrator] Early termination: ROT shift ${shift} with language ${tryLanguage} has ${(wordCoverage * 100).toFixed(0)}% valid words`);
+                        break; // Stop trying other shifts for this language
+                    }
+                }
+            }
+            
+            // Calculate confidence
+            let confidence = 0.5;
+            if (bestWordCoverage > 0.80) {
+                confidence = 0.98;
+            } else if (bestWordCoverage > 0.70) {
+                confidence = 0.95;
+            } else if (bestWordCoverage > 0.60) {
+                confidence = 0.90;
+            } else if (bestWordCoverage > 0.50) {
+                confidence = 0.85;
+            } else if (bestScore > -3) {
+                confidence = 0.95;
+            } else if (bestScore > -4) {
+                confidence = 0.8;
+            } else if (bestScore > -5) {
+                confidence = 0.6;
+            }
+            
+            // Determine method name based on shift
+            let method = 'rot47';
+            if (bestShift === 13) {
+                method = 'rot13';
+            } else if (bestShift >= 1 && bestShift <= 25) {
+                method = `rot${bestShift}`;
+            } else if (bestShift === 47) {
+                method = 'rot47';
+            } else {
+                method = 'rot47'; // Generic ROT for other shifts
+            }
+            
+            const result = {
+                plaintext: bestPlaintext,
+                method: method,
+                confidence: confidence,
+                score: bestScore,
+                key: bestShift,
+                wordCoverage: bestWordCoverage,
+                language: tryLanguage
+            };
+            
+            // If we found a good result (>50% word coverage), use it and stop trying other languages
+            if (bestWordCoverage > 0.50 || confidence > 0.8) {
+                console.log(`[Orchestrator] Found good ROT result with language ${tryLanguage}: shift=${bestShift}, wordCoverage=${(bestWordCoverage * 100).toFixed(0)}%, confidence=${(confidence * 100).toFixed(0)}%`);
+                return result;
+            }
+            
+            // Keep track of best result across all languages
+            if (bestScore > bestOverallScore || (bestWordCoverage > 0 && bestWordCoverage > (bestOverallResult?.wordCoverage || 0))) {
+                bestOverallScore = bestScore;
+                bestOverallResult = result;
             }
         }
         
-        // Calculate confidence
-        let confidence = 0.5;
-        if (bestWordCoverage > 0.80) {
-            confidence = 0.98;
-        } else if (bestWordCoverage > 0.70) {
-            confidence = 0.95;
-        } else if (bestWordCoverage > 0.60) {
-            confidence = 0.90;
-        } else if (bestWordCoverage > 0.50) {
-            confidence = 0.85;
-        } else if (bestScore > -3) {
-            confidence = 0.95;
-        } else if (bestScore > -4) {
-            confidence = 0.8;
-        } else if (bestScore > -5) {
-            confidence = 0.6;
+        // Return best result found (even if not perfect)
+        if (bestOverallResult && bestOverallResult.plaintext && bestOverallResult.plaintext !== ciphertext) {
+            console.log(`[Orchestrator] Returning best ROT result across languages: shift=${bestOverallResult.key}, language=${bestOverallResult.language}, wordCoverage=${(bestOverallResult.wordCoverage * 100).toFixed(0)}%`);
+            return bestOverallResult;
         }
         
-        // Determine method name based on shift
-        let method = 'rot47';
-        if (bestShift === 13) {
-            method = 'rot13';
-        } else if (bestShift >= 1 && bestShift <= 25) {
-            method = `rot${bestShift}`;
-        } else if (bestShift === 47) {
-            method = 'rot47';
-        } else {
-            method = 'rot47'; // Generic ROT for other shifts
-        }
-        
-        return {
-            plaintext: bestPlaintext,
-            method: method,
-            confidence: confidence,
-            score: bestScore,
-            key: bestShift,
-            wordCoverage: bestWordCoverage
+        // Fallback: return result even if not great
+        return bestOverallResult || {
+            plaintext: ciphertext,
+            method: 'rot47',
+            confidence: 0,
+            score: -Infinity,
+            key: 0,
+            wordCoverage: 0
         };
     }
     
