@@ -163,9 +163,26 @@
     <script src="js/navbar.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Suppress TensorFlow.js kernel registration warnings
+            // These warnings occur when kernels are registered multiple times
+            // They're harmless but clutter the console
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                const message = args[0];
+                // Filter out TensorFlow kernel registration warnings
+                if (typeof message === 'string' && (
+                    message.includes('kernel') && message.includes('already registered') ||
+                    message.includes('backend was already registered')
+                )) {
+                    return; // Suppress this warning
+                }
+                // Allow all other warnings through
+                originalWarn.apply(console, args);
+            };
+            
             // Check Library and Hide Loader
             function checkLibrary() {
-                if (window.nigmajs && window.nigmajs.HMMSolver) {
+                if (window.nigmajs && (window.nigmajs.Orchestrator || window.nigmajs.HMMSolver)) {
                     const loader = document.getElementById('loading-overlay');
                     if (loader) {
                         loader.classList.add('hidden');
