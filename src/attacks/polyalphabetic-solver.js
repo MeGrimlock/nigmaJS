@@ -385,6 +385,147 @@ export class PolyalphabeticSolver {
     }
 
     /**
+     * Attempts to solve Quagmire II cipher
+     * Quagmire II uses indicator-based alphabet selection
+     * @private
+     */
+    solveQuagmire2(ciphertext, keyLength) {
+        const cleanText = TextUtils.onlyLetters(ciphertext);
+        if (cleanText.length < 100) {
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        }
+
+        const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA'];
+        const commonIndicators = ['A', 'B', 'C', 'D', 'E', 'KEY', 'ABC'];
+        
+        let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire2' };
+
+        for (const keyword of commonKeywords) {
+            for (const indicator of commonIndicators) {
+                try {
+                    const quagmire = new Polyalphabetic.Quagmire2(ciphertext, keyword, indicator);
+                    const plaintext = quagmire.decode();
+                    const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+                    const ngramScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
+
+                    if (ngramScore > bestResult.score) {
+                        const ic = Stats.indexOfCoincidence(plaintext);
+                        const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+                        bestResult = {
+                            plaintext,
+                            key: `${keyword}:${indicator}`,
+                            score: ngramScore,
+                            confidence,
+                            method: 'quagmire2',
+                            keyLength
+                        };
+                    }
+                } catch (e) {
+                    // Skip invalid combinations
+                    continue;
+                }
+            }
+        }
+
+        return bestResult;
+    }
+
+    /**
+     * Attempts to solve Quagmire III cipher
+     * Quagmire III uses a keyed alphabet for both plaintext and ciphertext
+     * @private
+     */
+    solveQuagmire3(ciphertext, keyLength) {
+        const cleanText = TextUtils.onlyLetters(ciphertext);
+        if (cleanText.length < 100) {
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        }
+
+        const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA', 'AUTOMOBILE'];
+        const commonIndicators = ['KEY', 'A', 'B', 'C', 'ABC'];
+        
+        let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire3' };
+
+        for (const keyword of commonKeywords) {
+            for (const indicator of commonIndicators) {
+                try {
+                    const quagmire = new Polyalphabetic.Quagmire3(ciphertext, keyword, indicator);
+                    const plaintext = quagmire.decode();
+                    const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+                    const ngramScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
+
+                    if (ngramScore > bestResult.score) {
+                        const ic = Stats.indexOfCoincidence(plaintext);
+                        const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+                        bestResult = {
+                            plaintext,
+                            key: `${keyword}:${indicator}`,
+                            score: ngramScore,
+                            confidence,
+                            method: 'quagmire3',
+                            keyLength
+                        };
+                    }
+                } catch (e) {
+                    // Skip invalid combinations
+                    continue;
+                }
+            }
+        }
+
+        return bestResult;
+    }
+
+    /**
+     * Attempts to solve Quagmire IV cipher
+     * Quagmire IV uses different keyed alphabets for plaintext and ciphertext
+     * @private
+     */
+    solveQuagmire4(ciphertext, keyLength) {
+        const cleanText = TextUtils.onlyLetters(ciphertext);
+        if (cleanText.length < 100) {
+            return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
+        }
+
+        const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA'];
+        const commonIndicators = ['ABC', 'KEY', 'A', 'B', 'C'];
+        const commonCipherAlphabets = ['', 'ZYXWVUTSRQPONMLKJIHGFEDCBA']; // Empty = use keyword-based
+        
+        let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire4' };
+
+        for (const keyword of commonKeywords) {
+            for (const indicator of commonIndicators) {
+                for (const cipherAlphabet of commonCipherAlphabets) {
+                    try {
+                        const quagmire = new Polyalphabetic.Quagmire4(ciphertext, keyword, indicator, cipherAlphabet);
+                        const plaintext = quagmire.decode();
+                        const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+                        const ngramScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
+
+                        if (ngramScore > bestResult.score) {
+                            const ic = Stats.indexOfCoincidence(plaintext);
+                            const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
+                            bestResult = {
+                                plaintext,
+                                key: `${keyword}:${indicator}${cipherAlphabet ? ':' + cipherAlphabet : ''}`,
+                                score: ngramScore,
+                                confidence,
+                                method: 'quagmire4',
+                                keyLength
+                            };
+                        }
+                    } catch (e) {
+                        // Skip invalid combinations
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return bestResult;
+    }
+
+    /**
      * Attempts to solve Gronsfeld cipher
      * Gronsfeld is like Vigenère but uses numeric keys (0-9)
      * 
