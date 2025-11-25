@@ -240,7 +240,6 @@ export class Orchestrator {
                 // For Caesar, try ROT47 first (if text contains printable ASCII beyond letters)
                 // ROT47 handles all printable ASCII (33-126), not just letters
                 if (hasNonLetterASCII) {
-                if (hasNonLetterASCII) {
                     // Get language candidates from detection (if available)
                     // This allows trying multiple languages if first one fails
                     strategies.push({
