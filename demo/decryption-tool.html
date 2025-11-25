@@ -54,6 +54,17 @@
                         <div id="progressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s;"></div>
                     </div>
                 </div>
+                
+                <!-- Analysis Console -->
+                <div id="analysisConsole" style="margin-top: 1rem; display: none; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <h3 style="margin: 0; color: #a78bfa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">📊 Analysis Console</h3>
+                        <button id="clearConsoleBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">Clear</button>
+                    </div>
+                    <div id="consoleContent" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <!-- Console messages will be added here -->
+                    </div>
+                </div>
 
                 <button id="btnSolve" class="tab-btn" style="margin-top: 1rem; width: 100%; text-align: center; opacity: 0.5; cursor: not-allowed;" disabled>
                     📝 Enter text to begin
@@ -417,6 +428,45 @@
             // Initial button state
             updateButtonState();
 
+            // Console management
+            const analysisConsole = document.getElementById('analysisConsole');
+            const consoleContent = document.getElementById('consoleContent');
+            const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+            
+            function addConsoleMessage(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const colors = {
+                    info: '#3b82f6',
+                    success: '#10b981',
+                    warning: '#f59e0b',
+                    error: '#ef4444',
+                    progress: '#a78bfa'
+                };
+                const icons = {
+                    info: 'ℹ️',
+                    success: '✓',
+                    warning: '⚠️',
+                    error: '✗',
+                    progress: '⏳'
+                };
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = `display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem; background: rgba(255,255,255,0.02); border-left: 2px solid ${colors[type]}; border-radius: 4px;`;
+                messageDiv.innerHTML = `
+                    <span style="color: ${colors[type]}; font-size: 0.7rem; min-width: 50px;">${timestamp}</span>
+                    <span style="color: ${colors[type]}; margin-right: 0.3rem;">${icons[type]}</span>
+                    <span style="color: #e2e8f0; flex: 1;">${message}</span>
+                `;
+                
+                consoleContent.appendChild(messageDiv);
+                // Auto-scroll to bottom
+                analysisConsole.scrollTop = analysisConsole.scrollHeight;
+            }
+            
+            clearConsoleBtn.addEventListener('click', () => {
+                consoleContent.innerHTML = '';
+            });
+            
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
                 if (!text) return;
@@ -427,6 +477,8 @@
                 output.innerText = "";
                 container.style.display = 'block'; 
                 progressContainer.style.display = 'block';
+                analysisConsole.style.display = 'block';
+                consoleContent.innerHTML = ''; // Clear console
                 methodBadge.innerText = "Method: Detecting...";
                 progressText.innerText = "Decrypting...";
                 
@@ -444,16 +496,72 @@
                         // 'auto' enables automatic language detection before decryption
                         const orchestrator = new Orchestrator('auto');
                         
-                        // Update progress
-                        progressBar.style.width = '50%';
-                        progressText.innerText = "Detecting language and analyzing cipher...";
+                        let finalResult = null;
                         
-                        // Use autoDecrypt (non-generator) for dictionary validation
-                        // Note: useDictionary is now true by default in all solvers
-                        const result = await orchestrator.autoDecrypt(text, {
-                            tryMultiple: true, // Try multiple strategies for best result
-                            useDictionary: true // Enable dictionary validation (default: true)
-                        });
+                        // Use generator for real-time progress
+                        for await (const update of orchestrator.autoDecryptGenerator(text, {
+                            tryMultiple: true,
+                            useDictionary: true,
+                            maxTime: 60000
+                        })) {
+                            // Update progress bar
+                            if (update.progress !== undefined) {
+                                progressBar.style.width = `${update.progress}%`;
+                                progressText.innerText = `${Math.round(update.progress)}%`;
+                            }
+                            
+                            // Add console message based on stage
+                            if (update.stage === 'language-detection') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'language-detected') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'cipher-detection') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'cipher-detected') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'strategies-selected') {
+                                addConsoleMessage(update.message, 'info');
+                            } else if (update.stage === 'trying-strategy') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'solving') {
+                                // Don't spam console with every iteration, only show significant progress
+                                if (update.progress % 10 < 2) { // Show every ~10%
+                                    addConsoleMessage(update.message, 'progress');
+                                }
+                            } else if (update.stage === 'strategy-complete') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'strategy-failed') {
+                                addConsoleMessage(update.message, 'warning');
+                            } else if (update.stage === 'early-stop') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'validating') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'validation-complete') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'validation-failed') {
+                                addConsoleMessage(update.message, 'warning');
+                            } else if (update.stage === 'complete') {
+                                addConsoleMessage(update.message, 'success');
+                                finalResult = update;
+                            } else if (update.stage === 'failed') {
+                                addConsoleMessage(update.message, 'error');
+                                finalResult = update;
+                            } else if (update.stage === 'timeout') {
+                                addConsoleMessage(update.message, 'warning');
+                            }
+                            
+                            // Update preview if we have plaintext
+                            if (update.plaintext && update.stage === 'solving') {
+                                output.innerText = update.plaintext;
+                            }
+                        }
+                        
+                        // Use final result
+                        const result = finalResult || {
+                            plaintext: text,
+                            method: 'none',
+                            confidence: 0
+                        };
                         
                         console.log('[Demo] Decryption result:', result);
                         

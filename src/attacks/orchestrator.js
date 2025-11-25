@@ -392,75 +392,249 @@ export class Orchestrator {
      * 
      * @param {string} ciphertext - The ciphertext to decrypt.
      * @param {Object} options - Options.
-     * @yields {Object} Progress updates.
+     * @param {boolean} options.tryMultiple - Try multiple strategies (default: true).
+     * @param {number} options.maxTime - Maximum time in ms (default: 60000).
+     * @param {boolean} options.useDictionary - Use dictionary validation (default: true).
+     * @yields {Object} Progress updates with stage, method, progress, message, etc.
      */
     async *autoDecryptGenerator(ciphertext, options = {}) {
         const {
-            tryMultiple = false // For generator, usually stick to one strategy
+            tryMultiple = true,
+            maxTime = 60000,
+            useDictionary = true
         } = options;
         
-        // Detect cipher type
-        const detection = await CipherIdentifier.identify(ciphertext, this.language === 'auto' ? 'english' : this.language);
-        const topCandidate = detection.families[0];
+        const startTime = Date.now();
         
+        // Step 0: Auto-detect language
+        if (this.autoDetectLanguage) {
+            yield {
+                stage: 'language-detection',
+                message: 'Detecting language...',
+                progress: 5
+            };
+            
+            try {
+                const langResults = await LanguageAnalysis.detectLanguage(ciphertext);
+                if (langResults && langResults.length > 0) {
+                    const detectedLang = langResults[0].language;
+                    this.language = detectedLang;
+                    yield {
+                        stage: 'language-detected',
+                        message: `Language detected: ${detectedLang}`,
+                        language: detectedLang,
+                        progress: 8
+                    };
+                } else {
+                    this.language = 'english';
+                    yield {
+                        stage: 'language-detected',
+                        message: 'Language detection failed, defaulting to English',
+                        language: 'english',
+                        progress: 8
+                    };
+                }
+            } catch (error) {
+                this.language = 'english';
+                yield {
+                    stage: 'language-detected',
+                    message: 'Language detection failed, defaulting to English',
+                    language: 'english',
+                    progress: 8
+                };
+            }
+        }
+        
+        // Step 1: Detect cipher type
+        const languageForDetection = this.language === 'auto' ? 'english' : this.language;
         yield {
-            stage: 'detection',
-            cipherType: topCandidate.type,
-            confidence: topCandidate.confidence,
+            stage: 'cipher-detection',
+            message: 'Analyzing cipher type...',
             progress: 10
         };
         
-        // Select strategy
-        const strategies = this._selectStrategies(topCandidate, detection.stats);
-        const strategy = strategies[0]; // Use first strategy for generator
+        const detection = await CipherIdentifier.identify(ciphertext, languageForDetection);
+        const topCandidate = detection.families[0];
         
         yield {
-            stage: 'strategy-selection',
-            strategy: strategy.name,
-            progress: 20
+            stage: 'cipher-detected',
+            message: `Detected: ${topCandidate.type} (${(topCandidate.confidence * 100).toFixed(0)}% confidence)`,
+            cipherType: topCandidate.type,
+            confidence: topCandidate.confidence,
+            progress: 15
         };
         
-        // Execute with progress
-        if (strategy.name.includes('Hill Climbing') || strategy.name.includes('Simulated Annealing')) {
-            const method = strategy.name.includes('Annealing') ? 'annealing' : 'hillclimb';
-            const solver = method === 'annealing' 
-                ? new SimulatedAnnealing(this.language)
-                : new HillClimb(this.language);
-            
-            let lastProgress = 20;
-            for (const status of solver.solveGenerator(ciphertext, {
-                initMethod: 'frequency',
-                maxIterations: method === 'annealing' ? 20000 : 5000
-            })) {
-                const progress = 20 + (status.progress || 0) * 0.7; // 20-90%
-                if (progress > lastProgress + 5) { // Only yield every 5%
-                    yield {
-                        stage: 'solving',
-                        method: strategy.name,
-                        plaintext: status.plaintext,
-                        score: status.score,
-                        progress: progress
-                    };
-                    lastProgress = progress;
-                }
+        // Step 2: Select strategies
+        const strategies = this._selectStrategies(topCandidate, detection.stats);
+        
+        yield {
+            stage: 'strategies-selected',
+            message: `Selected ${strategies.length} strategy/strategies`,
+            strategies: strategies.map(s => s.name),
+            progress: 18
+        };
+        
+        // Step 3: Execute strategies
+        const results = [];
+        let strategyIndex = 0;
+        
+        for (const strategy of strategies) {
+            const elapsed = Date.now() - startTime;
+            if (elapsed > maxTime) {
+                yield {
+                    stage: 'timeout',
+                    message: `Timeout reached (${maxTime}ms)`,
+                    progress: 100
+                };
+                break;
             }
             
-            // Final result
-            const confidence = Math.min(1, Math.max(0, (status.score + 7) / 4));
+            strategyIndex++;
+            const strategyProgress = 18 + (strategyIndex / strategies.length) * 70; // 18-88%
+            
             yield {
-                stage: 'complete',
-                plaintext: status.plaintext,
-                method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
-                confidence: confidence,
-                score: status.score,
+                stage: 'trying-strategy',
+                message: `Trying: ${strategy.name} (${strategyIndex}/${strategies.length})`,
+                method: strategy.name,
+                strategyIndex: strategyIndex,
+                totalStrategies: strategies.length,
+                progress: strategyProgress
+            };
+            
+            try {
+                let result = null;
+                
+                // Execute with progress for iterative methods
+                if (strategy.name.includes('Hill Climbing') || strategy.name.includes('Simulated Annealing')) {
+                    const method = strategy.name.includes('Annealing') ? 'annealing' : 'hillclimb';
+                    const solver = method === 'annealing' 
+                        ? new SimulatedAnnealing(this.language)
+                        : new HillClimb(this.language);
+                    
+                    let lastYieldProgress = strategyProgress;
+                    for (const status of solver.solveGenerator(ciphertext, {
+                        initMethod: 'frequency',
+                        maxIterations: method === 'annealing' ? 20000 : 5000
+                    })) {
+                        const innerProgress = strategyProgress + (status.progress || 0) * 0.15; // Within strategy range
+                        if (innerProgress > lastYieldProgress + 2) { // Yield every 2%
+                            yield {
+                                stage: 'solving',
+                                message: `${strategy.name}: ${(status.progress || 0).toFixed(0)}% complete`,
+                                method: strategy.name,
+                                plaintext: status.plaintext,
+                                score: status.score,
+                                progress: innerProgress
+                            };
+                            lastYieldProgress = innerProgress;
+                        }
+                    }
+                    
+                    // Final result from solver
+                    const confidence = Math.min(1, Math.max(0, (status.score + 7) / 4));
+                    result = {
+                        plaintext: status.plaintext,
+                        method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
+                        confidence: confidence,
+                        score: status.score,
+                        key: status.key
+                    };
+                } else {
+                    // For brute force or Vigenère, execute directly
+                    result = await strategy.execute(ciphertext);
+                }
+                
+                if (result) {
+                    result.cipherType = topCandidate.type;
+                    result.detectionConfidence = topCandidate.confidence;
+                    results.push(result);
+                    
+                    yield {
+                        stage: 'strategy-complete',
+                        message: `✓ ${strategy.name}: ${(result.confidence * 100).toFixed(0)}% confidence`,
+                        method: result.method,
+                        confidence: result.confidence,
+                        score: result.score,
+                        progress: strategyProgress + 10
+                    };
+                    
+                    // If we found a very good result, stop early
+                    if (result.confidence > 0.9) {
+                        yield {
+                            stage: 'early-stop',
+                            message: 'High confidence result found, stopping early',
+                            progress: 90
+                        };
+                        break;
+                    }
+                }
+                
+                if (!tryMultiple) break;
+            } catch (e) {
+                yield {
+                    stage: 'strategy-failed',
+                    message: `✗ ${strategy.name} failed: ${e.message}`,
+                    method: strategy.name,
+                    error: e.message,
+                    progress: strategyProgress + 5
+                };
+            }
+        }
+        
+        // Step 4: Dictionary validation
+        if (useDictionary && results.length > 0) {
+            yield {
+                stage: 'validating',
+                message: 'Validating results with dictionary...',
+                progress: 90
+            };
+            
+            try {
+                const validator = new DictionaryValidator(this.language);
+                const validatedResults = await validator.validateMultiple(results);
+                const bestResult = validatedResults[0];
+                
+                yield {
+                    stage: 'validation-complete',
+                    message: `Dictionary validation: ${(bestResult.validation.confidence * 100).toFixed(0)}% confidence`,
+                    validation: bestResult.validation,
+                    progress: 95
+                };
+                
+                return {
+                    stage: 'complete',
+                    ...bestResult,
+                    dictionaryValidation: bestResult.validation,
+                    progress: 100
+                };
+            } catch (error) {
+                yield {
+                    stage: 'validation-failed',
+                    message: 'Dictionary validation failed, using best result',
+                    progress: 95
+                };
+            }
+        }
+        
+        // Step 5: Return best result
+        if (results.length === 0) {
+            yield {
+                stage: 'failed',
+                message: 'No successful decryption',
+                plaintext: ciphertext,
+                method: 'none',
+                confidence: 0,
                 progress: 100
             };
         } else {
-            // For brute force or Vigenère, execute directly
-            const result = await strategy.execute(ciphertext);
+            // Sort by confidence and return best
+            results.sort((a, b) => b.confidence - a.confidence);
+            const bestResult = results[0];
+            
             yield {
                 stage: 'complete',
-                ...result,
+                message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence)`,
+                ...bestResult,
                 progress: 100
             };
         }
