@@ -153,16 +153,27 @@ export class VigenereSolver {
         // Sort by score (lower is better)
         candidates.sort((a, b) => a.score - b.score);
         
-        // Prefer shorter keys if scores are similar (within 10%)
+        // Prefer shorter keys if scores are similar (within 15%)
+        // Also check if shorter key is a divisor of longer key (e.g., 3 vs 6, 9)
         let bestCandidate = candidates[0];
         for (let i = 1; i < candidates.length && i < 5; i++) {
             const candidate = candidates[i];
-            // If this candidate is significantly shorter and score is within 10%, prefer it
-            if (candidate.length < bestCandidate.length && 
-                candidate.score <= bestCandidate.score * 1.1) {
+            // If this candidate is shorter and:
+            // 1. Score is within 15%, OR
+            // 2. Longer candidate is a multiple of shorter (e.g., 6 is multiple of 3)
+            const isMultiple = bestCandidate.length > candidate.length && 
+                              (bestCandidate.length % candidate.length === 0);
+            const scoreSimilar = candidate.score <= bestCandidate.score * 1.15;
+            
+            if (candidate.length < bestCandidate.length && (scoreSimilar || isMultiple)) {
                 bestCandidate = candidate;
             }
         }
+        
+        console.log(`[VigenereSolver] Key length candidates:`, candidates.slice(0, 3).map(c => 
+            `len=${c.length}, score=${c.score.toFixed(3)}, IoC=${c.avgIoC.toFixed(2)}, variance=${c.variance.toFixed(2)}`
+        ));
+        console.log(`[VigenereSolver] Selected key length: ${bestCandidate.length}`);
 
         // Confidence: How close is the IoC to English?
         // 1.0 = Random, 1.73 = English. Map this range to 0-1.
