@@ -86,7 +86,9 @@ export class Orchestrator {
         }
         
         // Step 1: Detect cipher type
-        const detection = await CipherIdentifier.identify(ciphertext, effectiveLanguage);
+        // Use this.language (already set to detected language or original value)
+        const languageForDetection = this.language === 'auto' ? 'english' : this.language;
+        const detection = await CipherIdentifier.identify(ciphertext, languageForDetection);
         const topCandidate = detection.families[0];
         
         console.log(`[Orchestrator] Detected: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
