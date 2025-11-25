@@ -37,22 +37,30 @@ export class VigenereSolver {
         for (let i = 0; i < Math.min(3, candidates.length); i++) {
             const candidateLen = candidates[i].length;
             
+            console.log(`[VigenereSolver] Trying key length ${candidateLen}...`);
+            
             // 3. Solve for the Key (now async due to dictionary validation)
             const key = await this.findKey(cleanText, candidateLen);
+            
+            console.log(`[VigenereSolver] Found key: ${key} for length ${candidateLen}`);
             
             // 4. Decrypt
             const plaintext = this.decryptVigenere(ciphertext, key);
             
             // 5. Validate result with dictionary if available
             let validationScore = 0;
+            let validWords = 0;
+            let totalWords = 0;
+            
             if (dict) {
                 const words = plaintext.toUpperCase()
                     .split(/\s+/)
                     .map(w => TextUtils.onlyLetters(w))
                     .filter(w => w.length >= 3);
                 
+                totalWords = words.length;
+                
                 if (words.length > 0) {
-                    let validWords = 0;
                     for (const word of words) {
                         if (dict.has(word)) {
                             validWords++;
@@ -61,6 +69,8 @@ export class VigenereSolver {
                     validationScore = validWords / words.length;
                 }
             }
+            
+            console.log(`[VigenereSolver] Key ${key}: ${validWords}/${totalWords} valid words (${(validationScore * 100).toFixed(0)}%)`);
             
             // Combined score: IoC confidence + dictionary validation
             const combinedScore = (keyLengthData.confidence || 0.5) + (validationScore * 0.5);
@@ -77,9 +87,16 @@ export class VigenereSolver {
                 
                 // Early termination: if we found a key with >70% valid words, use it
                 if (validationScore > 0.70) {
+                    console.log(`[VigenereSolver] Early termination: Key ${key} has ${(validationScore * 100).toFixed(0)}% valid words`);
                     break;
                 }
             }
+        }
+
+        if (bestResult) {
+            console.log(`[VigenereSolver] Best result: Key=${bestResult.key}, Confidence=${bestResult.confidence.toFixed(2)}, ValidWords=${(bestResult.validationScore * 100).toFixed(0)}%`);
+        } else {
+            console.warn(`[VigenereSolver] No valid result found`);
         }
 
         return bestResult || {
@@ -218,7 +235,6 @@ export class VigenereSolver {
     async findKey(text, keyLen) {
         let key = "";
         const langData = LanguageAnalysis.languages[this.language].monograms;
-        const dict = LanguageAnalysis.getDictionary(this.language);
 
         for (let col = 0; col < keyLen; col++) {
             const columnText = this.getColumn(text, keyLen, col);
@@ -234,32 +250,41 @@ export class VigenereSolver {
             let minScore = Infinity;
             let bestBigramScore = -Infinity;
 
-            // Common English bigrams for validation
-            const commonBigrams = ['TH', 'HE', 'IN', 'ER', 'AN', 'RE', 'ED', 'ND', 'ON', 'EN', 'AT', 'OU', 'IT', 'IS', 'OR', 'TI', 'AS', 'TO', 'OF', 'TE'];
+            // Common English bigrams for validation (ordered by frequency)
+            const commonBigrams = ['TH', 'HE', 'IN', 'ER', 'AN', 'RE', 'ED', 'ND', 'ON', 'EN', 'AT', 'OU', 'IT', 'IS', 'OR', 'TI', 'AS', 'TO', 'OF', 'TE', 'ET', 'NG', 'AL', 'ST', 'LE', 'AR', 'SE', 'NE', 'VE', 'RA'];
             
             for (let shift = 0; shift < 26; shift++) {
                 // Shift the column (decrypt attempt)
+                // Note: shift is the key letter value (0=A, 1=B, ..., 25=Z)
+                // To decrypt, we shift backwards by the key value
                 const shiftedText = this.shiftText(columnText, -shift);
                 
-                // Use hybrid scoring (chi-squared + dictionary if available)
-                const score = await this._scoreWithDictionary(shiftedText, langData);
+                // Calculate chi-squared for this column
+                const freqs = LanguageAnalysis.getLetterFrequencies(shiftedText);
+                const chiSquared = LanguageAnalysis.calculateChiSquared(freqs, langData);
                 
-                // Also check for common bigrams (helps validate column decryption)
+                // Check for common bigrams (helps validate column decryption)
                 let bigramScore = 0;
+                let totalBigrams = 0;
                 for (let i = 0; i < shiftedText.length - 1; i++) {
                     const bigram = shiftedText.substring(i, i + 2);
-                    if (commonBigrams.includes(bigram)) {
-                        bigramScore++;
+                    totalBigrams++;
+                    // Weight by position in common list (earlier = more common)
+                    const bigramIndex = commonBigrams.indexOf(bigram);
+                    if (bigramIndex !== -1) {
+                        // More common bigrams get higher score
+                        bigramScore += (commonBigrams.length - bigramIndex) / commonBigrams.length;
                     }
                 }
-                // Normalize bigram score
-                const normalizedBigramScore = bigramScore / Math.max(1, shiftedText.length - 1);
+                // Normalize bigram score (0-1)
+                const normalizedBigramScore = totalBigrams > 0 ? bigramScore / totalBigrams : 0;
                 
                 // Combined score: lower chi-squared is better, higher bigram score is better
-                // Adjust: if bigram score is high, reduce chi-squared score
-                const adjustedScore = score * (1 - normalizedBigramScore * 0.2);
+                // Bigram score can reduce chi-squared by up to 40%
+                const adjustedScore = chiSquared * (1 - normalizedBigramScore * 0.4);
 
-                if (adjustedScore < minScore || (normalizedBigramScore > bestBigramScore && normalizedBigramScore > 0.1)) {
+                // Prefer shifts with high bigram scores or low chi-squared
+                if (adjustedScore < minScore || (normalizedBigramScore > bestBigramScore + 0.05 && normalizedBigramScore > 0.15)) {
                     minScore = adjustedScore;
                     bestShift = shift;
                     bestBigramScore = normalizedBigramScore;
@@ -267,6 +292,7 @@ export class VigenereSolver {
             }
 
             // Convert shift to char (0 = A, 1 = B...)
+            // The shift that decrypts correctly IS the key letter
             key += String.fromCharCode(65 + bestShift);
         }
 
