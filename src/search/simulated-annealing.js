@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import { Scorer } from './scorer.js';
 import { TextUtils } from '../core/text-utils.js';
+import { LanguageAnalysis } from '../analysis/analysis.js';
 
 /**
  * Simulated Annealing algorithm for breaking substitution ciphers.
@@ -41,6 +42,7 @@ export class SimulatedAnnealing {
      * @param {number} options.initialTemp - Initial temperature (default: 20).
      * @param {number} options.coolingRate - Cooling rate per iteration (default: 0.9999).
      * @param {number} options.restarts - Number of random restarts (default: 1).
+     * @param {boolean} options.useDictionary - Use dictionary validation in scoring (default: true).
      * @returns {Object} Result object with { plaintext, key, score, iterations }.
      */
     solve(ciphertext, options = {}) {
@@ -49,13 +51,14 @@ export class SimulatedAnnealing {
             maxIterations = 50000,
             initialTemp = 20,
             coolingRate = 0.9999,
-            restarts = 1
+            restarts = 1,
+            useDictionary = true
         } = options;
         
         let bestResult = null;
         
         for (let restart = 0; restart < restarts; restart++) {
-            const result = this._singleRun(ciphertext, initMethod, maxIterations, initialTemp, coolingRate);
+            const result = this._singleRun(ciphertext, initMethod, maxIterations, initialTemp, coolingRate, useDictionary);
             
             if (!bestResult || result.score > bestResult.score) {
                 bestResult = result;
@@ -64,16 +67,62 @@ export class SimulatedAnnealing {
         
         return bestResult;
     }
+
+    /**
+     * Scores text using N-gram scoring + dictionary validation (hybrid).
+     * @private
+     * @param {string} cleanText - Clean text (letters only) for N-gram scoring
+     * @param {string} fullText - Full text (with punctuation) for dictionary validation
+     * @param {Object} key - Current substitution key
+     * @returns {number} Combined score (higher is better)
+     */
+    _scoreWithDictionary(cleanText, fullText, key) {
+        // N-gram score (primary)
+        const ngramScore = this.scorer.scoreWithKey(cleanText, key);
+        
+        // Dictionary validation score (bonus)
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        if (!dict) return ngramScore; // No dictionary, return N-gram only
+        
+        // Extract words from full text and check against dictionary
+        const words = fullText.toUpperCase()
+            .split(/\s+/)
+            .map(w => TextUtils.onlyLetters(w))
+            .filter(w => w.length >= 3); // Only consider words >= 3 chars
+        
+        if (words.length === 0) return ngramScore;
+        
+        // Count valid words
+        let validWords = 0;
+        for (const word of words) {
+            if (dict.has(word)) {
+                validWords++;
+            }
+        }
+        
+        // Dictionary score: percentage of valid words (0-1)
+        const dictScore = validWords / words.length;
+        
+        // Combine: 70% N-gram, 30% dictionary
+        // Dictionary bonus: if 0.8 valid, add 0.8 * 50 = 40 to score
+        const dictBonus = dictScore * 50;
+        
+        // Final score: N-gram score + dictionary bonus
+        return ngramScore + dictBonus;
+    }
     
     /**
      * Single simulated annealing run.
      * @private
      */
-    _singleRun(ciphertext, initMethod, maxIterations, initialTemp, coolingRate) {
+    _singleRun(ciphertext, initMethod, maxIterations, initialTemp, coolingRate, useDictionary = true) {
         const cleaned = TextUtils.onlyLetters(ciphertext);
         
         let currentKey = this._initializeKey(cleaned, initMethod);
-        let currentScore = this.scorer.scoreWithKey(cleaned, currentKey);
+        // Use hybrid scoring if dictionary is enabled
+        let currentScore = useDictionary
+            ? this._scoreWithDictionary(cleaned, ciphertext, currentKey)
+            : this.scorer.scoreWithKey(cleaned, currentKey);
         
         let bestKey = Scorer.copyKey(currentKey);
         let bestScore = currentScore;
@@ -92,7 +141,10 @@ export class SimulatedAnnealing {
             const char2 = alphabet[j];
             
             const newKey = Scorer.swapKey(currentKey, char1, char2);
-            const newScore = this.scorer.scoreWithKey(cleaned, newKey);
+            // Use hybrid scoring if dictionary is enabled
+            const newScore = useDictionary
+                ? this._scoreWithDictionary(cleaned, ciphertext, newKey)
+                : this.scorer.scoreWithKey(cleaned, newKey);
             
             const delta = newScore - currentScore;
             
