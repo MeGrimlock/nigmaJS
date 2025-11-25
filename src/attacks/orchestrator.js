@@ -638,23 +638,61 @@ export class Orchestrator {
                     result.detectionConfidence = topCandidate.confidence;
                     results.push(result);
                     
+                    console.log(`[Orchestrator] Strategy ${strategy.name} result: method=${result.method}, confidence=${result.confidence}, plaintext length=${result.plaintext?.length || 0}`);
+                    
                     yield {
                         stage: 'strategy-complete',
                         message: `✓ ${strategy.name}: ${(result.confidence * 100).toFixed(0)}% confidence`,
                         method: result.method,
                         confidence: result.confidence,
                         score: result.score,
+                        plaintext: result.plaintext, // Include plaintext in yield
                         progress: strategyProgress + 10
                     };
                     
-                    // If we found a very good result, stop early
+                    // If we found a very good result, check dictionary before stopping early
                     if (result.confidence > 0.9) {
-                        yield {
-                            stage: 'early-stop',
-                            message: 'High confidence result found, stopping early',
-                            progress: 90
-                        };
-                        break;
+                        // Quick dictionary validation before stopping
+                        if (useDictionary && result.plaintext) {
+                            try {
+                                const validator = new DictionaryValidator(this.language);
+                                const quickValidation = await validator.validate(result.plaintext);
+                                const wordCoverage = parseFloat(quickValidation.metrics.wordCoverage) / 100;
+                                
+                                // Only stop early if word coverage is good (>30%)
+                                if (wordCoverage >= 0.30 || quickValidation.confidence >= 0.40) {
+                                    yield {
+                                        stage: 'early-stop',
+                                        message: 'High confidence result found, stopping early',
+                                        progress: 90
+                                    };
+                                    // Continue to dictionary validation step
+                                    break;
+                                } else {
+                                    yield {
+                                        stage: 'early-stop',
+                                        message: `High confidence but low dictionary validation (${(wordCoverage * 100).toFixed(0)}%), continuing...`,
+                                        progress: 90
+                                    };
+                                    // Don't break, continue to next strategy
+                                }
+                            } catch (e) {
+                                // Dictionary validation failed, stop early anyway
+                                yield {
+                                    stage: 'early-stop',
+                                    message: 'High confidence result found, stopping early',
+                                    progress: 90
+                                };
+                                break;
+                            }
+                        } else {
+                            yield {
+                                stage: 'early-stop',
+                                message: 'High confidence result found, stopping early',
+                                progress: 90
+                            };
+                            break;
+                        }
                     }
                 }
                 
@@ -682,21 +720,53 @@ export class Orchestrator {
                 const validator = new DictionaryValidator(this.language);
                 const validatedResults = await validator.validateMultiple(results);
                 const bestResult = validatedResults[0];
+                const dictConfidence = bestResult.validation.confidence;
+                const wordCoverage = parseFloat(bestResult.validation.metrics.wordCoverage) / 100;
+                
+                console.log(`[Orchestrator] Dictionary validation: method=${bestResult.method}, confidence=${bestResult.confidence}, dictConfidence=${dictConfidence}, wordCoverage=${wordCoverage}, plaintext length=${bestResult.plaintext?.length || 0}`);
                 
                 yield {
                     stage: 'validation-complete',
-                    message: `Dictionary validation: ${(bestResult.validation.confidence * 100).toFixed(0)}% confidence`,
+                    message: `Dictionary validation: ${(dictConfidence * 100).toFixed(0)}% confidence`,
                     validation: bestResult.validation,
                     progress: 95
                 };
                 
-                return {
+                // REJECT if dictionary validation is too low (< 30% word coverage)
+                if (wordCoverage < 0.30 && dictConfidence < 0.40) {
+                    console.warn(`[Orchestrator] Best result rejected: word coverage too low (${(wordCoverage * 100).toFixed(0)}%)`);
+                    
+                    // Try to find a better result
+                    for (let i = 1; i < validatedResults.length; i++) {
+                        const altResult = validatedResults[i];
+                        const altCoverage = parseFloat(altResult.validation.metrics.wordCoverage) / 100;
+                        if (altCoverage >= 0.30 || altResult.validation.confidence >= 0.40) {
+                            console.log(`[Orchestrator] Using alternative result: ${altResult.method} with ${(altCoverage * 100).toFixed(0)}% coverage`);
+                            const finalResult = {
+                                stage: 'complete',
+                                ...altResult,
+                                dictionaryValidation: altResult.validation,
+                                progress: 100
+                            };
+                            console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+                            return finalResult;
+                        }
+                    }
+                    
+                    // No good result found - return best with warning
+                    console.warn('[Orchestrator] No result passed dictionary validation threshold, returning best anyway');
+                }
+                
+                const finalResult = {
                     stage: 'complete',
                     ...bestResult,
                     dictionaryValidation: bestResult.validation,
                     progress: 100
                 };
+                console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+                return finalResult;
             } catch (error) {
+                console.error('[Orchestrator] Dictionary validation error:', error);
                 yield {
                     stage: 'validation-failed',
                     message: 'Dictionary validation failed, using best result',
