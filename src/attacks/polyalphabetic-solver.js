@@ -320,13 +320,26 @@ export class PolyalphabeticSolver {
 
         // Return the best result
         const allResults = [quagmire1Result, quagmire2Result, quagmire3Result, quagmire4Result]
-            .filter(r => r && r.score > -Infinity);
+            .filter(r => r && r.score > -Infinity && r.method !== 'none');
         
         if (allResults.length === 0) {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
         }
 
-        allResults.sort((a, b) => b.score - a.score);
+        // Sort by score, but if scores are very close (within 5%), prefer more specific methods (4 > 3 > 2 > 1)
+        allResults.sort((a, b) => {
+            const scoreDiff = b.score - a.score;
+            // If scores are very close (within 5% of the higher score), prefer higher Quagmire number
+            if (Math.abs(scoreDiff) < Math.abs(b.score * 0.05)) {
+                const methodPriority = { quagmire4: 4, quagmire3: 3, quagmire2: 2, quagmire1: 1 };
+                const aPriority = methodPriority[a.method] || 0;
+                const bPriority = methodPriority[b.method] || 0;
+                return bPriority - aPriority; // Higher number = more specific = better
+            }
+            return scoreDiff;
+        });
+        
+        console.log(`[PolyalphabeticSolver] Quagmire results: ${allResults.map(r => `${r.method}(${r.score.toFixed(2)})`).join(', ')}`);
         return allResults[0];
     }
 

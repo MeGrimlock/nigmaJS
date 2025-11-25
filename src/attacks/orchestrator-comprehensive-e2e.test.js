@@ -3,6 +3,35 @@ import Shift from '../ciphers/shift/shift.js';
 import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
 import { CipherIdentifier } from '../analysis/identifier.js';
 import { LanguageAnalysis } from '../analysis/analysis.js';
+import fs from 'fs';
+import path from 'path';
+
+// Mock fetch for Node.js environment
+if (typeof global.fetch === 'undefined') {
+    global.fetch = jest.fn((url) => {
+        const fileName = url.split('/').pop();
+        // Try multiple possible paths
+        const possiblePaths = [
+            path.join(process.cwd(), 'demo/data', fileName),
+            path.join(process.cwd(), 'data', fileName),
+            path.join(__dirname, '../../demo/data', fileName),
+            path.join(__dirname, '../../data', fileName)
+        ];
+        
+        for (const filePath of possiblePaths) {
+            if (fs.existsSync(filePath)) {
+                const data = fs.readFileSync(filePath, 'utf8');
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(JSON.parse(data))
+                });
+            }
+        }
+        
+        // If file not found, return error
+        return Promise.reject(new Error(`File not found: ${url}`));
+    });
+}
 
 /**
  * Comprehensive End-to-End Tests for Orchestrator
