@@ -325,17 +325,17 @@ export class Orchestrator {
      */
     async _solveVigenere(ciphertext, suggestedKeyLength) {
         const solver = new VigenereSolver(this.language);
-        const result = solver.solve(ciphertext);
+        const result = await solver.solve(ciphertext);
         
         // VigenereSolver may return confidence 0 if it fails
         // Use IoC as a proxy for confidence
-        const confidence = result.confidence || (result.analysis.ioc > 1.3 ? 0.7 : 0.3);
+        const confidence = result.confidence || (result.analysis?.avgIoC > 1.3 ? 0.7 : 0.3);
         
         return {
             plaintext: result.plaintext,
             method: 'vigenere-friedman',
             confidence: confidence,
-            score: result.analysis.ioc || 0,
+            score: result.analysis?.avgIoC || result.analysis?.ioc || 0,
             key: result.key
         };
     }

@@ -1,4 +1,6 @@
 import { LanguageAnalysis } from '../analysis/analysis.js';
+import { DictionaryValidator } from '../language/dictionary-validator.js';
+import { TextUtils } from '../core/text-utils.js';
 import Shift from '../ciphers/shift/shift.js';
 
 export class VigenereSolver {
@@ -6,14 +8,15 @@ export class VigenereSolver {
         this.language = language;
         // Standard IoC for languages (normalized to ~1.73 for English)
         this.targetIoC = language === 'english' ? 1.73 : 1.94; // approx for others
+        this.dictionaryValidator = null; // Lazy initialization
     }
 
     /**
      * Solves a Vigenère cipher by finding key length and then key.
      * @param {string} ciphertext 
-     * @returns {Object} { plaintext, key, confidence }
+     * @returns {Promise<Object>} { plaintext, key, confidence }
      */
-    solve(ciphertext) {
+    async solve(ciphertext) {
         const cleanText = ciphertext.toUpperCase().replace(/[^A-Z]/g, '');
         
         // 1. Find most probable Key Length (Friedman Test)
@@ -22,8 +25,8 @@ export class VigenereSolver {
 
         if (keyLen === 0) return { plaintext: ciphertext, key: "", confidence: 0 };
 
-        // 2. Solve for the Key
-        const key = this.findKey(cleanText, keyLen);
+        // 2. Solve for the Key (now async due to dictionary validation)
+        const key = await this.findKey(cleanText, keyLen);
 
         // 3. Decrypt
         // We use the Vigenere implementation from our library logic manually to avoid circular deps
@@ -84,9 +87,61 @@ export class VigenereSolver {
     }
 
     /**
-     * Recovers the key for a given length using Frequency Analysis per column.
+     * Scores text using chi-squared AND dictionary validation (hybrid scoring).
+     * @private
+     * @param {string} text - Text to score
+     * @param {Object} langData - Language frequency data
+     * @returns {Promise<number>} Combined score (lower is better for chi-squared, higher is better for dict)
      */
-    findKey(text, keyLen) {
+    async _scoreWithDictionary(text, langData) {
+        // Calculate chi-squared (lower is better)
+        const freqs = LanguageAnalysis.getLetterFrequencies(text);
+        const chiSquared = LanguageAnalysis.calculateChiSquared(freqs, langData);
+        
+        // Try to get dictionary score (if available)
+        let dictScore = 0;
+        try {
+            if (!this.dictionaryValidator) {
+                this.dictionaryValidator = new DictionaryValidator(this.language);
+            }
+            
+            // Check if dictionary is loaded (non-blocking)
+            const dict = LanguageAnalysis.getDictionary(this.language);
+            if (dict) {
+                // Extract words from text and check against dictionary
+                const words = text.split(/\s+/)
+                    .map(w => TextUtils.onlyLetters(w))
+                    .filter(w => w.length >= 3);
+                
+                if (words.length > 0) {
+                    let validWords = 0;
+                    for (const word of words) {
+                        if (dict.has(word.toUpperCase())) {
+                            validWords++;
+                        }
+                    }
+                    // Dictionary score: percentage of valid words (0-1, higher is better)
+                    // Convert to penalty reduction: if 80% valid, reduce chi-squared by 80% of max
+                    const wordCoverage = validWords / words.length;
+                    // Apply bonus: reduce chi-squared by up to 30% if words are valid
+                    dictScore = wordCoverage * 0.3;
+                }
+            }
+        } catch (error) {
+            // Dictionary not available, continue with chi-squared only
+            // console.debug('[VigenereSolver] Dictionary validation skipped:', error.message);
+        }
+        
+        // Combined score: chi-squared minus dictionary bonus
+        // Lower is better, so we subtract the dictionary bonus
+        return chiSquared - (chiSquared * dictScore);
+    }
+
+    /**
+     * Recovers the key for a given length using Frequency Analysis per column.
+     * Now with optional dictionary validation for better accuracy.
+     */
+    async findKey(text, keyLen) {
         let key = "";
         const langData = LanguageAnalysis.languages[this.language].monograms;
 
@@ -95,18 +150,17 @@ export class VigenereSolver {
             
             // This column is essentially a Caesar shift. Find the best shift.
             let bestShift = 0;
-            let minChiSquared = Infinity;
+            let minScore = Infinity;
 
             for (let shift = 0; shift < 26; shift++) {
                 // Shift the column
                 const shiftedText = this.shiftText(columnText, -shift); // Decrypt attempt
                 
-                // Check stats
-                const freqs = LanguageAnalysis.getLetterFrequencies(shiftedText);
-                const score = LanguageAnalysis.calculateChiSquared(freqs, langData);
+                // Use hybrid scoring (chi-squared + dictionary if available)
+                const score = await this._scoreWithDictionary(shiftedText, langData);
 
-                if (score < minChiSquared) {
-                    minChiSquared = score;
+                if (score < minScore) {
+                    minScore = score;
                     bestShift = shift;
                 }
             }
