@@ -7,9 +7,9 @@ import fs from 'fs';
 import path from 'path';
 
 // Load dictionaries directly from filesystem for tests
-// This bypasses fetch and loads dictionaries directly
+// This bypasses fetch and loads dictionaries directly into LanguageAnalysis
 async function loadDictionariesForTests() {
-    const dictionaries = ['english', 'spanish'];
+    const languagesToLoad = ['english', 'spanish'];
     const possiblePaths = [
         path.join(process.cwd(), 'demo/data'),
         path.join(process.cwd(), 'data'),
@@ -17,10 +17,10 @@ async function loadDictionariesForTests() {
         path.join(__dirname, '../../data')
     ];
     
-    // Store loaded dictionaries
+    // Store loaded dictionaries to inject into LanguageAnalysis
     const loadedDictionaries = {};
     
-    for (const lang of dictionaries) {
+    for (const lang of languagesToLoad) {
         for (const basePath of possiblePaths) {
             const filePath = path.join(basePath, `${lang}-dictionary.json`);
             if (fs.existsSync(filePath)) {
@@ -38,23 +38,23 @@ async function loadDictionariesForTests() {
         }
     }
     
-    // Patch LanguageAnalysis.getDictionary to return loaded dictionaries
+    // Patch LanguageAnalysis methods to use filesystem-loaded dictionaries
     const originalGetDictionary = LanguageAnalysis.getDictionary;
+    const originalLoadDictionary = LanguageAnalysis.loadDictionary;
+    
+    // Override getDictionary to return our loaded dictionaries
     LanguageAnalysis.getDictionary = function(language) {
+        // First check our loaded dictionaries
         if (loadedDictionaries[language]) {
             return loadedDictionaries[language];
         }
-        // Fallback to original if exists
-        if (originalGetDictionary) {
-            return originalGetDictionary.call(this, language);
-        }
-        return null;
+        // Fallback to original
+        return originalGetDictionary ? originalGetDictionary.call(this, language) : null;
     };
     
-    // Patch loadDictionary to use filesystem loading
-    const originalLoadDictionary = LanguageAnalysis.loadDictionary;
+    // Override loadDictionary to load from filesystem
     LanguageAnalysis.loadDictionary = async function(language, basePathParam = 'data/') {
-        // If already loaded, return true
+        // If already loaded in our cache, return true
         if (loadedDictionaries[language]) {
             return true;
         }
@@ -67,7 +67,7 @@ async function loadDictionariesForTests() {
                     const data = fs.readFileSync(filePath, 'utf8');
                     const words = JSON.parse(data);
                     loadedDictionaries[language] = new Set(words);
-                    console.log(`[Test] Loaded ${language} dictionary via loadDictionary: ${words.length} words`);
+                    console.log(`[Test] Loaded ${language} dictionary via loadDictionary: ${words.length} words from ${filePath}`);
                     return true;
                 } catch (error) {
                     // Continue to next path
@@ -75,14 +75,21 @@ async function loadDictionariesForTests() {
             }
         }
         
-        // If filesystem load failed, try original (but it will fail in Node.js without fetch)
+        // If filesystem load failed, return false (don't try fetch in Node.js)
+        console.warn(`[Test] Could not load ${language} dictionary from filesystem`);
         return false;
     };
+    
+    // Also need to patch the internal _calculateDictionaryScore to use our dictionaries
+    // This is called during language detection
+    return loadedDictionaries;
 }
 
 // Load dictionaries before tests run
+let testDictionaries = {};
 beforeAll(async () => {
-    await loadDictionariesForTests();
+    testDictionaries = await loadDictionariesForTests();
+    console.log(`[Test] Dictionaries loaded: ${Object.keys(testDictionaries).join(', ')}`);
 }, 30000);
 
 /**
