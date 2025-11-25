@@ -6,32 +6,84 @@ import { LanguageAnalysis } from '../analysis/analysis.js';
 import fs from 'fs';
 import path from 'path';
 
-// Mock fetch for Node.js environment
-if (typeof global.fetch === 'undefined') {
-    global.fetch = jest.fn((url) => {
-        const fileName = url.split('/').pop();
-        // Try multiple possible paths
-        const possiblePaths = [
-            path.join(process.cwd(), 'demo/data', fileName),
-            path.join(process.cwd(), 'data', fileName),
-            path.join(__dirname, '../../demo/data', fileName),
-            path.join(__dirname, '../../data', fileName)
-        ];
-        
-        for (const filePath of possiblePaths) {
+// Load dictionaries directly from filesystem for tests
+// This bypasses fetch and loads dictionaries directly
+async function loadDictionariesForTests() {
+    const dictionaries = ['english', 'spanish'];
+    const possiblePaths = [
+        path.join(process.cwd(), 'demo/data'),
+        path.join(process.cwd(), 'data'),
+        path.join(__dirname, '../../demo/data'),
+        path.join(__dirname, '../../data')
+    ];
+    
+    // Store loaded dictionaries
+    const loadedDictionaries = {};
+    
+    for (const lang of dictionaries) {
+        for (const basePath of possiblePaths) {
+            const filePath = path.join(basePath, `${lang}-dictionary.json`);
             if (fs.existsSync(filePath)) {
-                const data = fs.readFileSync(filePath, 'utf8');
-                return Promise.resolve({
-                    ok: true,
-                    json: () => Promise.resolve(JSON.parse(data))
-                });
+                try {
+                    const data = fs.readFileSync(filePath, 'utf8');
+                    const words = JSON.parse(data);
+                    const dictSet = new Set(words);
+                    loadedDictionaries[lang] = dictSet;
+                    console.log(`[Test] Loaded ${lang} dictionary: ${words.length} words from ${filePath}`);
+                    break; // Found and loaded, move to next language
+                } catch (error) {
+                    console.warn(`[Test] Failed to load ${lang} dictionary from ${filePath}:`, error.message);
+                }
+            }
+        }
+    }
+    
+    // Patch LanguageAnalysis.getDictionary to return loaded dictionaries
+    const originalGetDictionary = LanguageAnalysis.getDictionary;
+    LanguageAnalysis.getDictionary = function(language) {
+        if (loadedDictionaries[language]) {
+            return loadedDictionaries[language];
+        }
+        // Fallback to original if exists
+        if (originalGetDictionary) {
+            return originalGetDictionary.call(this, language);
+        }
+        return null;
+    };
+    
+    // Patch loadDictionary to use filesystem loading
+    const originalLoadDictionary = LanguageAnalysis.loadDictionary;
+    LanguageAnalysis.loadDictionary = async function(language, basePathParam = 'data/') {
+        // If already loaded, return true
+        if (loadedDictionaries[language]) {
+            return true;
+        }
+        
+        // Try to load from filesystem
+        for (const testPath of possiblePaths) {
+            const filePath = path.join(testPath, `${language}-dictionary.json`);
+            if (fs.existsSync(filePath)) {
+                try {
+                    const data = fs.readFileSync(filePath, 'utf8');
+                    const words = JSON.parse(data);
+                    loadedDictionaries[language] = new Set(words);
+                    console.log(`[Test] Loaded ${language} dictionary via loadDictionary: ${words.length} words`);
+                    return true;
+                } catch (error) {
+                    // Continue to next path
+                }
             }
         }
         
-        // If file not found, return error
-        return Promise.reject(new Error(`File not found: ${url}`));
-    });
+        // If filesystem load failed, try original (but it will fail in Node.js without fetch)
+        return false;
+    };
 }
+
+// Load dictionaries before tests run
+beforeAll(async () => {
+    await loadDictionariesForTests();
+}, 30000);
 
 /**
  * Comprehensive End-to-End Tests for Orchestrator
