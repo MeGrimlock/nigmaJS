@@ -21,22 +21,71 @@ export class VigenereSolver {
         
         // 1. Find most probable Key Length (Friedman Test)
         const keyLengthData = this.guessKeyLength(cleanText);
-        const keyLen = keyLengthData.length;
+        
+        if (!keyLengthData.length || keyLengthData.length === 0) {
+            return { plaintext: ciphertext, key: "", confidence: 0 };
+        }
 
-        if (keyLen === 0) return { plaintext: ciphertext, key: "", confidence: 0 };
+        // 2. Try top candidate lengths (in case first one is wrong)
+        const candidates = keyLengthData.candidates || [{ length: keyLengthData.length }];
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        
+        let bestResult = null;
+        let bestScore = -Infinity;
+        
+        // Try top 3 candidate lengths
+        for (let i = 0; i < Math.min(3, candidates.length); i++) {
+            const candidateLen = candidates[i].length;
+            
+            // 3. Solve for the Key (now async due to dictionary validation)
+            const key = await this.findKey(cleanText, candidateLen);
+            
+            // 4. Decrypt
+            const plaintext = this.decryptVigenere(ciphertext, key);
+            
+            // 5. Validate result with dictionary if available
+            let validationScore = 0;
+            if (dict) {
+                const words = plaintext.toUpperCase()
+                    .split(/\s+/)
+                    .map(w => TextUtils.onlyLetters(w))
+                    .filter(w => w.length >= 3);
+                
+                if (words.length > 0) {
+                    let validWords = 0;
+                    for (const word of words) {
+                        if (dict.has(word)) {
+                            validWords++;
+                        }
+                    }
+                    validationScore = validWords / words.length;
+                }
+            }
+            
+            // Combined score: IoC confidence + dictionary validation
+            const combinedScore = (keyLengthData.confidence || 0.5) + (validationScore * 0.5);
+            
+            if (combinedScore > bestScore) {
+                bestScore = combinedScore;
+                bestResult = {
+                    plaintext: plaintext,
+                    key: key,
+                    confidence: Math.min(1, combinedScore),
+                    analysis: { ...keyLengthData, keyLength: candidateLen },
+                    validationScore: validationScore
+                };
+                
+                // Early termination: if we found a key with >70% valid words, use it
+                if (validationScore > 0.70) {
+                    break;
+                }
+            }
+        }
 
-        // 2. Solve for the Key (now async due to dictionary validation)
-        const key = await this.findKey(cleanText, keyLen);
-
-        // 3. Decrypt
-        // We use the Vigenere implementation from our library logic manually to avoid circular deps
-        // or just implement the simple shift logic here for speed.
-        const plaintext = this.decryptVigenere(ciphertext, key);
-
-        return {
-            plaintext: plaintext,
-            key: key,
-            confidence: keyLengthData.confidence, // Using IoC proximity as confidence
+        return bestResult || {
+            plaintext: ciphertext,
+            key: "",
+            confidence: 0,
             analysis: keyLengthData
         };
     }
@@ -47,43 +96,68 @@ export class VigenereSolver {
     guessKeyLength(text) {
         // Limit key length for short texts to ensure at least 4 chars per column
         const maxLen = Math.min(20, Math.max(1, Math.floor(text.length / 4)));
-        let bestLen = 1;
-        let bestAvgIoC = 0;
-        let bestDiff = Infinity;
+        const candidates = [];
 
         // Random text IoC is approx 1.0 (normalized). Target is ~1.73.
         // We look for the length that produces columns closest to Target.
 
         for (let len = 1; len <= maxLen; len++) {
             let totalIoC = 0;
+            let minColumnIoC = Infinity;
+            let maxColumnIoC = -Infinity;
             
             // Analyze columns
             for (let col = 0; col < len; col++) {
                 const columnText = this.getColumn(text, len, col);
-                totalIoC += LanguageAnalysis.calculateIoC(columnText);
+                if (columnText.length < 3) continue; // Skip if column too short
+                const colIoC = LanguageAnalysis.calculateIoC(columnText);
+                totalIoC += colIoC;
+                minColumnIoC = Math.min(minColumnIoC, colIoC);
+                maxColumnIoC = Math.max(maxColumnIoC, colIoC);
             }
             
             const avgIoC = totalIoC / len;
             
             // Calculate distance to target (e.g. English 1.73)
             const diff = Math.abs(avgIoC - this.targetIoC);
+            
+            // Also consider consistency: columns should have similar IoC (low variance)
+            const variance = maxColumnIoC - minColumnIoC;
+            
+            candidates.push({
+                length: len,
+                avgIoC: avgIoC,
+                diff: diff,
+                variance: variance,
+                score: diff + (variance * 0.5) // Lower is better
+            });
+        }
 
-            // We prefer the smallest key length that gets close to the target
-            // to avoid multiples (e.g., if key is 2, 4 will also look good).
-            // So we only switch if the improvement is significant.
-            if (diff < bestDiff * 0.85) { // 15% improvement threshold
-                bestDiff = diff;
-                bestLen = len;
-                bestAvgIoC = avgIoC;
+        // Sort by score (lower is better)
+        candidates.sort((a, b) => a.score - b.score);
+        
+        // Prefer shorter keys if scores are similar (within 10%)
+        let bestCandidate = candidates[0];
+        for (let i = 1; i < candidates.length && i < 5; i++) {
+            const candidate = candidates[i];
+            // If this candidate is significantly shorter and score is within 10%, prefer it
+            if (candidate.length < bestCandidate.length && 
+                candidate.score <= bestCandidate.score * 1.1) {
+                bestCandidate = candidate;
             }
         }
 
         // Confidence: How close is the IoC to English?
         // 1.0 = Random, 1.73 = English. Map this range to 0-1.
-        let confidence = (bestAvgIoC - 1.0) / (this.targetIoC - 1.0);
+        let confidence = (bestCandidate.avgIoC - 1.0) / (this.targetIoC - 1.0);
         confidence = Math.min(Math.max(confidence, 0), 1);
 
-        return { length: bestLen, avgIoC: bestAvgIoC, confidence };
+        return { 
+            length: bestCandidate.length, 
+            avgIoC: bestCandidate.avgIoC, 
+            confidence: confidence,
+            candidates: candidates.slice(0, 3) // Return top 3 for debugging
+        };
     }
 
     /**
@@ -144,24 +218,51 @@ export class VigenereSolver {
     async findKey(text, keyLen) {
         let key = "";
         const langData = LanguageAnalysis.languages[this.language].monograms;
+        const dict = LanguageAnalysis.getDictionary(this.language);
 
         for (let col = 0; col < keyLen; col++) {
             const columnText = this.getColumn(text, keyLen, col);
             
+            if (columnText.length < 3) {
+                // Column too short, use A as default
+                key += 'A';
+                continue;
+            }
+            
             // This column is essentially a Caesar shift. Find the best shift.
             let bestShift = 0;
             let minScore = Infinity;
+            let bestBigramScore = -Infinity;
 
+            // Common English bigrams for validation
+            const commonBigrams = ['TH', 'HE', 'IN', 'ER', 'AN', 'RE', 'ED', 'ND', 'ON', 'EN', 'AT', 'OU', 'IT', 'IS', 'OR', 'TI', 'AS', 'TO', 'OF', 'TE'];
+            
             for (let shift = 0; shift < 26; shift++) {
-                // Shift the column
-                const shiftedText = this.shiftText(columnText, -shift); // Decrypt attempt
+                // Shift the column (decrypt attempt)
+                const shiftedText = this.shiftText(columnText, -shift);
                 
                 // Use hybrid scoring (chi-squared + dictionary if available)
                 const score = await this._scoreWithDictionary(shiftedText, langData);
+                
+                // Also check for common bigrams (helps validate column decryption)
+                let bigramScore = 0;
+                for (let i = 0; i < shiftedText.length - 1; i++) {
+                    const bigram = shiftedText.substring(i, i + 2);
+                    if (commonBigrams.includes(bigram)) {
+                        bigramScore++;
+                    }
+                }
+                // Normalize bigram score
+                const normalizedBigramScore = bigramScore / Math.max(1, shiftedText.length - 1);
+                
+                // Combined score: lower chi-squared is better, higher bigram score is better
+                // Adjust: if bigram score is high, reduce chi-squared score
+                const adjustedScore = score * (1 - normalizedBigramScore * 0.2);
 
-                if (score < minScore) {
-                    minScore = score;
+                if (adjustedScore < minScore || (normalizedBigramScore > bestBigramScore && normalizedBigramScore > 0.1)) {
+                    minScore = adjustedScore;
                     bestShift = shift;
+                    bestBigramScore = normalizedBigramScore;
                 }
             }
 

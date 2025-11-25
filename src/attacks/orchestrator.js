@@ -203,18 +203,17 @@ export class Orchestrator {
     _selectStrategies(topCandidate, stats) {
         const strategies = [];
         
-        // ALWAYS try Caesar first - it's fast and catches ROT13/simple shifts
-        strategies.push({
-            name: 'Brute Force (Caesar/ROT13)',
-            execute: (text) => this._bruteForceCaesar(text)
-        });
-        
         switch (topCandidate.type) {
             case 'caesar-shift':
-                // Already added Caesar above
+                // For Caesar, try brute force first (it's fast and accurate)
+                strategies.push({
+                    name: 'Brute Force (Caesar/ROT13)',
+                    execute: (text) => this._bruteForceCaesar(text)
+                });
                 break;
                 
             case 'vigenere-like':
+                // For Vigenère, try Vigenère-specific methods FIRST
                 // IMPORTANT: Try advanced polyalphabetic FIRST (Porta, Beaufort, Gronsfeld)
                 // These are more specific and should be tested before generic Vigenère
                 strategies.push({
@@ -230,6 +229,11 @@ export class Orchestrator {
                 strategies.push({
                     name: 'Hill Climbing (Fallback)',
                     execute: (text) => this._solveSubstitution(text, 'hillclimb')
+                });
+                // Only try Caesar as last resort for Vigenère (unlikely to work)
+                strategies.push({
+                    name: 'Brute Force (Caesar/ROT13) - Fallback',
+                    execute: (text) => this._bruteForceCaesar(text)
                 });
                 break;
                 
