@@ -420,8 +420,9 @@ export class Orchestrator {
     }
     
     /**
-     * Brute force ROT47 (ASCII printable characters 33-126, shift by 47)
-     * ROT47 shifts all printable ASCII characters, not just letters
+     * Brute force ROT (ASCII printable characters 33-126)
+     * Tries all possible shifts (1-94) and stops early if high word coverage is found
+     * ROT shifts all printable ASCII characters, not just letters
      * @private
      */
     async _bruteForceROT47(ciphertext) {
@@ -433,16 +434,12 @@ export class Orchestrator {
         let bestPlaintext = ciphertext;
         let bestWordCoverage = 0;
         
-        // ROT47 uses ASCII printable range (33-126), so we need to try shifts 0-94
-        // But ROT47 specifically shifts by 47, so we can optimize
-        const shiftsToTry = [47]; // ROT47 is specifically shift 47
-        // Also try nearby shifts in case of detection error
-        for (let i = 45; i <= 49; i++) {
-            if (i !== 47) shiftsToTry.push(i);
-        }
+        // ROT uses ASCII printable range (33-126), so we need to try shifts 1-94
+        // Try all shifts sequentially, stopping early if we find high word coverage
+        const maxShift = 94; // ASCII printable range is 94 characters (33-126)
         
-        for (const shift of shiftsToTry) {
-            // Decrypt using ROT47 logic (ASCII 33-126)
+        for (let shift = 1; shift <= maxShift; shift++) {
+            // Decrypt using ROT logic (ASCII 33-126)
             let decrypted = '';
             for (let i = 0; i < ciphertext.length; i++) {
                 const char = ciphertext[i];
@@ -450,7 +447,7 @@ export class Orchestrator {
                 
                 // Only shift printable ASCII (33-126)
                 if (code >= 33 && code <= 126) {
-                    // ROT47: shift by 47, wrapping at 94 characters
+                    // ROT: shift backwards by shift amount, wrapping at 94 characters
                     let newCode = code - shift;
                     while (newCode < 33) newCode += 94;
                     while (newCode > 126) newCode -= 94;
@@ -466,7 +463,7 @@ export class Orchestrator {
             
             const score = scorer.score(cleanText);
             
-            // Dictionary validation
+            // Dictionary validation - this is the key for early termination
             let wordCoverage = 0;
             if (dict) {
                 try {
@@ -500,10 +497,11 @@ export class Orchestrator {
                 bestPlaintext = decrypted;
                 bestWordCoverage = wordCoverage;
                 
-                // Early termination
+                // Early termination: if we found >70% valid words, we're done!
+                // This assumes we detected the language correctly
                 if (wordCoverage > 0.70) {
-                    console.log(`[Orchestrator] Early termination: ROT47 shift ${shift} has ${(wordCoverage * 100).toFixed(0)}% valid words`);
-                    break;
+                    console.log(`[Orchestrator] Early termination: ROT shift ${shift} has ${(wordCoverage * 100).toFixed(0)}% valid words`);
+                    break; // Stop trying other shifts
                 }
             }
         }
@@ -526,9 +524,21 @@ export class Orchestrator {
             confidence = 0.6;
         }
         
+        // Determine method name based on shift
+        let method = 'rot47';
+        if (bestShift === 13) {
+            method = 'rot13';
+        } else if (bestShift >= 1 && bestShift <= 25) {
+            method = `rot${bestShift}`;
+        } else if (bestShift === 47) {
+            method = 'rot47';
+        } else {
+            method = 'rot47'; // Generic ROT for other shifts
+        }
+        
         return {
             plaintext: bestPlaintext,
-            method: bestShift === 47 ? 'rot47' : 'caesar-shift',
+            method: method,
             confidence: confidence,
             score: bestScore,
             key: bestShift,
