@@ -228,7 +228,16 @@ export class Orchestrator {
         
         switch (topCandidate.type) {
             case 'caesar-shift':
-                // For Caesar, try brute force first (it's fast and accurate)
+                // For Caesar, try ROT47 first (if text contains printable ASCII beyond letters)
+                // ROT47 handles all printable ASCII (33-126), not just letters
+                const hasNonLetterASCII = /[!-~]/.test(text) && /[^A-Za-z\s]/.test(text);
+                if (hasNonLetterASCII) {
+                    strategies.push({
+                        name: 'Brute Force (ROT47)',
+                        execute: (text) => this._bruteForceROT47(text)
+                    });
+                }
+                // Then try standard Caesar brute force (letters only)
                 strategies.push({
                     name: 'Brute Force (Caesar/ROT13)',
                     execute: (text) => this._bruteForceCaesar(text)
@@ -407,6 +416,123 @@ export class Orchestrator {
             score: bestScore,
             key: bestShift,
             wordCoverage: bestWordCoverage // Include for debugging
+        };
+    }
+    
+    /**
+     * Brute force ROT47 (ASCII printable characters 33-126, shift by 47)
+     * ROT47 shifts all printable ASCII characters, not just letters
+     * @private
+     */
+    async _bruteForceROT47(ciphertext) {
+        const scorer = new Scorer(this.language, 4); // Use quadgrams
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        
+        let bestShift = 0;
+        let bestScore = -Infinity;
+        let bestPlaintext = ciphertext;
+        let bestWordCoverage = 0;
+        
+        // ROT47 uses ASCII printable range (33-126), so we need to try shifts 0-94
+        // But ROT47 specifically shifts by 47, so we can optimize
+        const shiftsToTry = [47]; // ROT47 is specifically shift 47
+        // Also try nearby shifts in case of detection error
+        for (let i = 45; i <= 49; i++) {
+            if (i !== 47) shiftsToTry.push(i);
+        }
+        
+        for (const shift of shiftsToTry) {
+            // Decrypt using ROT47 logic (ASCII 33-126)
+            let decrypted = '';
+            for (let i = 0; i < ciphertext.length; i++) {
+                const char = ciphertext[i];
+                const code = char.charCodeAt(0);
+                
+                // Only shift printable ASCII (33-126)
+                if (code >= 33 && code <= 126) {
+                    // ROT47: shift by 47, wrapping at 94 characters
+                    let newCode = code - shift;
+                    while (newCode < 33) newCode += 94;
+                    while (newCode > 126) newCode -= 94;
+                    decrypted += String.fromCharCode(newCode);
+                } else {
+                    decrypted += char; // Keep non-printable as-is
+                }
+            }
+            
+            // Score the decrypted text
+            const cleanText = TextUtils.onlyLetters(decrypted);
+            if (cleanText.length < 10) continue; // Skip if too short
+            
+            const score = scorer.score(cleanText);
+            
+            // Dictionary validation
+            let wordCoverage = 0;
+            if (dict) {
+                try {
+                    const words = decrypted.toUpperCase()
+                        .split(/\s+/)
+                        .map(w => TextUtils.onlyLetters(w))
+                        .filter(w => w.length >= 3);
+                    
+                    if (words.length > 0) {
+                        let validWords = 0;
+                        for (const word of words) {
+                            if (dict.has(word)) {
+                                validWords++;
+                            }
+                        }
+                        wordCoverage = validWords / words.length;
+                    }
+                } catch (error) {
+                    // Dictionary access failed, continue without dictionary validation
+                }
+            }
+            
+            // Combined score: N-gram + dictionary bonus
+            const dictBonus = wordCoverage * 50;
+            const combinedScore = score + dictBonus;
+            
+            // Update best if this is better
+            if (combinedScore > bestScore || (wordCoverage > bestWordCoverage && wordCoverage > 0.7)) {
+                bestScore = combinedScore;
+                bestShift = shift;
+                bestPlaintext = decrypted;
+                bestWordCoverage = wordCoverage;
+                
+                // Early termination
+                if (wordCoverage > 0.70) {
+                    console.log(`[Orchestrator] Early termination: ROT47 shift ${shift} has ${(wordCoverage * 100).toFixed(0)}% valid words`);
+                    break;
+                }
+            }
+        }
+        
+        // Calculate confidence
+        let confidence = 0.5;
+        if (bestWordCoverage > 0.80) {
+            confidence = 0.98;
+        } else if (bestWordCoverage > 0.70) {
+            confidence = 0.95;
+        } else if (bestWordCoverage > 0.60) {
+            confidence = 0.90;
+        } else if (bestWordCoverage > 0.50) {
+            confidence = 0.85;
+        } else if (bestScore > -3) {
+            confidence = 0.95;
+        } else if (bestScore > -4) {
+            confidence = 0.8;
+        } else if (bestScore > -5) {
+            confidence = 0.6;
+        }
+        
+        return {
+            plaintext: bestPlaintext,
+            method: bestShift === 47 ? 'rot47' : 'caesar-shift',
+            confidence: confidence,
+            score: bestScore,
+            key: bestShift,
+            wordCoverage: bestWordCoverage
         };
     }
     
