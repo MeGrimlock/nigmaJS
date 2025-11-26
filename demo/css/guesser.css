@@ -136,3 +136,27 @@
     background: #334155;
     border-radius: 3px;
 }
+
+/* Copy button styles */
+.copy-btn {
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background: rgba(139, 92, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.copy-btn:active {
+    transform: scale(0.95);
+}

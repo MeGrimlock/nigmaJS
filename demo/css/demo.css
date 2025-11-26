@@ -73,3 +73,45 @@ input[type="text"] {
     width: 80px;
 }
 
+/* Copy button styles */
+.copy-btn {
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    margin-left: 8px;
+}
+
+.copy-btn:hover {
+    background: rgba(139, 92, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.copy-btn:active {
+    transform: scale(0.95);
+}
+
+.copy-btn.copied {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.output-container {
+    position: relative;
+}
+
+.output-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+

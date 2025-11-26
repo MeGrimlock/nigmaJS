@@ -103,9 +103,12 @@
             <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">🔓 Decrypted Result (Live Preview)</h2>
-                    <span id="methodBadge" style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--accent);">
-                        Method: HMM
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button class="copy-btn" id="copyDecryptedBtn" title="Copy decrypted text" style="display: none;">📋 Copy</button>
+                        <span id="methodBadge" style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--accent);">
+                            Method: HMM
+                        </span>
+                    </div>
                 </div>
                 <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
                 
@@ -649,6 +652,35 @@
                         }
                         
                         output.innerText = result.plaintext || "❌ Decryption failed.";
+                        
+                        // Show and setup copy button if decryption was successful
+                        const copyDecryptedBtn = document.getElementById('copyDecryptedBtn');
+                        if (copyDecryptedBtn && isSuccess && result.plaintext) {
+                            copyDecryptedBtn.style.display = 'inline-flex';
+                            copyDecryptedBtn.onclick = () => {
+                                navigator.clipboard.writeText(result.plaintext).then(() => {
+                                    const originalText = copyDecryptedBtn.innerHTML;
+                                    copyDecryptedBtn.innerHTML = '✓ Copied!';
+                                    copyDecryptedBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+                                    copyDecryptedBtn.style.borderColor = '#10b981';
+                                    copyDecryptedBtn.style.color = '#10b981';
+                                    setTimeout(() => {
+                                        copyDecryptedBtn.innerHTML = originalText;
+                                        copyDecryptedBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                                        copyDecryptedBtn.style.borderColor = 'var(--accent)';
+                                        copyDecryptedBtn.style.color = 'var(--accent)';
+                                    }, 2000);
+                                }).catch(err => {
+                                    console.error('Failed to copy:', err);
+                                    copyDecryptedBtn.innerHTML = '✗ Error';
+                                    setTimeout(() => {
+                                        copyDecryptedBtn.innerHTML = '📋 Copy';
+                                    }, 2000);
+                                });
+                            };
+                        } else if (copyDecryptedBtn) {
+                            copyDecryptedBtn.style.display = 'none';
+                        }
                         
                         // Update badge with method and confidence
                         const confidencePercent = (result.confidence * 100).toFixed(0);

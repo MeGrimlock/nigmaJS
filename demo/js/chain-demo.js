@@ -425,6 +425,33 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
 
             outputLength.textContent = currentText.length;
+            
+            // Show and setup copy button
+            const copyBtn = document.getElementById('copyResultBtn');
+            if (copyBtn) {
+                copyBtn.style.display = 'inline-flex';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(currentText).then(() => {
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '✓ Copied!';
+                        copyBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+                        copyBtn.style.borderColor = '#10b981';
+                        copyBtn.style.color = '#10b981';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                            copyBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                            copyBtn.style.borderColor = 'var(--accent)';
+                            copyBtn.style.color = 'var(--accent)';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy:', err);
+                        copyBtn.innerHTML = '✗ Error';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '📋 Copy';
+                        }, 2000);
+                    });
+                };
+            }
 
             // Update Analysis
             if (freqChart) {
