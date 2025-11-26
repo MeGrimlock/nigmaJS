@@ -2,8 +2,16 @@
 
 ![Programming Language JS-ES6](https://img.shields.io/badge/language-JS--ES6-yellow)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Test](https://img.shields.io/badge/test-passing-green)
 ![NPM Version](https://img.shields.io/npm/v/nigmajs)
+![NPM Downloads](https://img.shields.io/npm/dm/nigmajs)
+![NPM Bundle Size](https://img.shields.io/bundlephobia/minzip/nigmajs)
+![GitHub Stars](https://img.shields.io/github/stars/MeGrimlock/nigmaJS?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/MeGrimlock/nigmaJS?style=social)
+![GitHub Issues](https://img.shields.io/github/issues/MeGrimlock/nigmaJS)
+![GitHub Pull Requests](https://img.shields.io/github/issues-pr/MeGrimlock/nigmaJS)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/MeGrimlock/nigmaJS)
+![GitHub Contributors](https://img.shields.io/github/contributors/MeGrimlock/nigmaJS)
+![GitHub Repo Size](https://img.shields.io/github/repo-size/MeGrimlock/nigmaJS)
 
 <p align="center">
   <img src="https://github.com/MeGrimlock/nigmaJS/blob/master/demo/favicon.ico" width="260" title="NigmaJS Logo">
