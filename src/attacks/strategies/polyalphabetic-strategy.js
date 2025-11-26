@@ -1,4 +1,4 @@
-import { PolyalphabeticSolver } from '../polyalphabetic-solver.js';
+import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
 
 /**
  * Advanced Polyalphabetic Cipher Strategy

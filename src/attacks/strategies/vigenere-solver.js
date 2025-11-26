@@ -1,7 +1,7 @@
-import { LanguageAnalysis } from '../analysis/analysis.js';
-import { DictionaryValidator } from '../language/dictionary-validator.js';
-import { TextUtils } from '../core/text-utils.js';
-import Shift from '../ciphers/shift/shift.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { DictionaryValidator } from '../../language/dictionary-validator.js';
+import { TextUtils } from '../../core/text-utils.js';
+import Shift from '../../ciphers/shift/shift.js';
 
 export class VigenereSolver {
     constructor(language = 'english') {

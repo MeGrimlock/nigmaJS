@@ -1,10 +1,10 @@
 import 'regenerator-runtime/runtime';
-import { TextUtils } from '../core/text-utils.js';
-import { Stats } from '../analysis/stats.js';
-import { Kasiski } from '../analysis/kasiski.js';
-import { Scorers } from '../language/scorers.js';
-import { LanguageAnalysis } from '../analysis/analysis.js';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
+import { TextUtils } from '../../core/text-utils.js';
+import { Stats } from '../../analysis/stats.js';
+import { Kasiski } from '../../analysis/kasiski.js';
+import { Scorers } from '../../language/scorers.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
 
 /**
  * Advanced Polyalphabetic Cipher Solver

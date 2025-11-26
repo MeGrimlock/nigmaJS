@@ -1,4 +1,4 @@
-import { VigenereSolver } from '../vigenere-solver.js';
+import { VigenereSolver } from './vigenere-solver.js';
 
 /**
  * Vigenère Cipher Strategy Wrapper
