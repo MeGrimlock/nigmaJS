@@ -16,9 +16,17 @@ import { default as Enigma } from '../ciphers/enigma/enigma.js';
 import { default as Polyalphabetic } from '../ciphers/polyalphabetic/polyalphabetic.js';
 import { HMMSolver } from '../attacks/hmm-solver.js';
 import { VigenereSolver } from '../attacks/vigenere-solver.js';
+import { PolyalphabeticSolver } from '../attacks/polyalphabetic-solver.js';
+import { Orchestrator } from '../attacks/orchestrator.js';
 import { Stats } from '../analysis/stats.js';
 import { Scorers } from '../language/scorers.js';
 import { TextUtils } from './text-utils.js';
+import { DictionaryValidator } from '../language/dictionary-validator.js';
+import { Kasiski } from '../analysis/kasiski.js';
+import { CipherIdentifier } from '../analysis/identifier.js';
+import { HillClimb } from '../search/hillclimb.js';
+import { SimulatedAnnealing } from '../search/simulated-annealing.js';
+import { Scorer } from '../search/scorer.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -95,11 +103,19 @@ export default class Nigma {
 	static Columnar = Columnar;
 	static Enigma = Enigma;
 	static LanguageAnalysis = LanguageAnalysis;
-    static HMMSolver = HMMSolver;
-    static VigenereSolver = VigenereSolver;
-    static Stats = Stats;
-    static Scorers = Scorers;
-    static TextUtils = TextUtils;
+	static HMMSolver = HMMSolver;
+	static VigenereSolver = VigenereSolver;
+	static PolyalphabeticSolver = PolyalphabeticSolver;
+    static Orchestrator = Orchestrator;
+	static Stats = Stats;
+	static Scorers = Scorers;
+	static TextUtils = TextUtils;
+	static DictionaryValidator = DictionaryValidator;
+    static Kasiski = Kasiski;
+    static CipherIdentifier = CipherIdentifier;
+    static HillClimb = HillClimb;
+    static SimulatedAnnealing = SimulatedAnnealing;
+    static Scorer = Scorer;
 
     /**
      * Performs basic statistical analysis on a text.
@@ -113,6 +129,15 @@ export default class Nigma {
             entropy: Stats.entropy(text),
             frequency: Stats.frequency(text)
         };
+    }
+
+    /**
+     * Identifies the probable cipher type(s) for a given ciphertext.
+     * @param {string} text - The ciphertext to analyze.
+     * @returns {Object} An object containing cipher families with confidence scores.
+     */
+    static identifyCipher(text) {
+        return CipherIdentifier.identify(text);
     }
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------
@@ -224,5 +249,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, Stats, Scorers, TextUtils };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer, DictionaryValidator };
 

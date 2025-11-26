@@ -48,6 +48,40 @@ export const TextUtils = {
      */
     onlyLetters: (text) => {
         return text.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z]/g, '');
+    },
+
+    /**
+     * Applies the layout (spaces, punctuation, case) from originalText to cleanedText.
+     * @param {string} originalText - The original text with layout.
+     * @param {string} cleanedText - The cleaned text (only letters, uppercase).
+     * @returns {string} The cleaned text with the original layout applied.
+     */
+    matchLayout: (originalText, cleanedText) => {
+        let result = '';
+        let cleanIndex = 0;
+        
+        for (let i = 0; i < originalText.length && cleanIndex < cleanedText.length; i++) {
+            const origChar = originalText[i];
+            
+            if (/[a-zA-Z]/.test(origChar)) {
+                // It's a letter - apply case from original
+                const cleanChar = cleanedText[cleanIndex];
+                result += origChar === origChar.toLowerCase() 
+                    ? cleanChar.toLowerCase() 
+                    : cleanChar.toUpperCase();
+                cleanIndex++;
+            } else {
+                // It's not a letter - keep as is (space, punctuation, etc.)
+                result += origChar;
+            }
+        }
+        
+        // If there are remaining characters in cleanedText, append them
+        if (cleanIndex < cleanedText.length) {
+            result += cleanedText.substring(cleanIndex);
+        }
+        
+        return result;
     }
 };
 

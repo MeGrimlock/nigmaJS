@@ -8,9 +8,17 @@ import Nigma, {
     LanguageAnalysis,
     HMMSolver,
     VigenereSolver,
+    PolyalphabeticSolver,
+    Orchestrator,
     Stats,
     Scorers,
-    TextUtils
+    TextUtils,
+    Kasiski,
+    CipherIdentifier,
+    HillClimb,
+    SimulatedAnnealing,
+    Scorer,
+    DictionaryValidator
 } from './core/nigma.js';
 
 export default Nigma;
@@ -24,7 +32,15 @@ export {
     LanguageAnalysis,
     HMMSolver,
     VigenereSolver,
+    PolyalphabeticSolver,
+    Orchestrator,
     Stats,
     Scorers,
-    TextUtils
+    TextUtils,
+    Kasiski,
+    CipherIdentifier,
+    HillClimb,
+    SimulatedAnnealing,
+    Scorer,
+    DictionaryValidator
 };

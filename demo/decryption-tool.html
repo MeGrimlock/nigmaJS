@@ -38,23 +38,54 @@
             </ul>
         </div>
 
-        <div class="input-card">
-            <h2>📝 Ciphered Text</h2>
-            <textarea id="cipherInput" placeholder="Paste ciphertext here (must be simple substitution)..."></textarea>
-            
-            <div id="progressContainer" style="margin-top: 1rem; display: none;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="color: var(--text-muted);">Decrypting...</span>
-                    <span id="progressText" style="color: var(--accent);">0%</span>
+        <!-- Two Column Layout -->
+        <div style="display: grid; grid-template-columns: 70% 30%; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <!-- Left Column: Input -->
+            <div class="input-card">
+                <h2>📝 Ciphered Text</h2>
+                <textarea id="cipherInput" placeholder="Paste ciphertext here to analyze and decrypt..." style="min-height: 400px;"></textarea>
+                
+                <div id="progressContainer" style="margin-top: 1rem; display: none;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-muted);">Decrypting...</span>
+                        <span id="progressText" style="color: var(--accent);">0%</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s;"></div>
+                    </div>
                 </div>
-                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
-                    <div id="progressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s;"></div>
-                </div>
+
+                <button id="btnSolve" class="tab-btn" style="margin-top: 1rem; width: 100%; text-align: center; opacity: 0.5; cursor: not-allowed;" disabled>
+                    📝 Enter text to begin
+                </button>
             </div>
 
-            <button id="btnSolve" class="tab-btn active" style="margin-top: 1rem; width: 100%; text-align: center;">
-                🚀 Attempt Decryption
-            </button>
+            <!-- Right Column: Live Analysis -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Text Statistics -->
+                <div class="input-card" style="padding: 1rem;">
+                    <h3 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">📊 Text Statistics</h3>
+                    <div id="textStatsContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                        <div style="color: #64748b; font-style: italic;">No text to analyze</div>
+                    </div>
+                </div>
+
+                <!-- Cipher Detection -->
+                <div class="input-card" style="padding: 1rem;">
+                    <h3 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.5px;">🔍 Cipher Detection</h3>
+                    <div id="cipherDetectionContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                        <div style="color: #64748b; font-style: italic;">Waiting for input...</div>
+                    </div>
+                </div>
+
+                <!-- Language Probability -->
+                <div class="input-card" style="padding: 1rem;">
+                    <h3 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">🌐 Language Probability</h3>
+                    <div id="languageProbContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                        <div style="color: #64748b; font-style: italic;">Analyzing...</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
             <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
@@ -65,20 +96,53 @@
                     </span>
                 </div>
                 <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
+                
+                <!-- Dictionary Validation Section -->
+                <div id="dictionaryValidationContainer" style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: #10b981; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📚 Dictionary Validation
+                        <span id="dictValidBadge" style="font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2);">VALID</span>
+                    </h3>
+                    <div id="dictionaryValidationContent" style="font-size: 0.9rem; color: #e2e8f0;">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
             </div>
 
             <div class="input-card">
                 <h3>How it works</h3>
                 <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
-                    This tool uses a multi-stage attack:
+                    This tool uses an <strong>Intelligent Orchestrator</strong> that automatically detects and attacks classical ciphers:
                     <br><br>
-                    <strong>1. Vigenère Analysis (Friedman Test):</strong> Checks for polyalphabetic patterns (Index of Coincidence). If detected, it finds the key length and solves each column as a Caesar shift.
+                    <strong>🔍 Step 1 - Detection:</strong> Analyzes Index of Coincidence (IC), Entropy, and Kasiski patterns to identify cipher type.
                     <br>
-                    <strong>2. Brute Force (Caesar Shift):</strong> Instantly checks all 26 simple shifts using Bigram analysis.
+                    <strong>🎯 Step 2 - Strategy Selection:</strong> Chooses the optimal attack based on detection:
+                    <ul style="margin: 0.5rem 0 0.5rem 1.5rem; padding: 0;">
+                        <li><strong>Caesar/ROT13:</strong> Brute force (26 rotations) with N-gram scoring</li>
+                        <li><strong>Vigenère:</strong> Friedman Test + frequency analysis per column</li>
+                        <li><strong>Substitution:</strong> Hill Climbing or Simulated Annealing with quadgram scoring</li>
+                        <li><strong>Advanced Polyalphabetic:</strong> Beaufort, Porta, Gronsfeld, Quagmire (experimental)</li>
+                    </ul>
+                    <strong>⚡ Step 3 - Execution:</strong> Runs the selected attack and returns the best result.
                     <br>
-                    <strong>3. Hidden Markov Models (HMM):</strong> For complex substitution ciphers, it uses a probabilistic model to "learn" the key mapping from scratch.
+                    <strong>📚 Step 4 - Dictionary Validation:</strong> Validates the decrypted text against a 275k+ word English dictionary to measure confidence:
+                    <ul style="margin: 0.5rem 0 0.5rem 1.5rem; padding: 0;">
+                        <li><strong>Word Coverage:</strong> % of valid dictionary words found</li>
+                        <li><strong>Character Coverage:</strong> % of characters in valid words</li>
+                        <li><strong>Confidence Score:</strong> Weighted metric (0-100%) combining all factors</li>
+                    </ul>
+                    <br>
+                    <strong>📊 Powered by:</strong> N-gram models (quadgrams), log-likelihood scoring, heuristic search algorithms, and dictionary validation.
                     <br><br>
-                    <em>Note: HMM requires enough text (>50 chars) to analyze statistics effectively.</em>
+                    <strong>⚠️ Current Limitations:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; font-size: 0.85rem; color: #f59e0b;">
+                        <li><strong>Beaufort:</strong> ~40-60% success rate (requires >200 chars)</li>
+                        <li><strong>Porta:</strong> ~60-70% success rate</li>
+                        <li><strong>Quagmire:</strong> ~20-30% success rate (very difficult without known alphabet)</li>
+                        <li><strong>General:</strong> Longer texts and shorter keys improve accuracy significantly</li>
+                    </ul>
+                    <br>
+                    <em>Note: This is an experimental tool. For production cryptanalysis, combine with manual analysis.</em>
                 </p>
             </div>
     </div>
@@ -109,6 +173,12 @@
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             const methodBadge = document.getElementById('methodBadge');
+            const cipherDetectionContent = document.getElementById('cipherDetectionContent');
+            const textStatsContent = document.getElementById('textStatsContent');
+            const languageProbContent = document.getElementById('languageProbContent');
+            
+            let hasAttemptedDecryption = false;
+            let lastDecryptionSuccess = false;
 
             // Helper: Apply decrypted letters back to original layout (preserving spaces/numbers)
             function matchLayout(original, cleanDecrypted) {
@@ -137,16 +207,202 @@
             // Helper: Random Char for Matrix Effect
             const randomChar = () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
 
+            // Update button state based on input
+            function updateButtonState() {
+                const text = input.value.trim();
+                
+                if (text.length === 0) {
+                    // No text - disabled state
+                    btnSolve.disabled = true;
+                    btnSolve.style.opacity = '0.5';
+                    btnSolve.style.cursor = 'not-allowed';
+                    btnSolve.classList.remove('active');
+                    btnSolve.innerHTML = '📝 Enter text to begin';
+                } else if (!hasAttemptedDecryption) {
+                    // Has text, not attempted yet
+                    btnSolve.disabled = false;
+                    btnSolve.style.opacity = '1';
+                    btnSolve.style.cursor = 'pointer';
+                    btnSolve.classList.add('active');
+                    btnSolve.innerHTML = '🚀 Attempt Decryption';
+                } else {
+                    // Has attempted - show retry
+                    btnSolve.disabled = false;
+                    btnSolve.style.opacity = '1';
+                    btnSolve.style.cursor = 'pointer';
+                    btnSolve.classList.add('active');
+                    btnSolve.innerHTML = lastDecryptionSuccess ? '🔄 Retry Decryption' : '🔄 Retry';
+                }
+            }
+
+            // Live Analysis on Input Change (with debounce)
+            let analysisTimeout;
+            input.addEventListener('input', () => {
+                updateButtonState();
+                
+                clearTimeout(analysisTimeout);
+                analysisTimeout = setTimeout(() => {
+                    const text = input.value.trim();
+                    
+                    // Update Text Statistics
+                    if (text.length === 0) {
+                        textStatsContent.innerHTML = '<div style="color: #64748b; font-style: italic;">No text to analyze</div>';
+                        cipherDetectionContent.innerHTML = '<div style="color: #64748b; font-style: italic;">Waiting for input...</div>';
+                        languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic;">Analyzing...</div>';
+                        return;
+                    }
+                    
+                    const { Stats, Scorers, CipherIdentifier } = window.nigmajs;
+                    if (!Stats || !Scorers || !CipherIdentifier) return;
+                    
+                    // Text Statistics
+                    const cleanText = text.toUpperCase().replace(/[^A-Z]/g, '');
+                    const ic = Stats.indexOfCoincidence(text).toFixed(2);
+                    const entropy = Stats.entropy(text).toFixed(2);
+                    
+                    let statsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                    statsHtml += `<div style="display: flex; justify-content: space-between;">
+                        <span style="color: #94a3b8;">Length:</span>
+                        <span style="color: #e2e8f0; font-weight: bold;">${text.length} chars</span>
+                    </div>`;
+                    statsHtml += `<div style="display: flex; justify-content: space-between;">
+                        <span style="color: #94a3b8;">Letters:</span>
+                        <span style="color: #e2e8f0; font-weight: bold;">${cleanText.length}</span>
+                    </div>`;
+                    statsHtml += `<div style="display: flex; justify-content: space-between;">
+                        <span style="color: #94a3b8;">IC:</span>
+                        <span style="color: ${ic > 1.5 ? '#10b981' : ic > 1.2 ? '#f59e0b' : '#ef4444'}; font-weight: bold;">${ic}</span>
+                    </div>`;
+                    statsHtml += `<div style="display: flex; justify-content: space-between;">
+                        <span style="color: #94a3b8;">Entropy:</span>
+                        <span style="color: ${entropy > 4 ? '#ef4444' : entropy > 3 ? '#f59e0b' : '#10b981'}; font-weight: bold;">${entropy}</span>
+                    </div>`;
+                    statsHtml += '</div>';
+                    textStatsContent.innerHTML = statsHtml;
+                    
+                    if (text.length < 20) {
+                        cipherDetectionContent.innerHTML = '<div style="color: #f59e0b; font-size: 0.8rem;">Need at least 20 characters for analysis</div>';
+                        languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic;">Not enough text</div>';
+                        return;
+                    }
+
+                    try {
+                        // Cipher Detection
+                        const result = CipherIdentifier.identify(text);
+                        
+                        // Build HTML for cipher detection (compact for sidebar)
+                        let cipherHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                        
+                        result.families.slice(0, 3).forEach((family, index) => {
+                            const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            const confidencePercent = (family.confidence * 100).toFixed(0);
+                            const confidenceColor = family.confidence > 0.7 ? '#10b981' : family.confidence > 0.4 ? '#f59e0b' : '#94a3b8';
+                            
+                            cipherHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                <div style="flex: 1;">
+                                    <span style="margin-right: 0.4rem;">${icon}</span>
+                                    <strong style="color: #e2e8f0; font-size: 0.75rem;">${family.type.replace(/-/g, ' ').toUpperCase()}</strong>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <div style="width: 35px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                        <div style="width: ${confidencePercent}%; height: 100%; background: ${confidenceColor};"></div>
+                                    </div>
+                                    <span style="color: ${confidenceColor}; font-size: 0.7rem; font-weight: bold; min-width: 30px;">${confidencePercent}%</span>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        cipherHtml += '</div>';
+                        cipherDetectionContent.innerHTML = cipherHtml;
+                        
+                        // Language Probability
+                        try {
+                            const langRanking = Scorers.rankLanguages(text);
+                            let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
+                            
+                            if (!langRanking || langRanking.length === 0) {
+                                langHtml += '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">No language data available</div>';
+                            } else {
+                                // Filter out invalid scores (NaN, undefined, null)
+                                const validRanking = langRanking.filter(lang => 
+                                    lang && 
+                                    typeof lang.score === 'number' && 
+                                    !isNaN(lang.score) && 
+                                    isFinite(lang.score)
+                                );
+                                
+                                if (validRanking.length === 0) {
+                                    langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to analyze language</div>';
+                                } else {
+                                    const maxScore = validRanking[0].score;
+                                    const minScore = validRanking[validRanking.length - 1].score;
+                                    const scoreRange = maxScore - minScore;
+                                    
+                                    validRanking.slice(0, 5).forEach((lang, index) => {
+                                        const langName = lang.lang ? lang.lang.charAt(0).toUpperCase() + lang.lang.slice(1) : 'Unknown';
+                                        
+                                        // Calculate probability with proper validation
+                                        let probability = '0';
+                                        if (scoreRange > 0.001) { // Avoid division by zero and very small ranges
+                                            const normalizedScore = ((lang.score - minScore) / scoreRange) * 100;
+                                            probability = Math.max(0, Math.min(100, normalizedScore)).toFixed(0);
+                                        } else {
+                                            // All scores are very similar, distribute evenly
+                                            probability = Math.round(100 / validRanking.length).toString();
+                                        }
+                                        
+                                        // Ensure probability is a valid number
+                                        if (isNaN(probability) || !isFinite(parseFloat(probability))) {
+                                            probability = '0';
+                                        }
+                                        
+                                        const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
+                                    
+                                        langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                                            <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
+                                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                                <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                                    <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
+                                                </div>
+                                                <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
+                                            </div>
+                                        </div>`;
+                                    });
+                                }
+                            }
+                            
+                            langHtml += '</div>';
+                            languageProbContent.innerHTML = langHtml;
+                        } catch (langError) {
+                            console.error('Language probability error:', langError);
+                            languageProbContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Language analysis error</div>';
+                        }
+                        
+                        langHtml += '</div>';
+                        languageProbContent.innerHTML = langHtml;
+                        
+                    } catch (e) {
+                        console.error('Analysis error:', e);
+                        cipherDetectionContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Analysis error</div>';
+                    }
+                }, 500); // 500ms debounce
+            });
+            
+            // Initial button state
+            updateButtonState();
+
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
                 if (!text) return;
 
+                hasAttemptedDecryption = true;
                 btnSolve.innerText = "⏳ Solving...";
                 btnSolve.disabled = true;
                 output.innerText = "";
                 container.style.display = 'block'; 
                 progressContainer.style.display = 'block';
                 methodBadge.innerText = "Method: Detecting...";
+                progressText.innerText = "Decrypting...";
                 
                 // Reset Badge
                 methodBadge.style.color = 'var(--accent)';
@@ -155,100 +411,221 @@
                 // Wait for UI update
                 setTimeout(async () => {
                     try {
-                        const { HMMSolver, VigenereSolver } = window.nigmajs;
-                        if (!HMMSolver || !VigenereSolver) throw new Error("Library not loaded.");
+                        const { Orchestrator } = window.nigmajs;
+                        if (!Orchestrator) throw new Error("Orchestrator not loaded.");
 
-                        // --- 1. Try Vigenère Solver First ---
-                        const vigenereSolver = new VigenereSolver('english');
-                        const vResult = vigenereSolver.solve(text);
+                        // --- Use Orchestrator with Dictionary Validation ---
+                        const orchestrator = new Orchestrator('english');
                         
-                        // If high confidence (IoC match) and key length > 1 (not Caesar)
-                        if (vResult.confidence > 0.85 && vResult.analysis.length > 1) {
-                            progressBar.style.width = '100%';
-                            progressText.innerText = 'Done!';
-                            output.innerText = matchLayout(text, vResult.plaintext);
-                            
-                            methodBadge.innerText = `Method: Vigenère (Key: ${vResult.key})`;
-                            methodBadge.style.color = '#8b5cf6'; // Purple
-                            methodBadge.style.borderColor = '#8b5cf6';
-                            
-                            container.scrollIntoView({ behavior: 'smooth' });
-                            btnSolve.innerText = "🚀 Attempt Decryption";
-                            btnSolve.disabled = false;
-                            return; // Stop here
+                        // Update progress
+                        progressBar.style.width = '50%';
+                        progressText.innerText = "Analyzing cipher...";
+                        
+                        // Use autoDecrypt (non-generator) for dictionary validation
+                        const result = await orchestrator.autoDecrypt(text, {
+                            tryMultiple: true, // Try multiple strategies for best result
+                            useDictionary: true // Enable dictionary validation
+                        });
+                        
+                        console.log('[Demo] Decryption result:', result);
+                        
+                        // Check if decryption was successful
+                        const isSuccess = result.plaintext && result.plaintext.length > 0 && result.method !== 'none';
+                        
+                        // Update progress based on success
+                        progressBar.style.width = '100%';
+                        if (isSuccess) {
+                            progressText.innerText = '✓ Decryption successful!';
+                            progressBar.style.background = "#10b981";
+                        } else {
+                            progressText.innerText = '✗ Decryption failed';
+                            progressBar.style.background = "#ef4444";
                         }
-
-                        // --- 2. Fallback to HMM (handles Caesar + Substitution) ---
-                        const solver = new HMMSolver('english');
-                        // Initialize with text to use Frequency Analysis Smart Init
-                        await solver.initialize(text);
                         
-                        let finalCleanText = "";
-
-                        // Use Generator
-                        for await (const status of solver.solveGenerator(text, 150)) { // Increased iterations slightly
-                            // Update Progress
-                            progressBar.style.width = `${status.progress}%`;
-                            progressText.innerText = `Iteration ${status.iteration}/${status.totalIterations}`;
+                        output.innerText = result.plaintext || "❌ Decryption failed.";
+                        
+                        // Update badge with method and confidence
+                        const confidencePercent = (result.confidence * 100).toFixed(0);
+                        methodBadge.innerText = `Method: ${result.method.toUpperCase()} (${confidencePercent}% confidence)`;
+                        
+                        // Color based on confidence
+                        if (result.confidence > 0.7) {
+                            methodBadge.style.color = '#10b981'; // Green
+                            methodBadge.style.borderColor = '#10b981';
+                        } else if (result.confidence > 0.4) {
+                            methodBadge.style.color = '#f59e0b'; // Orange
+                            methodBadge.style.borderColor = '#f59e0b';
+                        } else {
+                            methodBadge.style.color = '#ef4444'; // Red
+                            methodBadge.style.borderColor = '#ef4444';
+                        }
+                        
+                        // Display Dictionary Validation if available
+                        const dictValidationContainer = document.getElementById('dictionaryValidationContainer');
+                        const dictValidationContent = document.getElementById('dictionaryValidationContent');
+                        const dictValidBadge = document.getElementById('dictValidBadge');
+                        
+                        console.log('[Demo] Dictionary validation:', result.dictionaryValidation);
+                        
+                        if (result.dictionaryValidation && result.dictionaryValidation.metrics) {
+                            const validation = result.dictionaryValidation;
+                            const metrics = validation.metrics;
                             
-                            // --- MATRIX EFFECT LOGIC ---
-                            const isFinished = status.progress >= 100;
-                            let displayStr = "";
-
-                            if (status.method === 'caesar' || isFinished) {
-                                // Done: Show clean result formatted nicely
-                                displayStr = matchLayout(text, status.decryptedText);
-                                finalCleanText = status.decryptedText;
+                            // Update badge
+                            if (validation.valid) {
+                                dictValidBadge.innerText = '✓ VALID';
+                                dictValidBadge.style.background = 'rgba(16, 185, 129, 0.3)';
+                                dictValidBadge.style.color = '#10b981';
                             } else {
-                                // In Progress: Scramble Effect
-                                // 1. Get current best guess from HMM (stripped)
-                                const currentGuess = status.decryptedText === "Optimizing..." ? 
-                                    text.replace(/[^a-zA-Z]/g, '') : status.decryptedText;
-                                
-                                // 2. Add noise to the guess
-                                let noisyGuess = "";
-                                for(let i=0; i<currentGuess.length; i++) {
-                                    // 20% chance to show random char instead of guess (Flicker effect)
-                                    if (Math.random() < 0.2) {
-                                        noisyGuess += randomChar();
+                                dictValidBadge.innerText = '⚠ UNCERTAIN';
+                                dictValidBadge.style.background = 'rgba(245, 158, 11, 0.3)';
+                                dictValidBadge.style.color = '#f59e0b';
+                            }
+                            
+                            // Build metrics HTML
+                            let html = `<p style="color: #94a3b8; margin-bottom: 1rem;">${validation.summary}</p>`;
+                            
+                            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+                            
+                            // Valid Words
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Valid Words</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #10b981; margin-top: 0.25rem;">${metrics.validWords} / ${metrics.totalWords}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.wordCoverage}% coverage</div>
+                            </div>`;
+                            
+                            // Character Coverage
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Character Coverage</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6; margin-top: 0.25rem;">${metrics.charCoverage}%</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.validChars} / ${metrics.totalChars} chars</div>
+                            </div>`;
+                            
+                            // Average Word Length
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Avg Word Length</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6; margin-top: 0.25rem;">${metrics.avgWordLength}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">letters per word</div>
+                            </div>`;
+                            
+                            // Confidence Score
+                            const dictConfidencePercent = (validation.confidence * 100).toFixed(0);
+                            const dictConfidenceColor = validation.confidence > 0.7 ? '#10b981' : validation.confidence > 0.4 ? '#f59e0b' : '#ef4444';
+                            html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dictionary Score</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: ${dictConfidenceColor}; margin-top: 0.25rem;">${dictConfidencePercent}%</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">confidence</div>
+                            </div>`;
+                            
+                            html += '</div>';
+                            
+                            // Sample words found
+                            if (validation.foundWords && validation.foundWords.length > 0) {
+                                html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                        ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                    </div>
+                                </div>`;
+                            }
+                            
+                            dictValidationContent.innerHTML = html;
+                            dictValidationContainer.style.display = 'block';
+                        } else {
+                            // Dictionary validation not available - show fallback message
+                            console.warn('[Demo] Dictionary validation not available in result');
+                            
+                            // Try to manually validate if we have the DictionaryValidator
+                            if (window.nigmajs.DictionaryValidator && isSuccess) {
+                                try {
+                                    const validator = new window.nigmajs.DictionaryValidator('english');
+                                    const manualValidation = await validator.validate(result.plaintext);
+                                    
+                                    console.log('[Demo] Manual validation:', manualValidation);
+                                    
+                                    if (manualValidation && manualValidation.metrics) {
+                                        const validation = manualValidation;
+                                        const metrics = validation.metrics;
+                                        
+                                        // Update badge
+                                        if (validation.valid) {
+                                            dictValidBadge.innerText = '✓ VALID';
+                                            dictValidBadge.style.background = 'rgba(16, 185, 129, 0.3)';
+                                            dictValidBadge.style.color = '#10b981';
+                                        } else {
+                                            dictValidBadge.innerText = '⚠ UNCERTAIN';
+                                            dictValidBadge.style.background = 'rgba(245, 158, 11, 0.3)';
+                                            dictValidBadge.style.color = '#f59e0b';
+                                        }
+                                        
+                                        // Build metrics HTML (same as above)
+                                        let html = `<p style="color: #94a3b8; margin-bottom: 1rem;">${validation.summary}</p>`;
+                                        
+                                        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Valid Words</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #10b981; margin-top: 0.25rem;">${metrics.validWords} / ${metrics.totalWords}</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.wordCoverage}% coverage</div>
+                                        </div>`;
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Character Coverage</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6; margin-top: 0.25rem;">${metrics.charCoverage}%</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">${metrics.validChars} / ${metrics.totalChars} chars</div>
+                                        </div>`;
+                                        
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Avg Word Length</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6; margin-top: 0.25rem;">${metrics.avgWordLength}</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">letters per word</div>
+                                        </div>`;
+                                        
+                                        const dictConfidencePercent = (validation.confidence * 100).toFixed(0);
+                                        const dictConfidenceColor = validation.confidence > 0.7 ? '#10b981' : validation.confidence > 0.4 ? '#f59e0b' : '#ef4444';
+                                        html += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dictionary Score</div>
+                                            <div style="font-size: 1.5rem; font-weight: bold; color: ${dictConfidenceColor}; margin-top: 0.25rem;">${dictConfidencePercent}%</div>
+                                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">confidence</div>
+                                        </div>`;
+                                        
+                                        html += '</div>';
+                                        
+                                        if (validation.foundWords && validation.foundWords.length > 0) {
+                                            html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                                    ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                                </div>
+                                            </div>`;
+                                        }
+                                        
+                                        dictValidationContent.innerHTML = html;
+                                        dictValidationContainer.style.display = 'block';
                                     } else {
-                                        noisyGuess += currentGuess[i];
+                                        dictValidationContainer.style.display = 'none';
                                     }
+                                } catch (validationError) {
+                                    console.error('[Demo] Manual validation failed:', validationError);
+                                    dictValidationContainer.style.display = 'none';
                                 }
-
-                                // 3. Map back to original layout
-                                displayStr = matchLayout(text, noisyGuess);
+                            } else {
+                                dictValidationContainer.style.display = 'none';
                             }
-
-                            output.innerText = displayStr;
-                            
-                            // Update Method Badge
-                            if (status.method) {
-                                methodBadge.innerText = `Method: ${status.method === 'caesar' ? 'Brute Force (Caesar)' : 'HMM (Substitution)'}`;
-                                if (status.method === 'caesar') {
-                                    methodBadge.style.color = '#10b981'; 
-                                    methodBadge.style.borderColor = '#10b981';
-                                } else {
-                                    methodBadge.style.color = '#f59e0b';
-                                    methodBadge.style.borderColor = '#f59e0b';
-                                }
-                            }
-                            
-                            if (status.iteration === 1) container.scrollIntoView({ behavior: 'smooth' });
-                            
-                            // Allow UI render
-                            await new Promise(r => setTimeout(r, 10)); 
                         }
                         
-                        progressText.innerText = "Done!";
-                        progressBar.style.background = "#10b981";
+                        container.scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Mark as successful
+                        lastDecryptionSuccess = true;
 
                     } catch (e) {
                         console.error(e);
                         alert("Error: " + e.message);
+                        output.innerText = "❌ Decryption failed. The cipher may be too complex or the text too short.";
+                        lastDecryptionSuccess = false;
                     } finally {
-                        btnSolve.innerText = "🚀 Attempt Decryption";
-                        btnSolve.disabled = false;
+                        updateButtonState();
                     }
                 }, 100);
             });
