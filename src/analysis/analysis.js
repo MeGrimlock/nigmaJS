@@ -459,7 +459,13 @@ export class LanguageAnalysis {
             // If dictionaryScore is high (e.g., 0.8), reduce penalty by 0.8 * 50 = 40
             // Only apply bonus if dictionary is loaded and has meaningful validation (>20% valid words)
             // This helps when dictionaries are available, but doesn't hurt when they're not
-            const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) ? -dictionaryScore * 50 : 0;
+            // IMPORTANT: For short texts, dictionary score is less reliable, so reduce its weight
+            const textLength = cleanedText.length;
+            const isShortText = textLength < 50;
+            const dictionaryWeight = isShortText ? 0.5 : 1.0; // Reduce weight for short texts
+            const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) 
+                ? -dictionaryScore * 50 * dictionaryWeight 
+                : 0;
 
             // Final Encrypted Score
             const encryptedScore = shapeScore + iocDistance;

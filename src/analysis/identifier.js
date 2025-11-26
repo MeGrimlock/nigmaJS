@@ -72,28 +72,62 @@ export class CipherIdentifier {
             'random-unknown': 0
         };
 
-        // --- Heuristic 1: Index of Coincidence ---
+        // --- Heuristic 1: Index of Coincidence (adjusted for text length) ---
+        // IMPORTANT: IC is less reliable for short texts (< 100 chars)
+        // Short texts naturally have lower IC due to statistical variance
         // Monoalphabetic: IC ≈ 1.5-2.0 (preserves letter frequency)
         // Polyalphabetic (Vigenère): IC ≈ 1.0-1.4 (flattens frequency)
         // Random/Strong: IC ≈ 1.0 (uniform distribution)
         // Transposition: IC ≈ 1.5-2.0 (preserves frequency, just reorders)
-
-        if (ic >= 1.5) {
+        
+        // Adjust IC thresholds based on text length
+        // For short texts (< 50 chars), IC is less reliable, so we're more lenient
+        // For medium texts (50-150), use standard thresholds
+        // For long texts (> 150), IC is very reliable
+        const isShortText = length < 50;
+        const isMediumText = length >= 50 && length < 150;
+        const isLongText = length >= 150;
+        
+        // Adjusted thresholds based on text length
+        const highICThreshold = isShortText ? 1.2 : (isMediumText ? 1.4 : 1.5);
+        const mediumICThreshold = isShortText ? 0.8 : (isMediumText ? 1.1 : 1.2);
+        
+        if (ic >= highICThreshold) {
             scores['monoalphabetic-substitution'] += 1.0;
             scores['caesar-shift'] += 0.9; // Caesar is a special case of monoalphabetic
             scores['transposition'] += 0.6;
-        } else if (ic >= 1.2 && ic < 1.5) {
-            scores['vigenere-like'] += 0.9;
-            scores['monoalphabetic-substitution'] += 0.3;
-        } else if (ic < 1.2) {
-            scores['vigenere-like'] += 0.7;
-            scores['random-unknown'] += 0.8;
+        } else if (ic >= mediumICThreshold && ic < highICThreshold) {
+            // Medium IC: could be Vigenère or short monoalphabetic text
+            // For short texts, prefer monoalphabetic (Caesar/Rot13/Rot47)
+            if (isShortText) {
+                scores['caesar-shift'] += 0.8;
+                scores['monoalphabetic-substitution'] += 0.7;
+                scores['vigenere-like'] += 0.4; // Less likely for short texts
+            } else {
+                scores['vigenere-like'] += 0.9;
+                scores['monoalphabetic-substitution'] += 0.3;
+            }
+        } else if (ic < mediumICThreshold) {
+            // Low IC: could be Vigenère, random, or short monoalphabetic with statistical variance
+            if (isShortText) {
+                // Short texts with low IC are often Caesar/Rot13/Rot47 with statistical variance
+                scores['caesar-shift'] += 0.6;
+                scores['monoalphabetic-substitution'] += 0.5;
+                scores['vigenere-like'] += 0.3;
+            } else {
+                scores['vigenere-like'] += 0.7;
+                scores['random-unknown'] += 0.8;
+            }
         }
 
-        // --- Heuristic 2: Kasiski Examination ---
+        // --- Heuristic 2: Kasiski Examination (improved) ---
         // If we find repeated n-grams with consistent distances, it's likely polyalphabetic
         // BUT: If IC is very high (> 1.6), repetitions are from plaintext, not polyalphabetic cipher
-        if (kasiski.hasRepetitions && kasiski.suggestedKeyLengths.length > 0 && ic < 1.6) {
+        // IMPORTANT: For short texts, Kasiski is less reliable (fewer repetitions)
+        const reliableKasiski = length >= 100 && kasiski.hasRepetitions && kasiski.suggestedKeyLengths.length > 0;
+        const highIC = ic >= (isShortText ? 1.3 : 1.6); // Adjusted threshold for short texts
+        
+        if (reliableKasiski && !highIC) {
             const topKeyLength = kasiski.suggestedKeyLengths[0];
             if (topKeyLength.score > 0.3) { // Strong evidence
                 scores['vigenere-like'] += 1.2;
@@ -103,35 +137,123 @@ export class CipherIdentifier {
                 scores['vigenere-like'] += 0.6;
             }
         } else {
-            // No repetitions → likely monoalphabetic or very short key
-            scores['monoalphabetic-substitution'] += 0.5;
-            scores['caesar-shift'] += 0.4;
+            // No reliable repetitions → likely monoalphabetic or very short key
+            // For short texts, this is especially true (Caesar/Rot13/Rot47)
+            if (isShortText) {
+                scores['caesar-shift'] += 0.6; // Short texts are often Caesar shifts
+                scores['monoalphabetic-substitution'] += 0.5;
+            } else {
+                scores['monoalphabetic-substitution'] += 0.5;
+                scores['caesar-shift'] += 0.4;
+            }
         }
 
         // --- Heuristic 3: Entropy ---
         // High entropy (close to 4.7) → strong cipher or random
         // Low entropy (< 3.5) → weak cipher or plaintext leak
         // Transposition preserves entropy of plaintext (~4.0-4.2 for English)
+        // IMPORTANT: Entropy is less reliable for short texts
         if (entropy >= 4.3) {
             scores['random-unknown'] += 0.5;
             scores['vigenere-like'] += 0.2;
         } else if (entropy >= 3.8 && entropy < 4.3) {
-            scores['transposition'] += 0.5;
-            scores['vigenere-like'] += 0.3;
+            // Entropy in this range suggests transposition OR monoalphabetic
+            // Use IC to distinguish: high IC + medium entropy = transposition
+            // Low IC + medium entropy = might be Vigenère
+            if (ic >= 1.5) {
+                scores['transposition'] += 0.7; // High IC + medium entropy = transposition
+                scores['monoalphabetic-substitution'] += 0.3;
+            } else {
+                scores['transposition'] += 0.5;
+                scores['vigenere-like'] += 0.3;
+            }
         } else if (entropy < 3.8) {
             scores['monoalphabetic-substitution'] += 0.3;
             scores['caesar-shift'] += 0.3;
         }
-
-        // --- Heuristic 4: Text Length ---
-        // Very short texts are hard to classify, boost "unknown"
-        if (length < 50) {
-            scores['random-unknown'] += 0.2;
+        
+        // --- Heuristic 3b: Transposition Detection (improved) ---
+        // Transposition ciphers have:
+        // - High IC (≈1.5-2.0) because they preserve letter frequencies
+        // - Medium entropy (≈3.8-4.2) because they preserve plaintext entropy
+        // - No letter substitutions (all letters from plaintext alphabet)
+        // - Character positions changed but frequencies preserved
+        if (ic >= 1.5 && entropy >= 3.8 && entropy < 4.3 && length >= 50) {
+            // Check if all characters are from expected alphabet (no substitutions)
+            const uniqueChars = new Set(cleaned);
+            const isOnlyLetters = Array.from(uniqueChars).every(c => /[A-Za-z]/.test(c));
+            
+            if (isOnlyLetters) {
+                // High IC + medium entropy + only letters = likely transposition
+                scores['transposition'] += 0.5;
+                // Penalize substitution ciphers
+                scores['monoalphabetic-substitution'] -= 0.2;
+                scores['caesar-shift'] -= 0.2;
+            }
         }
 
-        // --- Heuristic 5: Caesar Shift Detection ---
-        // If IC is high (>= 1.4), it's likely Caesar or simple substitution (even with repetitions from plaintext)
-        if (ic >= 1.4) {
+        // --- Heuristic 4: Text Length (improved) ---
+        // Very short texts are hard to classify, but we can still make educated guesses
+        // For very short texts, prefer simpler ciphers (Caesar/Rot13/Rot47)
+        if (length < 50) {
+            // Don't boost "unknown" too much - short texts are often simple ciphers
+            scores['random-unknown'] += 0.1;
+            // Boost Caesar shift for short texts (common use case)
+            scores['caesar-shift'] += 0.3;
+        }
+
+        // --- Heuristic 5: Caesar Shift Detection (improved) ---
+        // Test if text could be a Caesar shift by trying a few shifts
+        // This is a quick test that helps distinguish Caesar from Vigenère
+        let caesarTestScore = 0;
+        if (length >= 20 && length < 200) { // Only for reasonable lengths
+            // Quick test: try shifts 1, 13, 25 (common Caesar shifts)
+            const testShifts = [1, 13, 25];
+            let bestShiftScore = 0;
+            
+            for (const shift of testShifts) {
+                let shifted = '';
+                for (const char of cleaned) {
+                    const code = char.charCodeAt(0);
+                    if (code >= 65 && code <= 90) { // A-Z
+                        const shiftedCode = ((code - 65 + shift) % 26) + 65;
+                        shifted += String.fromCharCode(shiftedCode);
+                    }
+                }
+                
+                // Check if shifted text has valid words (quick dictionary check)
+                try {
+                    const dict = LanguageAnalysis.getDictionary(language);
+                    if (dict && shifted.length > 0) {
+                        const words = shifted.split(/\s+/).filter(w => w.length >= 3);
+                        if (words.length > 0) {
+                            let validWords = 0;
+                            for (const word of words.slice(0, 10)) { // Check first 10 words only
+                                if (dict.has(word)) validWords++;
+                            }
+                            const wordScore = validWords / words.length;
+                            if (wordScore > bestShiftScore) {
+                                bestShiftScore = wordScore;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Dictionary not available, skip
+                }
+            }
+            
+            // If we found a good Caesar shift match, boost Caesar score
+            if (bestShiftScore > 0.3) {
+                caesarTestScore = bestShiftScore * 0.8; // Convert to score boost
+                scores['caesar-shift'] += caesarTestScore;
+                scores['monoalphabetic-substitution'] += caesarTestScore * 0.7;
+                // Strongly penalize Vigenère if Caesar test succeeds
+                scores['vigenere-like'] -= caesarTestScore * 1.5;
+            }
+        }
+        
+        // Also use IC-based detection (for longer texts where IC is reliable)
+        if (ic >= 1.4 && length >= 100) {
             scores['caesar-shift'] += 0.8;
             scores['monoalphabetic-substitution'] += 0.7;
             // Penalize vigenere if IC is too high
