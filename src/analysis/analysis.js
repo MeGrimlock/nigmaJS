@@ -433,39 +433,58 @@ export class LanguageAnalysis {
 
             const analysis = this.analyzeCorrelation(text, langKey);
             
+            // Adjust weights based on text length
+            // For short texts, rely more on dictionary and less on statistical analysis
+            const textLength = cleanedText.length;
+            const isShortText = textLength < 50;
+            const isMediumText = textLength >= 50 && textLength < 150;
+            
             // 1. Chi-Squared (Identity Match)
+            // For short texts, reduce weight of statistical analysis
+            const monogramWeight = isShortText ? 0.3 : (isMediumText ? 0.4 : 0.5);
+            const bigramWeight = isShortText ? 2.0 : (isMediumText ? 2.5 : 3.0);
             const identityScore = (
-                analysis.monograms.score * 0.5 + 
-                analysis.bigrams.score * 3.0
-            ) / 3.5;
+                analysis.monograms.score * monogramWeight + 
+                analysis.bigrams.score * bigramWeight
+            ) / (monogramWeight + bigramWeight);
 
             // 2. Shape Score (Distribution Match)
+            // For short texts, reduce weight of n-grams (less reliable)
+            const shapeMonogramWeight = isShortText ? 0.3 : 0.5;
+            const shapeBigramWeight = isShortText ? 2.0 : 3.0;
+            const shapeTrigramWeight = isShortText ? 1.0 : 2.0;
+            const shapeQuadgramWeight = isShortText ? 0.5 : 1.0;
             const shapeScore = (
-                analysis.monograms.shapeScore * 0.5 +
-                analysis.bigrams.shapeScore * 3.0 + 
-                analysis.trigrams.shapeScore * 2.0 + 
-                analysis.quadgrams.shapeScore * 1.0
-            ) / 6.5;
+                analysis.monograms.shapeScore * shapeMonogramWeight +
+                analysis.bigrams.shapeScore * shapeBigramWeight + 
+                analysis.trigrams.shapeScore * shapeTrigramWeight + 
+                analysis.quadgrams.shapeScore * shapeQuadgramWeight
+            ) / (shapeMonogramWeight + shapeBigramWeight + shapeTrigramWeight + shapeQuadgramWeight);
 
             const targetIoC = expectedIoC[langKey] || 1.7;
-            const iocDistance = Math.abs(textIoC - targetIoC) * 50; 
+            // For short texts, IoC distance is less reliable, reduce its impact
+            const iocWeight = isShortText ? 20 : (isMediumText ? 35 : 50);
+            const iocDistance = Math.abs(textIoC - targetIoC) * iocWeight; 
             
             const alphabetPenalty = this.getAlphabetPenalty(cleanedText, langKey);
 
-            // 3. Dictionary Score (NEW: validate words against dictionary)
-            // Only calculate if dictionary is available for this language
+            // 3. Dictionary Score (IMPROVED: more important for short texts)
+            // For short texts, dictionary validation is MORE important (fewer words to analyze)
             const dictionaryScore = this._calculateDictionaryScore(text, langKey);
             // Dictionary score is 0-1, convert to penalty (lower is better for identityScore)
-            // If dictionaryScore is high (e.g., 0.8), reduce penalty by 0.8 * 50 = 40
-            // Only apply bonus if dictionary is loaded and has meaningful validation (>20% valid words)
-            // This helps when dictionaries are available, but doesn't hurt when they're not
-            // IMPORTANT: For short texts, dictionary score is less reliable, so reduce its weight
-            const textLength = cleanedText.length;
-            const isShortText = textLength < 50;
-            const dictionaryWeight = isShortText ? 0.5 : 1.0; // Reduce weight for short texts
+            // For short texts, INCREASE dictionary weight (it's more reliable than stats)
+            const dictionaryWeight = isShortText ? 1.5 : (isMediumText ? 1.2 : 1.0);
             const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) 
                 ? -dictionaryScore * 50 * dictionaryWeight 
                 : 0;
+            
+            // 4. Additional penalty for short texts when dictionary score is low
+            // If we have a dictionary but very few valid words, it's likely wrong language
+            if (isShortText && dictionaryScore !== null && dictionaryScore < 0.1) {
+                // Strong penalty if dictionary validation fails for short text
+                // This helps distinguish between similar languages (e.g., Portuguese vs Spanish)
+                alphabetPenalty += 100; // Add significant penalty
+            }
 
             // Final Encrypted Score
             const encryptedScore = shapeScore + iocDistance;
@@ -481,7 +500,18 @@ export class LanguageAnalysis {
 
         const bestIdentity = results.reduce((min, r) => r.identityScore < min ? r.identityScore : min, Infinity);
         
-        if (bestIdentity < 500) { 
+        // For short texts, prefer identityScore (includes dictionary validation)
+        // For longer texts, use standard logic
+        const isShortText = cleanedText.length < 50;
+        
+        if (isShortText) {
+            // For short texts, always use identityScore (includes dictionary bonus)
+            // Dictionary validation is more reliable than statistical analysis for short texts
+            return results.sort((a, b) => a.identityScore - b.identityScore).map(r => ({
+                ...r,
+                score: r.identityScore 
+            }));
+        } else if (bestIdentity < 500) { 
              return results.sort((a, b) => a.identityScore - b.identityScore).map(r => ({
                  ...r,
                  score: r.identityScore 
