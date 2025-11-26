@@ -143,5 +143,42 @@ if (dictionaryExists('portuguese')) {
     }
 }
 
+// 6. Extract German
+if (dictionaryExists('german')) {
+    console.log('✓ German dictionary already exists, skipping...');
+} else {
+    console.log('Extracting German Dictionary...');
+    try {
+        // Load words from german-words-dict/dist/words.json
+        // The file is an object where keys are words (similar to italian-words-dict)
+        const germanWordsDict = require('german-words-dict/dist/words.json');
+        
+        // Extract all word keys from the dictionary object
+        const germanWords = Object.keys(germanWordsDict);
+        
+        // Normalize and uppercase words, remove accents
+        // Use Set for faster duplicate removal
+        const germanSet = new Set();
+        for (const word of germanWords) {
+            if (typeof word === 'string' && word.length > 0) {
+                const normalized = word.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                if (/^[A-Z]+$/.test(normalized)) {
+                    germanSet.add(normalized);
+                }
+            }
+        }
+        const germanArray = Array.from(germanSet);
+        
+        fs.writeFileSync(
+            path.join(outputDir, 'german-dictionary.json'), 
+            JSON.stringify(germanArray)
+        );
+        console.log(`Saved ${germanArray.length} German words.`);
+    } catch (error) {
+        console.error('❌ Failed to extract German dictionary:', error.message);
+        console.log('💡 Make sure german-words-dict is installed: npm install german-words-dict');
+    }
+}
+
 console.log('✅ Dictionary extraction complete.');
 
