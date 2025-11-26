@@ -58,12 +58,13 @@ export class Orchestrator {
         const startTime = Date.now();
         
         // Step 0: Auto-detect language if needed (BEFORE cipher detection for better accuracy)
+        let languageCandidates = [this.language];
         if (this.autoDetectLanguage) {
             console.log('[Orchestrator] Auto-detecting language...');
             try {
                 // Try to load dictionaries for better detection (non-blocking)
-                const candidateLanguages = ['english', 'spanish', 'french', 'german', 'italian', 'portuguese'];
-                for (const lang of candidateLanguages) {
+                const allCandidateLanguages = ['english', 'spanish', 'french', 'german', 'italian', 'portuguese'];
+                for (const lang of allCandidateLanguages) {
                     // Try to load dictionary, but don't wait if it fails
                     LanguageAnalysis.loadDictionary(lang, 'data/').catch(() => {});
                     LanguageAnalysis.loadDictionary(lang, '../demo/data/').catch(() => {});
@@ -72,144 +73,165 @@ export class Orchestrator {
                 // Detect language using statistical analysis + dictionary validation
                 const langResults = LanguageAnalysis.detectLanguage(ciphertext);
                 
-                // Store language detection results for use in ROT brute force
+                // Store language detection results for use in strategies
                 this.languageDetectionResults = langResults;
                 
                 if (langResults && langResults.length > 0) {
+                    // Get top 5 language candidates to try (in order of probability)
+                    languageCandidates = langResults
+                        .slice(0, 5) // Try top 5 languages
+                        .map(r => r.language);
+                    
                     const detectedLang = langResults[0].language;
                     console.log(`[Orchestrator] Detected language: ${detectedLang} (confidence: ${langResults[0].score.toFixed(2)})`);
-                    if (langResults.length > 1) {
-                        console.log(`[Orchestrator] Top language candidates: ${langResults.slice(0, 3).map(r => `${r.language} (${(r.score || 0).toFixed(1)})`).join(', ')}`);
-                    }
+                    console.log(`[Orchestrator] Will try ALL methods for each language in order: ${languageCandidates.join(', ')}`);
                     this.language = detectedLang;
                 } else {
                     console.warn('[Orchestrator] Could not detect language, defaulting to english');
                     this.language = 'english';
+                    languageCandidates = ['english'];
                 }
             } catch (error) {
                 console.warn('[Orchestrator] Language detection failed:', error.message);
                 this.language = 'english'; // Fallback to english
+                languageCandidates = ['english'];
             }
         }
         
-        // Step 1: Detect cipher type
-        // Use this.language (already set to detected language or original value)
-        const languageForDetection = this.language === 'auto' ? 'english' : this.language;
+        // Step 1: Detect cipher type (use first language candidate for detection)
+        const languageForDetection = languageCandidates[0] === 'auto' ? 'english' : languageCandidates[0];
         const detection = await CipherIdentifier.identify(ciphertext, languageForDetection);
         const topCandidate = detection.families[0];
         
-        console.log(`[Orchestrator] Detected: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
+        console.log(`[Orchestrator] Detected cipher: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
         
         // Step 2: Select attack strategy based on detection
         const strategies = this._selectStrategies(topCandidate, detection.stats, ciphertext);
+        console.log(`[Orchestrator] Selected ${strategies.length} strategy/strategies`);
         
-        // Step 3: Execute strategies
+        // Step 3: Execute strategies for EACH language candidate
+        // This ensures we try ALL methods for each language before moving to the next
         const results = [];
+        let bestResultAcrossLanguages = null;
+        let bestScoreAcrossLanguages = -Infinity;
+        const originalLanguage = this.language;
         
-        for (const strategy of strategies) {
-            const elapsed = Date.now() - startTime;
-            if (elapsed > maxTime) {
-                console.log(`[Orchestrator] Timeout reached (${maxTime}ms)`);
-                break;
-            }
+        for (const tryLanguage of languageCandidates) {
+            console.log(`\n[Orchestrator] ===== Trying ALL methods for language: ${tryLanguage} =====`);
             
+            // Temporarily change language for this iteration
+            this.language = tryLanguage;
+            
+            // Try to load dictionary for this language
             try {
-                console.log(`[Orchestrator] Trying strategy: ${strategy.name}`);
-                const result = await strategy.execute(ciphertext);
-                
-                if (result) {
-                    results.push({
-                        ...result,
-                        cipherType: topCandidate.type,
-                        detectionConfidence: topCandidate.confidence
-                    });
-                }
-                
-                // If we found a very good result, stop early
-                // BUT: Only stop if dictionary validation passes (if enabled)
-                // This prevents stopping on false positives like Quagmire decrypting Vigenère
-                if (result && result.confidence > 0.9) {
-                    // If dictionary validation is enabled, check word coverage before stopping
-                    if (useDictionary && result.plaintext) {
-                        try {
-                            const validator = new DictionaryValidator(this.language);
-                            const quickValidation = await validator.validate(result.plaintext);
-                            const wordCoverage = parseFloat(quickValidation.metrics.wordCoverage) / 100;
-                            
-                            // Only stop early if word coverage is good (>30%)
-                            if (wordCoverage >= 0.30 || quickValidation.confidence >= 0.40) {
-                                console.log(`[Orchestrator] High confidence result with good dictionary validation, stopping early`);
-                                break;
-                            } else {
-                                console.log(`[Orchestrator] High confidence but low dictionary validation (${(wordCoverage * 100).toFixed(0)}%), continuing...`);
-                            }
-                        } catch (e) {
-                            // Dictionary validation failed, use confidence only
-                            console.log(`[Orchestrator] High confidence result found, stopping early (dictionary validation skipped)`);
-                            break;
-                        }
-                    } else {
-                        console.log(`[Orchestrator] High confidence result found, stopping early`);
-                        break;
-                    }
-                }
-                
-                if (!tryMultiple) break; // Only try first strategy
+                await LanguageAnalysis.loadDictionary(tryLanguage, 'data/');
             } catch (e) {
-                console.error(`[Orchestrator] Strategy ${strategy.name} failed:`, e.message);
+                try {
+                    await LanguageAnalysis.loadDictionary(tryLanguage, '../demo/data/');
+                } catch (e2) {
+                    // Dictionary not available, continue anyway
+                }
             }
-        }
-        
-        // Step 4: Validate with dictionary (if enabled and results exist)
-        if (useDictionary && results.length > 0) {
-            console.log('[Orchestrator] Validating results with dictionary...');
-            const validator = new DictionaryValidator(this.language);
             
-            try {
-                const validatedResults = await validator.validateMultiple(results);
-                // validatedResults are already sorted by updated confidence
+            // Execute ALL strategies for this language
+            for (let i = 0; i < strategies.length; i++) {
+                const strategy = strategies[i];
+                const elapsed = Date.now() - startTime;
+                if (elapsed > maxTime) {
+                    console.log(`[Orchestrator] Timeout reached (${maxTime}ms)`);
+                    break;
+                }
                 
-                // Add dictionary validation info to top result
-                const bestResult = validatedResults[0];
-                const dictConfidence = bestResult.validation.confidence;
-                const wordCoverage = parseFloat(bestResult.validation.metrics.wordCoverage) / 100;
-                
-                console.log(`[Orchestrator] Best result after dictionary validation: confidence=${bestResult.confidence.toFixed(2)}, validWords=${bestResult.validation.metrics.validWords}, wordCoverage=${wordCoverage.toFixed(2)}`);
-
-                // REJECT if dictionary validation is too low (< 30% word coverage)
-                // This prevents false positives like Vigenère decrypting Porta as gibberish
-                if (wordCoverage < 0.30 && dictConfidence < 0.40) {
-                    console.warn(`[Orchestrator] Best result rejected: word coverage too low (${(wordCoverage * 100).toFixed(0)}%). Trying next strategy...`);
+                try {
+                    console.log(`[Orchestrator] [${tryLanguage}] Trying strategy ${i + 1}/${strategies.length}: ${strategy.name}`);
+                    const result = await strategy.execute(ciphertext);
                     
-                    // Try to find a better result
-                    for (let i = 1; i < validatedResults.length; i++) {
-                        const altResult = validatedResults[i];
-                        const altCoverage = parseFloat(altResult.validation.metrics.wordCoverage) / 100;
-                        if (altCoverage >= 0.30 || altResult.validation.confidence >= 0.40) {
-                            console.log(`[Orchestrator] Using alternative result: ${altResult.method} with ${(altCoverage * 100).toFixed(0)}% coverage`);
-                            return {
-                                ...altResult,
-                                dictionaryValidation: altResult.validation
+                    if (result && result.plaintext) {
+                        // Validate result with dictionary for this language
+                        let wordCoverage = 0;
+                        let dictConfidence = 0;
+                        
+                        if (useDictionary) {
+                            try {
+                                const validator = new DictionaryValidator(tryLanguage);
+                                const validation = await validator.validate(result.plaintext);
+                                wordCoverage = parseFloat(validation.metrics.wordCoverage) / 100;
+                                dictConfidence = validation.confidence;
+                                
+                                // Add dictionary validation info to result
+                                result.wordCoverage = wordCoverage;
+                                result.dictConfidence = dictConfidence;
+                            } catch (e) {
+                                // Dictionary validation failed, continue
+                            }
+                        }
+                        
+                        // Calculate combined score: confidence + dictionary validation
+                        const combinedScore = result.confidence + (wordCoverage * 0.5) + (dictConfidence * 0.3);
+                        
+                        results.push({
+                            ...result,
+                            language: tryLanguage,
+                            cipherType: topCandidate.type,
+                            detectionConfidence: topCandidate.confidence,
+                            combinedScore: combinedScore
+                        });
+                        
+                        // Track best result across all languages
+                        if (combinedScore > bestScoreAcrossLanguages) {
+                            bestScoreAcrossLanguages = combinedScore;
+                            bestResultAcrossLanguages = {
+                                ...result,
+                                language: tryLanguage,
+                                cipherType: topCandidate.type,
+                                detectionConfidence: topCandidate.confidence
                             };
                         }
+                        
+                        console.log(`[Orchestrator] [${tryLanguage}] ${strategy.name}: confidence=${(result.confidence * 100).toFixed(0)}%, wordCoverage=${(wordCoverage * 100).toFixed(0)}%, combinedScore=${combinedScore.toFixed(2)}`);
+                        
+                        // Early termination: If we found a VERY good result (high confidence + good dictionary validation)
+                        if (result.confidence > 0.85 && wordCoverage > 0.50) {
+                            console.log(`[Orchestrator] ✓ Excellent result found for ${tryLanguage}: confidence=${(result.confidence * 100).toFixed(0)}%, wordCoverage=${(wordCoverage * 100).toFixed(0)}%`);
+                            console.log(`[Orchestrator] Stopping early - found good solution`);
+                            // Restore original language
+                            this.language = originalLanguage;
+                            // Return best result with dictionary validation
+                            if (useDictionary && bestResultAcrossLanguages) {
+                                try {
+                                    const validator = new DictionaryValidator(bestResultAcrossLanguages.language);
+                                    const validation = await validator.validate(bestResultAcrossLanguages.plaintext);
+                                    return {
+                                        ...bestResultAcrossLanguages,
+                                        dictionaryValidation: validation
+                                    };
+                                } catch (e) {
+                                    return bestResultAcrossLanguages;
+                                }
+                            }
+                            return bestResultAcrossLanguages;
+                        }
                     }
-                    
-                    // No good result found - return best with warning
-                    console.warn('[Orchestrator] No result passed dictionary validation threshold');
+                } catch (e) {
+                    console.warn(`[Orchestrator] Strategy ${strategy.name} failed for ${tryLanguage}:`, e.message);
                 }
-                
-                return {
-                    ...bestResult,
-                    dictionaryValidation: bestResult.validation
-                };
-            } catch (error) {
-                console.warn('[Orchestrator] Dictionary validation failed:', error);
-                // Fall back to non-validated results
+            }
+            
+            // If we found a good result for this language, we can stop trying other languages
+            // But only if it's really good (not just "ok")
+            if (bestResultAcrossLanguages && bestResultAcrossLanguages.confidence > 0.80 && 
+                bestResultAcrossLanguages.wordCoverage > 0.40) {
+                console.log(`[Orchestrator] ✓ Good result found for ${tryLanguage}, stopping language iteration`);
+                break;
             }
         }
         
-        // Step 5: Return best result (without dictionary validation)
+        // Restore original language
+        this.language = originalLanguage;
+        
+        // Step 4: Return best result across all languages
         if (results.length === 0) {
+            console.warn('[Orchestrator] No successful decryption found for any language');
             return {
                 plaintext: ciphertext,
                 method: 'none',
@@ -220,10 +242,30 @@ export class Orchestrator {
             };
         }
         
-        // Sort by score (higher is better)
-        results.sort((a, b) => (b.score || -Infinity) - (a.score || -Infinity));
+        // Sort by combined score (higher is better)
+        results.sort((a, b) => (b.combinedScore || -Infinity) - (a.combinedScore || -Infinity));
         
-        return results[0];
+        // Use best result across all languages
+        const bestResult = bestResultAcrossLanguages || results[0];
+        
+        console.log(`[Orchestrator] Best result: method=${bestResult.method}, language=${bestResult.language}, confidence=${(bestResult.confidence * 100).toFixed(0)}%, wordCoverage=${((bestResult.wordCoverage || 0) * 100).toFixed(0)}%`);
+        
+        // Final dictionary validation if enabled
+        if (useDictionary && bestResult.plaintext) {
+            try {
+                const validator = new DictionaryValidator(bestResult.language || this.language);
+                const validation = await validator.validate(bestResult.plaintext);
+                return {
+                    ...bestResult,
+                    dictionaryValidation: validation
+                };
+            } catch (error) {
+                console.warn('[Orchestrator] Final dictionary validation failed:', error);
+                return bestResult;
+            }
+        }
+        
+        return bestResult;
     }
     
     /**
@@ -1106,6 +1148,7 @@ export class Orchestrator {
         const startTime = Date.now();
         
         // Step 0: Auto-detect language
+        let languageCandidates = [this.language];
         if (this.autoDetectLanguage) {
             yield {
                 stage: 'language-detection',
@@ -1116,23 +1159,27 @@ export class Orchestrator {
             try {
                 const langResults = await LanguageAnalysis.detectLanguage(ciphertext);
                 
-                // Store language detection results for use in ROT brute force
+                // Store language detection results
                 this.languageDetectionResults = langResults;
                 
                 if (langResults && langResults.length > 0) {
+                    // Get top 5 language candidates to try
+                    languageCandidates = langResults
+                        .slice(0, 5)
+                        .map(r => r.language);
+                    
                     const detectedLang = langResults[0].language;
                     this.language = detectedLang;
-                    const candidates = langResults.length > 1 
-                        ? ` (candidates: ${langResults.slice(0, 3).map(r => r.language).join(', ')})`
-                        : '';
                     yield {
                         stage: 'language-detected',
-                        message: `Language detected: ${detectedLang}${candidates}`,
+                        message: `Language detected: ${detectedLang}. Will try ALL methods for each language: ${languageCandidates.join(', ')}`,
                         language: detectedLang,
+                        languageCandidates: languageCandidates,
                         progress: 8
                     };
                 } else {
                     this.language = 'english';
+                    languageCandidates = ['english'];
                     yield {
                         stage: 'language-detected',
                         message: 'Language detection failed, defaulting to English',
@@ -1142,6 +1189,7 @@ export class Orchestrator {
                 }
             } catch (error) {
                 this.language = 'english';
+                languageCandidates = ['english'];
                 yield {
                     stage: 'language-detected',
                     message: 'Language detection failed, defaulting to English',
@@ -1151,8 +1199,8 @@ export class Orchestrator {
             }
         }
         
-        // Step 1: Detect cipher type
-        const languageForDetection = this.language === 'auto' ? 'english' : this.language;
+        // Step 1: Detect cipher type (use first language candidate)
+        const languageForDetection = languageCandidates[0] === 'auto' ? 'english' : languageCandidates[0];
         yield {
             stage: 'cipher-detection',
             message: 'Analyzing cipher type...',
@@ -1175,16 +1223,41 @@ export class Orchestrator {
         
         yield {
             stage: 'strategies-selected',
-            message: `Selected ${strategies.length} strategy/strategies`,
+            message: `Selected ${strategies.length} strategy/strategies. Will try ALL for each language.`,
             strategies: strategies.map(s => s.name),
             progress: 18
         };
         
-        // Step 3: Execute strategies
+        // Step 3: Execute strategies for EACH language candidate
         const results = [];
-        let strategyIndex = 0;
+        let bestResultAcrossLanguages = null;
+        let bestScoreAcrossLanguages = -Infinity;
+        const originalLanguage = this.language;
+        let totalStrategies = strategies.length * languageCandidates.length;
+        let currentStrategyIndex = 0;
         
-        for (const strategy of strategies) {
+        for (const tryLanguage of languageCandidates) {
+            yield {
+                stage: 'trying-language',
+                message: `===== Trying ALL methods for language: ${tryLanguage} =====`,
+                language: tryLanguage,
+                progress: 18 + (languageCandidates.indexOf(tryLanguage) / languageCandidates.length) * 10
+            };
+            
+            // Temporarily change language
+            this.language = tryLanguage;
+            
+            // Try to load dictionary
+            try {
+                await LanguageAnalysis.loadDictionary(tryLanguage, 'data/');
+            } catch (e) {
+                try {
+                    await LanguageAnalysis.loadDictionary(tryLanguage, '../demo/data/');
+                } catch (e2) {}
+            }
+            
+            // Execute ALL strategies for this language
+            for (const strategy of strategies) {
             const elapsed = Date.now() - startTime;
             if (elapsed > maxTime) {
                 yield {
@@ -1195,17 +1268,18 @@ export class Orchestrator {
                 break;
             }
             
-            strategyIndex++;
-            const strategyProgress = 18 + (strategyIndex / strategies.length) * 70; // 18-88%
-            
-            yield {
-                stage: 'trying-strategy',
-                message: `Trying: ${strategy.name} (${strategyIndex}/${strategies.length})`,
-                method: strategy.name,
-                strategyIndex: strategyIndex,
-                totalStrategies: strategies.length,
-                progress: strategyProgress
-            };
+                currentStrategyIndex++;
+                const strategyProgress = 18 + (currentStrategyIndex / totalStrategies) * 70; // 18-88%
+                
+                yield {
+                    stage: 'trying-strategy',
+                    message: `[${tryLanguage}] Trying: ${strategy.name} (${currentStrategyIndex}/${totalStrategies})`,
+                    method: strategy.name,
+                    language: tryLanguage,
+                    strategyIndex: currentStrategyIndex,
+                    totalStrategies: totalStrategies,
+                    progress: strategyProgress
+                };
             
             try {
                 let result = null;
@@ -1275,66 +1349,94 @@ export class Orchestrator {
                     result = await strategy.execute(ciphertext);
                 }
                 
-                if (result) {
+                if (result && result.plaintext) {
+                    // Validate with dictionary for this language
+                    let wordCoverage = 0;
+                    let dictConfidence = 0;
+                    
+                    if (useDictionary) {
+                        try {
+                            const validator = new DictionaryValidator(tryLanguage);
+                            const validation = await validator.validate(result.plaintext);
+                            wordCoverage = parseFloat(validation.metrics.wordCoverage) / 100;
+                            dictConfidence = validation.confidence;
+                            result.wordCoverage = wordCoverage;
+                            result.dictConfidence = dictConfidence;
+                        } catch (e) {
+                            // Dictionary validation failed
+                        }
+                    }
+                    
+                    // Calculate combined score
+                    const combinedScore = result.confidence + (wordCoverage * 0.5) + (dictConfidence * 0.3);
+                    
                     result.cipherType = topCandidate.type;
                     result.detectionConfidence = topCandidate.confidence;
+                    result.language = tryLanguage;
+                    result.combinedScore = combinedScore;
                     results.push(result);
                     
-                    console.log(`[Orchestrator] Strategy ${strategy.name} result: method=${result.method}, confidence=${result.confidence}, plaintext length=${result.plaintext?.length || 0}`);
+                    // Track best result across all languages
+                    if (combinedScore > bestScoreAcrossLanguages) {
+                        bestScoreAcrossLanguages = combinedScore;
+                        bestResultAcrossLanguages = {
+                            ...result,
+                            language: tryLanguage,
+                            cipherType: topCandidate.type,
+                            detectionConfidence: topCandidate.confidence
+                        };
+                    }
+                    
+                    console.log(`[Orchestrator] [${tryLanguage}] ${strategy.name} result: method=${result.method}, confidence=${result.confidence}, wordCoverage=${(wordCoverage * 100).toFixed(0)}%`);
                     
                     yield {
                         stage: 'strategy-complete',
-                        message: `✓ ${strategy.name}: ${(result.confidence * 100).toFixed(0)}% confidence`,
+                        message: `✓ [${tryLanguage}] ${strategy.name}: ${(result.confidence * 100).toFixed(0)}% confidence, ${(wordCoverage * 100).toFixed(0)}% words`,
                         method: result.method,
+                        language: tryLanguage,
                         confidence: result.confidence,
                         score: result.score,
-                        plaintext: result.plaintext, // Include plaintext in yield
-                        progress: strategyProgress + 10
+                        wordCoverage: wordCoverage,
+                        plaintext: result.plaintext,
+                        progress: strategyProgress + 5
                     };
                     
-                    // If we found a very good result, check dictionary before stopping early
-                    if (result.confidence > 0.9) {
-                        // Quick dictionary validation before stopping
-                        if (useDictionary && result.plaintext) {
+                    // Early termination: If we found a VERY good result
+                    if (result.confidence > 0.85 && wordCoverage > 0.50) {
+                        yield {
+                            stage: 'early-stop',
+                            message: `✓ Excellent result found for ${tryLanguage}! Stopping early.`,
+                            progress: 90
+                        };
+                        // Restore original language
+                        this.language = originalLanguage;
+                        // Return best result
+                        if (useDictionary && bestResultAcrossLanguages) {
                             try {
-                                const validator = new DictionaryValidator(this.language);
-                                const quickValidation = await validator.validate(result.plaintext);
-                                const wordCoverage = parseFloat(quickValidation.metrics.wordCoverage) / 100;
-                                
-                                // Only stop early if word coverage is good (>30%)
-                                if (wordCoverage >= 0.30 || quickValidation.confidence >= 0.40) {
-                                    yield {
-                                        stage: 'early-stop',
-                                        message: 'High confidence result found, stopping early',
-                                        progress: 90
-                                    };
-                                    // Continue to dictionary validation step
-                                    break;
-                                } else {
-                                    yield {
-                                        stage: 'early-stop',
-                                        message: `High confidence but low dictionary validation (${(wordCoverage * 100).toFixed(0)}%), continuing...`,
-                                        progress: 90
-                                    };
-                                    // Don't break, continue to next strategy
-                                }
-                            } catch (e) {
-                                // Dictionary validation failed, stop early anyway
+                                const validator = new DictionaryValidator(bestResultAcrossLanguages.language);
+                                const validation = await validator.validate(bestResultAcrossLanguages.plaintext);
                                 yield {
-                                    stage: 'early-stop',
-                                    message: 'High confidence result found, stopping early',
-                                    progress: 90
+                                    stage: 'complete',
+                                    ...bestResultAcrossLanguages,
+                                    dictionaryValidation: validation,
+                                    progress: 100
                                 };
-                                break;
+                                return;
+                            } catch (e) {
+                                yield {
+                                    stage: 'complete',
+                                    ...bestResultAcrossLanguages,
+                                    progress: 100
+                                };
+                                return;
                             }
-                        } else {
-                            yield {
-                                stage: 'early-stop',
-                                message: 'High confidence result found, stopping early',
-                                progress: 90
-                            };
-                            break;
                         }
+                        yield {
+                            stage: 'complete',
+                            ...bestResultAcrossLanguages,
+                            progress: 100
+                        };
+                        return;
                     }
                 }
                 
@@ -1342,103 +1444,79 @@ export class Orchestrator {
             } catch (e) {
                 yield {
                     stage: 'strategy-failed',
-                    message: `✗ ${strategy.name} failed: ${e.message}`,
+                    message: `✗ [${tryLanguage}] ${strategy.name} failed: ${e.message}`,
                     method: strategy.name,
+                    language: tryLanguage,
                     error: e.message,
-                    progress: strategyProgress + 5
+                    progress: strategyProgress + 2
                 };
             }
-        }
-        
-        // Step 4: Dictionary validation
-        if (useDictionary && results.length > 0) {
-            yield {
-                stage: 'validating',
-                message: 'Validating results with dictionary...',
-                progress: 90
-            };
+            }
             
-            try {
-                const validator = new DictionaryValidator(this.language);
-                const validatedResults = await validator.validateMultiple(results);
-                const bestResult = validatedResults[0];
-                const dictConfidence = bestResult.validation.confidence;
-                const wordCoverage = parseFloat(bestResult.validation.metrics.wordCoverage) / 100;
-                
-                console.log(`[Orchestrator] Dictionary validation: method=${bestResult.method}, confidence=${bestResult.confidence}, dictConfidence=${dictConfidence}, wordCoverage=${wordCoverage}, plaintext length=${bestResult.plaintext?.length || 0}`);
-                
+            // If we found a good result for this language, we can stop trying other languages
+            if (bestResultAcrossLanguages && bestResultAcrossLanguages.confidence > 0.80 && 
+                bestResultAcrossLanguages.wordCoverage > 0.40) {
                 yield {
-                    stage: 'validation-complete',
-                    message: `Dictionary validation: ${(dictConfidence * 100).toFixed(0)}% confidence`,
-                    validation: bestResult.validation,
-                    progress: 95
+                    stage: 'language-complete',
+                    message: `✓ Good result found for ${tryLanguage}, stopping language iteration`,
+                    language: tryLanguage,
+                    progress: 88
                 };
-                
-                // REJECT if dictionary validation is too low (< 30% word coverage)
-                if (wordCoverage < 0.30 && dictConfidence < 0.40) {
-                    console.warn(`[Orchestrator] Best result rejected: word coverage too low (${(wordCoverage * 100).toFixed(0)}%)`);
-                    
-                    // Try to find a better result
-                    for (let i = 1; i < validatedResults.length; i++) {
-                        const altResult = validatedResults[i];
-                        const altCoverage = parseFloat(altResult.validation.metrics.wordCoverage) / 100;
-                        if (altCoverage >= 0.30 || altResult.validation.confidence >= 0.40) {
-                            console.log(`[Orchestrator] Using alternative result: ${altResult.method} with ${(altCoverage * 100).toFixed(0)}% coverage`);
-                            const finalResult = {
-                                stage: 'complete',
-                                ...altResult,
-                                dictionaryValidation: altResult.validation,
-                                progress: 100
-                            };
-                            console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
-                            return finalResult;
-                        }
-                    }
-                    
-                    // No good result found - return best with warning
-                    console.warn('[Orchestrator] No result passed dictionary validation threshold, returning best anyway');
-                }
-                
-                const finalResult = {
-                    stage: 'complete',
-                    ...bestResult,
-                    dictionaryValidation: bestResult.validation,
-                    progress: 100
-                };
-                console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
-                return finalResult;
-            } catch (error) {
-                console.error('[Orchestrator] Dictionary validation error:', error);
-                yield {
-                    stage: 'validation-failed',
-                    message: 'Dictionary validation failed, using best result',
-                    progress: 95
-                };
+                break;
             }
         }
         
-        // Step 5: Return best result
+        // Restore original language
+        this.language = originalLanguage;
+        
+        // Step 4: Return best result across all languages
         if (results.length === 0) {
             yield {
                 stage: 'failed',
-                message: 'No successful decryption',
+                message: 'No successful decryption found for any language',
                 plaintext: ciphertext,
                 method: 'none',
                 confidence: 0,
                 progress: 100
             };
-        } else {
-            // Sort by confidence and return best
-            results.sort((a, b) => b.confidence - a.confidence);
-            const bestResult = results[0];
-            
-            yield {
-                stage: 'complete',
-                message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence)`,
-                ...bestResult,
-                progress: 100
-            };
+            return;
         }
+        
+        // Sort by combined score (higher is better)
+        results.sort((a, b) => (b.combinedScore || -Infinity) - (a.combinedScore || -Infinity));
+        
+        const bestResult = bestResultAcrossLanguages || results[0];
+        
+        console.log(`[Orchestrator] Best result: method=${bestResult.method}, language=${bestResult.language}, confidence=${(bestResult.confidence * 100).toFixed(0)}%, wordCoverage=${((bestResult.wordCoverage || 0) * 100).toFixed(0)}%`);
+        
+        // Final dictionary validation if enabled
+        if (useDictionary && bestResult.plaintext) {
+            try {
+                const validator = new DictionaryValidator(bestResult.language || this.language);
+                const validation = await validator.validate(bestResult.plaintext);
+                const finalResult = {
+                    stage: 'complete',
+                    message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence, language: ${bestResult.language})`,
+                    ...bestResult,
+                    dictionaryValidation: validation,
+                    progress: 100
+                };
+                console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+                return finalResult;
+            } catch (error) {
+                console.warn('[Orchestrator] Final dictionary validation failed:', error);
+            }
+        }
+        
+        const finalResult = {
+            stage: 'complete',
+            message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence, language: ${bestResult.language})`,
+            ...bestResult,
+            progress: 100
+        };
+        console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+        return finalResult;
     }
 }
+
 
