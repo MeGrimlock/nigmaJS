@@ -305,13 +305,8 @@ if (!LanguageAnalysis.getDictionary) {
     LanguageAnalysis.getDictionary = function(language) {
         // Access private dictionaries object
         // This is a workaround - ideally LanguageAnalysis should expose this method
-        const dictionaries = {
-            english: null,
-            spanish: null
-        };
-        
-        // Try to access from module scope (requires modification to analysis.js)
-        // For now, return null and rely on proper integration
+        // Note: This is now handled by LanguageAnalysis.getDictionary() directly
+        // Supported languages: english, spanish, italian, french, portuguese, german
         return null;
     };
 }

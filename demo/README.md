@@ -82,8 +82,12 @@ This happens when dictionaries fail to load. Check the browser console (F12) for
 The demos use large dictionary files located in `demo/data/`:
 - `english-dictionary.json` - 275k+ English words
 - `spanish-dictionary.json` - 636k+ Spanish words
+- `italian-dictionary.json` - 17k+ Italian words
+- `french-dictionary.json` - 319k+ French words
+- `portuguese-dictionary.json` - 182k+ Portuguese words
+- `german-dictionary.json` - 66k+ German words
 
-These files are loaded asynchronously when needed.
+These files are loaded asynchronously when needed. The system automatically detects the language and loads the appropriate dictionary.
 
 ## 🎯 Development
 

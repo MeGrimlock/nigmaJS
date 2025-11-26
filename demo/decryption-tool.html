@@ -744,7 +744,9 @@
                             // Try to manually validate if we have the DictionaryValidator
                             if (window.nigmajs.DictionaryValidator && isSuccess) {
                                 try {
-                                    const validator = new window.nigmajs.DictionaryValidator('english');
+                                    // Use detected language from orchestrator, fallback to 'english'
+                                    const detectedLanguage = orchestrator.language || 'english';
+                                    const validator = new window.nigmajs.DictionaryValidator(detectedLanguage);
                                     const manualValidation = await validator.validate(result.plaintext);
                                     
                                     console.log('[Demo] Manual validation:', manualValidation);
