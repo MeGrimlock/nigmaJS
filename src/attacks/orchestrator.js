@@ -126,17 +126,40 @@ export class Orchestrator {
                                 plaintextLangScore = topPlaintextLang.score;
                                 
                                 // Only override if:
-                                // 1. Plaintext detection is confident (score < 300 for good match)
+                                // 1. Plaintext detection is very confident (score < 250 for excellent match)
                                 // 2. The detected language is different
-                                // 3. The plaintext detection score is significantly better than original
+                                // 3. The plaintext detection score is significantly better than original (at least 100 points)
+                                // 4. The plaintext has good dictionary validation for the new language
                                 const originalLangResult = plaintextLangResults.find(r => r.language === tryLanguage);
                                 const originalLangScore = originalLangResult ? originalLangResult.score : Infinity;
                                 
-                                if (topPlaintextLang.score < 300 && 
+                                // Check dictionary validation for the new language
+                                let newLangDictScore = 0;
+                                try {
+                                    const newLangDict = LanguageAnalysis.getDictionary(topPlaintextLang.language);
+                                    if (newLangDict && result.plaintext) {
+                                        const words = result.plaintext.toUpperCase()
+                                            .split(/\s+/)
+                                            .filter(w => w.length >= 3);
+                                        if (words.length > 0) {
+                                            const validWords = words.filter(w => newLangDict.has(w)).length;
+                                            newLangDictScore = validWords / words.length;
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Dictionary not available
+                                }
+                                
+                                // Only override if:
+                                // - Plaintext detection is very confident (< 250)
+                                // - New language is significantly better (100+ points)
+                                // - Dictionary validation supports the new language (> 0.3)
+                                if (topPlaintextLang.score < 250 && 
                                     topPlaintextLang.language !== tryLanguage &&
-                                    topPlaintextLang.score < originalLangScore - 50) { // At least 50 points better
+                                    topPlaintextLang.score < originalLangScore - 100 && // At least 100 points better
+                                    newLangDictScore > 0.3) { // Dictionary validation supports it
                                     detectedLanguageFromPlaintext = topPlaintextLang.language;
-                                    console.log(`[Orchestrator] Plaintext language re-detection: ${tryLanguage} → ${detectedLanguageFromPlaintext} (score: ${topPlaintextLang.score.toFixed(2)} vs ${originalLangScore.toFixed(2)})`);
+                                    console.log(`[Orchestrator] Plaintext language re-detection: ${tryLanguage} → ${detectedLanguageFromPlaintext} (score: ${topPlaintextLang.score.toFixed(2)} vs ${originalLangScore.toFixed(2)}, dict: ${(newLangDictScore * 100).toFixed(0)}%)`);
                                 }
                             }
                         } catch (error) {
