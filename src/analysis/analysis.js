@@ -11,7 +11,8 @@ import chineseData from '../language/models/chinese.js';
 // Dictionaries will be loaded asynchronously
 const dictionaries = {
     english: null, // Set<string>
-    spanish: null
+    spanish: null,
+    italian: null
 };
 
 const languages = {
@@ -42,7 +43,7 @@ export class LanguageAnalysis {
 
     /**
      * Loads a dictionary for a specific language from external JSON.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', or 'italian'
      * @param {string} basePath - Path to the data folder (e.g. 'data/')
      */
     static async loadDictionary(language, basePath = 'data/') {
@@ -64,7 +65,7 @@ export class LanguageAnalysis {
 
     /**
      * Gets the loaded dictionary for a specific language.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', or 'italian'
      * @returns {Set<string>|null} The dictionary Set, or null if not loaded
      */
     static getDictionary(language) {
@@ -73,7 +74,7 @@ export class LanguageAnalysis {
 
     /**
      * Checks if a dictionary is loaded for a specific language.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', or 'italian'
      * @returns {boolean} True if dictionary is loaded
      */
     static isDictionaryLoaded(language) {
