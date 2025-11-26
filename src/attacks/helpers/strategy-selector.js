@@ -122,7 +122,7 @@ export class StrategySelector {
                     }
                 });
                 // Try Polybius if text contains number pairs
-                if (/\d{2}/.test(text)) {
+                if (/\d{2}/.test(ciphertext)) {
                     strategies.push({
                         name: 'Polybius Square',
                         execute: async (text) => {
@@ -132,7 +132,7 @@ export class StrategySelector {
                     });
                 }
                 // Try Baconian if text contains A/B patterns or binary-like patterns
-                if (/[ABab]{5,}/.test(text) || /[01]{5,}/.test(text)) {
+                if (/[ABab]{5,}/.test(ciphertext) || /[01]{5,}/.test(ciphertext)) {
                     strategies.push({
                         name: 'Baconian',
                         execute: async (text) => {
@@ -206,7 +206,7 @@ export class StrategySelector {
                     }
                 });
                 // Try Polybius if text contains number pairs
-                if (/\d{2}/.test(text)) {
+                if (/\d{2}/.test(ciphertext)) {
                     strategies.push({
                         name: 'Polybius Square',
                         execute: async (text) => {
@@ -216,7 +216,7 @@ export class StrategySelector {
                     });
                 }
                 // Try Baconian if text contains A/B patterns
-                if (/[ABab]{5,}/.test(text) || /[01]{5,}/.test(text)) {
+                if (/[ABab]{5,}/.test(ciphertext) || /[01]{5,}/.test(ciphertext)) {
                     strategies.push({
                         name: 'Baconian',
                         execute: async (text) => {

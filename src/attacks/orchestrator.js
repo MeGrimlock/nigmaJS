@@ -196,7 +196,6 @@ export class Orchestrator {
         // Final dictionary validation if enabled
         if (useDictionary && bestResult.plaintext) {
             try {
-                const { DictionaryValidator } = await import('../../language/dictionary-validator.js');
                 const validator = new DictionaryValidator(bestResult.language || this.language);
                 const validation = await validator.validate(bestResult.plaintext);
                 return {
