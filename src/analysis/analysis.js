@@ -367,18 +367,21 @@ export class LanguageAnalysis {
         if (!dict) return null; // No dictionary available, return null to indicate no validation
         
         // Extract words from text
+        // Lower threshold to 2 chars for short texts to catch more words
         const words = text.toUpperCase()
             .split(/\s+/)
             .map(w => this.cleanText(w))
-            .filter(w => w.length >= 3); // Only consider words >= 3 chars
+            .filter(w => w.length >= 2); // Lower threshold to 2 chars for short texts (was 3)
         
         if (words.length === 0) return null; // No words to validate
         
-        // Count valid words
+        // Count valid words and track their lengths
         let validWords = 0;
+        let totalValidWordLength = 0;
         for (const word of words) {
             if (dict.has(word)) {
                 validWords++;
+                totalValidWordLength += word.length;
             }
         }
         
@@ -386,11 +389,16 @@ export class LanguageAnalysis {
         // Higher is better, so we return as a positive score
         const wordCoverage = validWords / words.length;
         
-        // Also consider average word length (longer valid words = higher confidence)
-        const avgLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
-        const lengthBonus = Math.min(avgLength / 10, 0.2); // Max 0.2 bonus for long words
+        // For short texts, give more weight to longer valid words
+        // A single long valid word (e.g., "CRYPTOGRAPHY") is more significant than short words
+        const avgValidWordLength = validWords > 0 ? totalValidWordLength / validWords : 0;
+        const lengthBonus = Math.min(avgValidWordLength / 8, 0.3); // Max 0.3 bonus (increased from 0.2)
         
-        return wordCoverage * (1 + lengthBonus);
+        // For very short texts, boost score if we have at least one valid word
+        const isVeryShort = words.length <= 3;
+        const shortTextBonus = isVeryShort && validWords > 0 ? 0.2 : 0;
+        
+        return wordCoverage * (1 + lengthBonus + shortTextBonus);
     }
 
     static detectLanguage(text) {
@@ -468,22 +476,48 @@ export class LanguageAnalysis {
             
             const alphabetPenalty = this.getAlphabetPenalty(cleanedText, langKey);
 
-            // 3. Dictionary Score (IMPROVED: more important for short texts)
+            // 3. Dictionary Score (IMPROVED: cross-validation for short texts)
             // For short texts, dictionary validation is MORE important (fewer words to analyze)
             const dictionaryScore = this._calculateDictionaryScore(text, langKey);
+            
+            // For short texts, also check against other languages to find the best match
+            let crossValidationBonus = 0;
+            if (isShortText && dictionaryScore !== null) {
+                // Compare dictionary score with other similar languages
+                const otherScores = {};
+                for (const otherLang of candidateLanguages) {
+                    if (otherLang !== langKey) {
+                        const otherScore = this._calculateDictionaryScore(text, otherLang);
+                        if (otherScore !== null) {
+                            otherScores[otherLang] = otherScore;
+                        }
+                    }
+                }
+                
+                // If this language has significantly better dictionary score, add bonus
+                const maxOtherScore = Math.max(...Object.values(otherScores), 0);
+                if (dictionaryScore > maxOtherScore + 0.2) {
+                    // This language is clearly better (at least 20% more valid words)
+                    crossValidationBonus = -30; // Significant bonus
+                } else if (dictionaryScore < maxOtherScore - 0.2) {
+                    // Another language is clearly better
+                    crossValidationBonus = 30; // Penalty
+                }
+            }
+            
             // Dictionary score is 0-1, convert to penalty (lower is better for identityScore)
             // For short texts, INCREASE dictionary weight (it's more reliable than stats)
-            const dictionaryWeight = isShortText ? 1.5 : (isMediumText ? 1.2 : 1.0);
+            const dictionaryWeight = isShortText ? 2.0 : (isMediumText ? 1.2 : 1.0); // Increased from 1.5 to 2.0
             const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) 
-                ? -dictionaryScore * 50 * dictionaryWeight 
-                : 0;
+                ? -dictionaryScore * 50 * dictionaryWeight + crossValidationBonus
+                : crossValidationBonus;
             
             // 4. Additional penalty for short texts when dictionary score is low
             // If we have a dictionary but very few valid words, it's likely wrong language
             if (isShortText && dictionaryScore !== null && dictionaryScore < 0.1) {
                 // Strong penalty if dictionary validation fails for short text
                 // This helps distinguish between similar languages (e.g., Portuguese vs Spanish)
-                alphabetPenalty += 100; // Add significant penalty
+                alphabetPenalty += 150; // Increased from 100 to 150
             }
 
             // Final Encrypted Score

@@ -1,5 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
+import { LanguageAnalysis } from '../analysis/analysis.js';
 import { StrategySelector } from './helpers/strategy-selector.js';
 import { LanguageHandler } from './helpers/language-handler.js';
 import { ResultValidator } from './helpers/result-validator.js';
@@ -114,11 +115,41 @@ export class Orchestrator {
                     const result = await strategy.execute(ciphertext);
                     
                     if (result && result.plaintext) {
-                        // Validate result with dictionary for this language
-                        const validatedResult = await ResultValidator.validateResult(result, tryLanguage);
+                        // Re-detect language from decrypted plaintext (more reliable than ciphertext)
+                        // This helps correct language detection errors, especially for short texts
+                        let detectedLanguageFromPlaintext = tryLanguage;
+                        let plaintextLangScore = null;
+                        try {
+                            const plaintextLangResults = LanguageAnalysis.detectLanguage(result.plaintext);
+                            if (plaintextLangResults && plaintextLangResults.length > 0) {
+                                const topPlaintextLang = plaintextLangResults[0];
+                                plaintextLangScore = topPlaintextLang.score;
+                                
+                                // Only override if:
+                                // 1. Plaintext detection is confident (score < 300 for good match)
+                                // 2. The detected language is different
+                                // 3. The plaintext detection score is significantly better than original
+                                const originalLangResult = plaintextLangResults.find(r => r.language === tryLanguage);
+                                const originalLangScore = originalLangResult ? originalLangResult.score : Infinity;
+                                
+                                if (topPlaintextLang.score < 300 && 
+                                    topPlaintextLang.language !== tryLanguage &&
+                                    topPlaintextLang.score < originalLangScore - 50) { // At least 50 points better
+                                    detectedLanguageFromPlaintext = topPlaintextLang.language;
+                                    console.log(`[Orchestrator] Plaintext language re-detection: ${tryLanguage} → ${detectedLanguageFromPlaintext} (score: ${topPlaintextLang.score.toFixed(2)} vs ${originalLangScore.toFixed(2)})`);
+                                }
+                            }
+                        } catch (error) {
+                            // If re-detection fails, use original language
+                            // Silently continue (don't log warning for every failure)
+                        }
+                        
+                        // Validate result with dictionary for the detected language (from plaintext)
+                        const validatedResult = await ResultValidator.validateResult(result, detectedLanguageFromPlaintext);
                         results.push({
                             ...validatedResult,
-                            language: tryLanguage,
+                            language: detectedLanguageFromPlaintext, // Use re-detected language
+                            originalLanguage: tryLanguage, // Keep track of original
                             cipherType: topCandidate.type,
                             detectionConfidence: topCandidate.confidence
                         });
@@ -128,7 +159,8 @@ export class Orchestrator {
                             bestScoreAcrossLanguages = validatedResult.combinedScore;
                             bestResultAcrossLanguages = {
                                 ...validatedResult,
-                                language: tryLanguage,
+                                language: detectedLanguageFromPlaintext, // Use re-detected language
+                                originalLanguage: tryLanguage,
                                 cipherType: topCandidate.type,
                                 detectionConfidence: topCandidate.confidence
                             };
