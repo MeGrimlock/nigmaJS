@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
 import { LanguageAnalysis } from '../analysis/analysis.js';
+import { configLoader } from '../config/config-loader.js';
 import { StrategySelector } from './helpers/strategy-selector.js';
 import { LanguageHandler } from './helpers/language-handler.js';
 import { ResultValidator } from './helpers/result-validator.js';
@@ -125,11 +126,17 @@ export class Orchestrator {
                                 const topPlaintextLang = plaintextLangResults[0];
                                 plaintextLangScore = topPlaintextLang.score;
                                 
+                                // Get thresholds from config
+                                const redetectionConfig = configLoader.get('language_detection.plaintext_redetection', {});
+                                const confidentScoreThreshold = redetectionConfig.confident_score_threshold || 250;
+                                const minScoreDifference = redetectionConfig.min_score_difference || 100;
+                                const minDictValidation = redetectionConfig.min_dict_validation || 0.3;
+                                
                                 // Only override if:
-                                // 1. Plaintext detection is very confident (score < 250 for excellent match)
+                                // 1. Plaintext detection is very confident (from config)
                                 // 2. The detected language is different
-                                // 3. The plaintext detection score is significantly better than original (at least 100 points)
-                                // 4. The plaintext has good dictionary validation for the new language
+                                // 3. The plaintext detection score is significantly better than original (from config)
+                                // 4. The plaintext has good dictionary validation for the new language (from config)
                                 const originalLangResult = plaintextLangResults.find(r => r.language === tryLanguage);
                                 const originalLangScore = originalLangResult ? originalLangResult.score : Infinity;
                                 
@@ -150,14 +157,11 @@ export class Orchestrator {
                                     // Dictionary not available
                                 }
                                 
-                                // Only override if:
-                                // - Plaintext detection is very confident (< 250)
-                                // - New language is significantly better (100+ points)
-                                // - Dictionary validation supports the new language (> 0.3)
-                                if (topPlaintextLang.score < 250 && 
+                                // Only override if all conditions are met (using config values)
+                                if (topPlaintextLang.score < confidentScoreThreshold && 
                                     topPlaintextLang.language !== tryLanguage &&
-                                    topPlaintextLang.score < originalLangScore - 100 && // At least 100 points better
-                                    newLangDictScore > 0.3) { // Dictionary validation supports it
+                                    topPlaintextLang.score < originalLangScore - minScoreDifference &&
+                                    newLangDictScore > minDictValidation) {
                                     detectedLanguageFromPlaintext = topPlaintextLang.language;
                                     console.log(`[Orchestrator] Plaintext language re-detection: ${tryLanguage} → ${detectedLanguageFromPlaintext} (score: ${topPlaintextLang.score.toFixed(2)} vs ${originalLangScore.toFixed(2)}, dict: ${(newLangDictScore * 100).toFixed(0)}%)`);
                                 }

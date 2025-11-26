@@ -7,6 +7,7 @@ import germanData from '../language/models/german.js';
 import portugueseData from '../language/models/portuguese.js';
 import russianData from '../language/models/russian.js';
 import chineseData from '../language/models/chinese.js';
+import { configLoader } from '../config/config-loader.js';
 
 // Dictionaries will be loaded asynchronously
 const dictionaries = {
@@ -358,6 +359,52 @@ export class LanguageAnalysis {
     }
 
     /**
+     * Helper method to calculate stop words score for language detection.
+     * Stop words are common words specific to each language that help distinguish languages,
+     * especially useful for short texts where statistical analysis is less reliable.
+     * @private
+     */
+    static _calculateStopWordsScore(text, language) {
+        // Get stop words from config
+        const stopWords = configLoader.get(`stop_words.${language}`, []);
+        if (stopWords.length === 0) return null; // No stop words configured for this language
+        
+        // Get stop words scoring config
+        const scoringConfig = configLoader.get('stop_words_scoring', {});
+        const minCount = scoringConfig.min_count || 1;
+        const bonusPerWord = scoringConfig.bonus_per_word || 20;
+        const weight = scoringConfig.weight || 0.3;
+        
+        // Extract words from text (uppercase, cleaned)
+        const words = text.toUpperCase()
+            .split(/\s+/)
+            .map(w => this.cleanText(w))
+            .filter(w => w.length >= 2); // At least 2 chars
+        
+        if (words.length === 0) return null;
+        
+        // Count stop words found
+        const stopWordsSet = new Set(stopWords.map(w => w.toUpperCase()));
+        let stopWordsFound = 0;
+        for (const word of words) {
+            if (stopWordsSet.has(word)) {
+                stopWordsFound++;
+            }
+        }
+        
+        // Only return score if we found at least minCount stop words
+        if (stopWordsFound < minCount) return null;
+        
+        // Calculate score: bonus per word found, weighted
+        // More stop words = higher confidence in language
+        const rawScore = stopWordsFound * bonusPerWord;
+        const weightedScore = rawScore * weight;
+        
+        // Return as negative value (lower is better for identityScore)
+        return -weightedScore;
+    }
+
+    /**
      * Helper method to calculate dictionary score for language detection.
      * Extracts words from text and checks them against dictionary.
      * @private
@@ -366,12 +413,18 @@ export class LanguageAnalysis {
         const dict = this.getDictionary(language);
         if (!dict) return null; // No dictionary available, return null to indicate no validation
         
+        // Get configuration values
+        const minWordLength = configLoader.get('language_detection.dictionary.min_word_length', 2);
+        const lengthBonusMax = configLoader.get('language_detection.dictionary.bonuses.length_bonus_max', 0.3);
+        const lengthBonusDivisor = configLoader.get('language_detection.dictionary.bonuses.length_bonus_divisor', 8);
+        const shortTextBonus = configLoader.get('language_detection.dictionary.bonuses.short_text_bonus', 0.2);
+        const shortTextMaxWords = configLoader.get('language_detection.dictionary.bonuses.short_text_max_words', 3);
+        
         // Extract words from text
-        // Lower threshold to 2 chars for short texts to catch more words
         const words = text.toUpperCase()
             .split(/\s+/)
             .map(w => this.cleanText(w))
-            .filter(w => w.length >= 2); // Lower threshold to 2 chars for short texts (was 3)
+            .filter(w => w.length >= minWordLength);
         
         if (words.length === 0) return null; // No words to validate
         
@@ -392,13 +445,55 @@ export class LanguageAnalysis {
         // For short texts, give more weight to longer valid words
         // A single long valid word (e.g., "CRYPTOGRAPHY") is more significant than short words
         const avgValidWordLength = validWords > 0 ? totalValidWordLength / validWords : 0;
-        const lengthBonus = Math.min(avgValidWordLength / 8, 0.3); // Max 0.3 bonus (increased from 0.2)
+        const lengthBonus = Math.min(avgValidWordLength / lengthBonusDivisor, lengthBonusMax);
         
         // For very short texts, boost score if we have at least one valid word
-        const isVeryShort = words.length <= 3;
-        const shortTextBonus = isVeryShort && validWords > 0 ? 0.2 : 0;
+        const isVeryShort = words.length <= shortTextMaxWords;
+        const shortTextBonusValue = isVeryShort && validWords > 0 ? shortTextBonus : 0;
         
-        return wordCoverage * (1 + lengthBonus + shortTextBonus);
+        return wordCoverage * (1 + lengthBonus + shortTextBonusValue);
+    }
+
+    /**
+     * Calculates stop words score for language detection.
+     * Stop words are common words specific to each language that help identify the language.
+     * @private
+     * @param {string} text - Text to analyze
+     * @param {string} language - Language to check
+     * @returns {number} Score 0-1 (higher = more stop words found)
+     */
+    static _calculateStopWordsScore(text, language) {
+        const stopWords = configLoader.get(`stop_words.${language}`, []);
+        if (!stopWords || stopWords.length === 0) {
+            return 0; // No stop words defined for this language
+        }
+        
+        // Extract words from text
+        const words = text.toUpperCase()
+            .split(/\s+/)
+            .map(w => this.cleanText(w))
+            .filter(w => w.length >= 2);
+        
+        if (words.length === 0) return 0;
+        
+        // Create a Set for fast lookup
+        const stopWordsSet = new Set(stopWords.map(w => w.toUpperCase()));
+        
+        // Count how many stop words are found
+        let foundStopWords = 0;
+        for (const word of words) {
+            if (stopWordsSet.has(word)) {
+                foundStopWords++;
+            }
+        }
+        
+        // Return score: percentage of stop words found
+        // Also give bonus for finding multiple stop words (more confidence)
+        const baseScore = foundStopWords / Math.max(words.length, 1);
+        const bonusPerWord = configLoader.get('stop_words_scoring.bonus_per_word', 20);
+        const bonus = Math.min(foundStopWords * bonusPerWord / 100, 0.3); // Max 0.3 bonus
+        
+        return Math.min(baseScore + bonus, 1.0); // Cap at 1.0
     }
 
     static detectLanguage(text) {
@@ -406,15 +501,17 @@ export class LanguageAnalysis {
         // Keep accents for alphabet checking
         const cleanedText = this.cleanText(text);
         
+        // Get expected IoC values from config (with fallback to defaults)
+        const expectedIoCConfig = configLoader.get('ic_analysis.expected_values', {});
         const expectedIoC = {
-            english: 1.73,
-            french: 2.02,
-            german: 2.05,
-            italian: 1.94,
-            portuguese: 1.94,
-            spanish: 1.94,
-            russian: 1.76,
-            chinese: 0.0
+            english: expectedIoCConfig.english || 1.73,
+            french: expectedIoCConfig.french || 2.02,
+            german: expectedIoCConfig.german || 2.05,
+            italian: expectedIoCConfig.italian || 1.94,
+            portuguese: expectedIoCConfig.portuguese || 1.94,
+            spanish: expectedIoCConfig.spanish || 1.94,
+            russian: expectedIoCConfig.russian || 1.76,
+            chinese: expectedIoCConfig.chinese || 0.0
         };
 
         // 1. Determine Script Dominance
@@ -441,27 +538,25 @@ export class LanguageAnalysis {
 
             const analysis = this.analyzeCorrelation(text, langKey);
             
-            // Adjust weights based on text length
-            // For short texts, rely more on dictionary and less on statistical analysis
+            // Adjust weights based on text length (using config)
             const textLength = cleanedText.length;
-            const isShortText = textLength < 50;
-            const isMediumText = textLength >= 50 && textLength < 150;
+            const lengthCategory = configLoader.getTextLengthCategory(textLength);
             
-            // 1. Chi-Squared (Identity Match)
-            // For short texts, reduce weight of statistical analysis
-            const monogramWeight = isShortText ? 0.3 : (isMediumText ? 0.4 : 0.5);
-            const bigramWeight = isShortText ? 2.0 : (isMediumText ? 2.5 : 3.0);
+            // 1. Chi-Squared (Identity Match) - using config values
+            const chiSquaredWeights = configLoader.get('language_detection.weights.chi_squared', {});
+            const monogramWeight = chiSquaredWeights.monogram?.[lengthCategory] || 0.5;
+            const bigramWeight = chiSquaredWeights.bigram?.[lengthCategory] || 3.0;
             const identityScore = (
                 analysis.monograms.score * monogramWeight + 
                 analysis.bigrams.score * bigramWeight
             ) / (monogramWeight + bigramWeight);
 
-            // 2. Shape Score (Distribution Match)
-            // For short texts, reduce weight of n-grams (less reliable)
-            const shapeMonogramWeight = isShortText ? 0.3 : 0.5;
-            const shapeBigramWeight = isShortText ? 2.0 : 3.0;
-            const shapeTrigramWeight = isShortText ? 1.0 : 2.0;
-            const shapeQuadgramWeight = isShortText ? 0.5 : 1.0;
+            // 2. Shape Score (Distribution Match) - using config values
+            const shapeWeights = configLoader.get('language_detection.weights.shape_score', {});
+            const shapeMonogramWeight = shapeWeights.monogram?.[lengthCategory] || 0.5;
+            const shapeBigramWeight = shapeWeights.bigram?.[lengthCategory] || 3.0;
+            const shapeTrigramWeight = shapeWeights.trigram?.[lengthCategory] || 2.0;
+            const shapeQuadgramWeight = shapeWeights.quadgram?.[lengthCategory] || 1.0;
             const shapeScore = (
                 analysis.monograms.shapeScore * shapeMonogramWeight +
                 analysis.bigrams.shapeScore * shapeBigramWeight + 
@@ -470,19 +565,36 @@ export class LanguageAnalysis {
             ) / (shapeMonogramWeight + shapeBigramWeight + shapeTrigramWeight + shapeQuadgramWeight);
 
             const targetIoC = expectedIoC[langKey] || 1.7;
-            // For short texts, IoC distance is less reliable, reduce its impact
-            const iocWeight = isShortText ? 20 : (isMediumText ? 35 : 50);
+            // IoC weight from config
+            const iocWeights = configLoader.get('language_detection.ioc.weight', {});
+            const iocWeight = iocWeights[lengthCategory] || 50;
             const iocDistance = Math.abs(textIoC - targetIoC) * iocWeight; 
             
             const alphabetPenalty = this.getAlphabetPenalty(cleanedText, langKey);
 
-            // 3. Dictionary Score (IMPROVED: cross-validation for short texts)
+            // 3. Stop Words Score (NEW: helps distinguish languages, especially for short texts)
+            const stopWordsScore = this._calculateStopWordsScore(text, langKey);
+            
+            // 4. Dictionary Score (IMPROVED: cross-validation for short texts)
             // For short texts, dictionary validation is MORE important (fewer words to analyze)
             const dictionaryScore = this._calculateDictionaryScore(text, langKey);
             
+            // Get dictionary config values
+            const dictConfig = configLoader.get('language_detection.dictionary', {});
+            const minScoreForBonus = dictConfig.min_score_for_bonus || 0.2;
+            const bonusMultiplier = dictConfig.bonus_multiplier || 50;
+            const weightMultipliers = dictConfig.weight_multiplier || {};
+            const dictionaryWeight = weightMultipliers[lengthCategory] || 1.0;
+            const crossValidationConfig = dictConfig.cross_validation || {};
+            const significantDifference = crossValidationConfig.significant_difference || 0.2;
+            const crossValidationBonusValue = crossValidationConfig.bonus || -30;
+            const crossValidationPenaltyValue = crossValidationConfig.penalty || 30;
+            const lowScorePenalties = dictConfig.low_score_penalty || {};
+            const lowScoreThreshold = dictConfig.low_score_threshold || 0.1;
+            
             // For short texts, also check against other languages to find the best match
             let crossValidationBonus = 0;
-            if (isShortText && dictionaryScore !== null) {
+            if (lengthCategory === 'very_short' && dictionaryScore !== null) {
                 // Compare dictionary score with other similar languages
                 const otherScores = {};
                 for (const otherLang of candidateLanguages) {
@@ -496,39 +608,41 @@ export class LanguageAnalysis {
                 
                 // If this language has significantly better dictionary score, add bonus
                 const maxOtherScore = Math.max(...Object.values(otherScores), 0);
-                if (dictionaryScore > maxOtherScore + 0.2) {
-                    // This language is clearly better (at least 20% more valid words)
-                    crossValidationBonus = -30; // Significant bonus
-                } else if (dictionaryScore < maxOtherScore - 0.2) {
+                if (dictionaryScore > maxOtherScore + significantDifference) {
+                    // This language is clearly better
+                    crossValidationBonus = crossValidationBonusValue;
+                } else if (dictionaryScore < maxOtherScore - significantDifference) {
                     // Another language is clearly better
-                    crossValidationBonus = 30; // Penalty
+                    crossValidationBonus = crossValidationPenaltyValue;
                 }
             }
             
             // Dictionary score is 0-1, convert to penalty (lower is better for identityScore)
-            // For short texts, INCREASE dictionary weight (it's more reliable than stats)
-            const dictionaryWeight = isShortText ? 2.0 : (isMediumText ? 1.2 : 1.0); // Increased from 1.5 to 2.0
-            const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) 
-                ? -dictionaryScore * 50 * dictionaryWeight + crossValidationBonus
+            const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > minScoreForBonus) 
+                ? -dictionaryScore * bonusMultiplier * dictionaryWeight + crossValidationBonus
                 : crossValidationBonus;
             
-            // 4. Additional penalty for short texts when dictionary score is low
+            // 5. Additional penalty for short texts when dictionary score is low
             // If we have a dictionary but very few valid words, it's likely wrong language
-            if (isShortText && dictionaryScore !== null && dictionaryScore < 0.1) {
-                // Strong penalty if dictionary validation fails for short text
-                // This helps distinguish between similar languages (e.g., Portuguese vs Spanish)
-                alphabetPenalty += 150; // Increased from 100 to 150
+            const lowScorePenalty = lowScorePenalties[lengthCategory] || 0;
+            if (dictionaryScore !== null && dictionaryScore < lowScoreThreshold && lowScorePenalty > 0) {
+                alphabetPenalty += lowScorePenalty;
             }
+            
+            // 6. Stop Words Bonus (helps distinguish languages, especially for short texts)
+            // Stop words are more reliable than dictionary for encrypted text
+            const stopWordsBonus = stopWordsScore !== null ? stopWordsScore : 0;
 
             // Final Encrypted Score
             const encryptedScore = shapeScore + iocDistance;
 
             results.push({
                 language: langKey,
-                identityScore: identityScore + alphabetPenalty + dictionaryBonus,
+                identityScore: identityScore + alphabetPenalty + dictionaryBonus + stopWordsBonus,
                 encryptedScore: encryptedScore + alphabetPenalty, 
                 dictionaryScore: dictionaryScore, // Add dictionary score to details
-                details: { ...analysis, ioc: textIoC, expectedIoC: targetIoC, dictionaryScore }
+                stopWordsScore: stopWordsScore, // Add stop words score to details
+                details: { ...analysis, ioc: textIoC, expectedIoC: targetIoC, dictionaryScore, stopWordsScore }
             });
         }
 
@@ -536,7 +650,8 @@ export class LanguageAnalysis {
         
         // For short texts, prefer identityScore (includes dictionary validation)
         // For longer texts, use standard logic
-        const isShortText = cleanedText.length < 50;
+        const lengthCategory = configLoader.getTextLengthCategory(cleanedText.length);
+        const isShortText = lengthCategory === 'very_short';
         
         if (isShortText) {
             // For short texts, always use identityScore (includes dictionary bonus)
