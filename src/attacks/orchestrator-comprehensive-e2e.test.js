@@ -9,7 +9,7 @@ import path from 'path';
 // Load dictionaries directly from filesystem for tests
 // This bypasses fetch and loads dictionaries directly into LanguageAnalysis
 async function loadDictionariesForTests() {
-    const languagesToLoad = ['english', 'spanish', 'italian'];
+    const languagesToLoad = ['english', 'spanish', 'italian', 'french', 'portuguese'];
     const possiblePaths = [
         path.join(process.cwd(), 'demo/data'),
         path.join(process.cwd(), 'data'),
