@@ -81,7 +81,7 @@ describe('Orchestrator', () => {
             }
             
             expect(updates.length).toBeGreaterThan(2);
-            expect(updates[0].stage).toBe('detection');
+            expect(updates[0].stage).toMatch(/detection|cipher-detection|language-detection/);
             expect(updates[updates.length - 1].stage).toBe('complete');
             expect(updates[updates.length - 1].plaintext).toBeDefined();
         }, 60000);

@@ -1,7 +1,7 @@
 
 import 'regenerator-runtime/runtime';
 import { HMMSolver } from './hmm-solver';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
 import fs from 'fs';
 import path from 'path';
 

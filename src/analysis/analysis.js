@@ -11,7 +11,11 @@ import chineseData from '../language/models/chinese.js';
 // Dictionaries will be loaded asynchronously
 const dictionaries = {
     english: null, // Set<string>
-    spanish: null
+    spanish: null,
+    italian: null,
+    french: null,
+    portuguese: null,
+    german: null
 };
 
 const languages = {
@@ -42,7 +46,7 @@ export class LanguageAnalysis {
 
     /**
      * Loads a dictionary for a specific language from external JSON.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', 'italian', 'french', 'portuguese', or 'german'
      * @param {string} basePath - Path to the data folder (e.g. 'data/')
      */
     static async loadDictionary(language, basePath = 'data/') {
@@ -64,7 +68,7 @@ export class LanguageAnalysis {
 
     /**
      * Gets the loaded dictionary for a specific language.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', 'italian', 'french', 'portuguese', or 'german'
      * @returns {Set<string>|null} The dictionary Set, or null if not loaded
      */
     static getDictionary(language) {
@@ -73,7 +77,7 @@ export class LanguageAnalysis {
 
     /**
      * Checks if a dictionary is loaded for a specific language.
-     * @param {string} language - 'english' or 'spanish'
+     * @param {string} language - 'english', 'spanish', 'italian', 'french', 'portuguese', or 'german'
      * @returns {boolean} True if dictionary is loaded
      */
     static isDictionaryLoaded(language) {
@@ -353,6 +357,42 @@ export class LanguageAnalysis {
         return penalty;
     }
 
+    /**
+     * Helper method to calculate dictionary score for language detection.
+     * Extracts words from text and checks them against dictionary.
+     * @private
+     */
+    static _calculateDictionaryScore(text, language) {
+        const dict = this.getDictionary(language);
+        if (!dict) return null; // No dictionary available, return null to indicate no validation
+        
+        // Extract words from text
+        const words = text.toUpperCase()
+            .split(/\s+/)
+            .map(w => this.cleanText(w))
+            .filter(w => w.length >= 3); // Only consider words >= 3 chars
+        
+        if (words.length === 0) return null; // No words to validate
+        
+        // Count valid words
+        let validWords = 0;
+        for (const word of words) {
+            if (dict.has(word)) {
+                validWords++;
+            }
+        }
+        
+        // Return score: percentage of valid words (0-1, where 1 = 100% valid)
+        // Higher is better, so we return as a positive score
+        const wordCoverage = validWords / words.length;
+        
+        // Also consider average word length (longer valid words = higher confidence)
+        const avgLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
+        const lengthBonus = Math.min(avgLength / 10, 0.2); // Max 0.2 bonus for long words
+        
+        return wordCoverage * (1 + lengthBonus);
+    }
+
     static detectLanguage(text) {
         const results = [];
         // Keep accents for alphabet checking
@@ -412,14 +452,24 @@ export class LanguageAnalysis {
             
             const alphabetPenalty = this.getAlphabetPenalty(cleanedText, langKey);
 
+            // 3. Dictionary Score (NEW: validate words against dictionary)
+            // Only calculate if dictionary is available for this language
+            const dictionaryScore = this._calculateDictionaryScore(text, langKey);
+            // Dictionary score is 0-1, convert to penalty (lower is better for identityScore)
+            // If dictionaryScore is high (e.g., 0.8), reduce penalty by 0.8 * 50 = 40
+            // Only apply bonus if dictionary is loaded and has meaningful validation (>20% valid words)
+            // This helps when dictionaries are available, but doesn't hurt when they're not
+            const dictionaryBonus = (dictionaryScore !== null && dictionaryScore > 0.2) ? -dictionaryScore * 50 : 0;
+
             // Final Encrypted Score
             const encryptedScore = shapeScore + iocDistance;
 
             results.push({
                 language: langKey,
-                identityScore: identityScore + alphabetPenalty,
+                identityScore: identityScore + alphabetPenalty + dictionaryBonus,
                 encryptedScore: encryptedScore + alphabetPenalty, 
-                details: { ...analysis, ioc: textIoC, expectedIoC: targetIoC }
+                dictionaryScore: dictionaryScore, // Add dictionary score to details
+                details: { ...analysis, ioc: textIoC, expectedIoC: targetIoC, dictionaryScore }
             });
         }
 

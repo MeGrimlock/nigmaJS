@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guesser.css">
     <link rel="stylesheet" href="css/navbar.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <!-- TensorFlow.js is already included in nigma.min.js, no need to load separately -->
+    <!-- This prevents duplicate kernel registration warnings -->
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -54,6 +55,17 @@
                         <div id="progressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s;"></div>
                     </div>
                 </div>
+                
+                <!-- Analysis Console -->
+                <div id="analysisConsole" style="margin-top: 1rem; display: none; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <h3 style="margin: 0; color: #a78bfa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">📊 Analysis Console</h3>
+                        <button id="clearConsoleBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">Clear</button>
+                    </div>
+                    <div id="consoleContent" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <!-- Console messages will be added here -->
+                    </div>
+                </div>
 
                 <button id="btnSolve" class="tab-btn" style="margin-top: 1rem; width: 100%; text-align: center; opacity: 0.5; cursor: not-allowed;" disabled>
                     📝 Enter text to begin
@@ -91,9 +103,12 @@
             <div id="resultsContainer" class="input-card" style="display: none; border-color: var(--success);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">🔓 Decrypted Result (Live Preview)</h2>
-                    <span id="methodBadge" style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--accent);">
-                        Method: HMM
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button class="copy-btn" id="copyDecryptedBtn" title="Copy decrypted text" style="display: none;">📋 Copy</button>
+                        <span id="methodBadge" style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: var(--accent);">
+                            Method: HMM
+                        </span>
+                    </div>
                 </div>
                 <p id="decryptedOutput" style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; color: #e2e8f0; font-size: 1.1rem; line-height: 1.6;"></p>
                 
@@ -125,7 +140,7 @@
                     </ul>
                     <strong>⚡ Step 3 - Execution:</strong> Runs the selected attack and returns the best result.
                     <br>
-                    <strong>📚 Step 4 - Dictionary Validation:</strong> Validates the decrypted text against a 275k+ word English dictionary to measure confidence:
+                    <strong>📚 Step 4 - Dictionary Validation:</strong> Validates the decrypted text against language-specific dictionaries (English 275k+, Spanish 636k+, Italian 17k+, French 319k+, Portuguese 182k+, German 66k+ words) to measure confidence:
                     <ul style="margin: 0.5rem 0 0.5rem 1.5rem; padding: 0;">
                         <li><strong>Word Coverage:</strong> % of valid dictionary words found</li>
                         <li><strong>Character Coverage:</strong> % of characters in valid words</li>
@@ -151,9 +166,26 @@
     <script src="js/navbar.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Suppress TensorFlow.js kernel registration warnings
+            // These warnings occur when kernels are registered multiple times
+            // They're harmless but clutter the console
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                const message = args[0];
+                // Filter out TensorFlow kernel registration warnings
+                if (typeof message === 'string' && (
+                    message.includes('kernel') && message.includes('already registered') ||
+                    message.includes('backend was already registered')
+                )) {
+                    return; // Suppress this warning
+                }
+                // Allow all other warnings through
+                originalWarn.apply(console, args);
+            };
+            
             // Check Library and Hide Loader
             function checkLibrary() {
-                if (window.nigmajs && window.nigmajs.HMMSolver) {
+                if (window.nigmajs && (window.nigmajs.Orchestrator || window.nigmajs.HMMSolver)) {
                     const loader = document.getElementById('loading-overlay');
                     if (loader) {
                         loader.classList.add('hidden');
@@ -252,8 +284,8 @@
                         return;
                     }
                     
-                    const { Stats, Scorers, CipherIdentifier } = window.nigmajs;
-                    if (!Stats || !Scorers || !CipherIdentifier) return;
+                    const { Stats, LanguageAnalysis, CipherIdentifier } = window.nigmajs;
+                    if (!Stats || !LanguageAnalysis || !CipherIdentifier) return;
                     
                     // Text Statistics
                     const cleanText = text.toUpperCase().replace(/[^A-Z]/g, '');
@@ -286,111 +318,176 @@
                         return;
                     }
 
-                    try {
+                    // Show loading state
+                    cipherDetectionContent.innerHTML = '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">🔍 Analyzing cipher...</div>';
+                    languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">🌐 Detecting language...</div>';
+                    
+                    // Run async analyses in parallel
+                    Promise.all([
                         // Cipher Detection
-                        const result = CipherIdentifier.identify(text);
-                        
-                        // Build HTML for cipher detection (compact for sidebar)
-                        let cipherHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                        
-                        result.families.slice(0, 3).forEach((family, index) => {
-                            const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
-                            const confidencePercent = (family.confidence * 100).toFixed(0);
-                            const confidenceColor = family.confidence > 0.7 ? '#10b981' : family.confidence > 0.4 ? '#f59e0b' : '#94a3b8';
-                            
-                            cipherHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                <div style="flex: 1;">
-                                    <span style="margin-right: 0.4rem;">${icon}</span>
-                                    <strong style="color: #e2e8f0; font-size: 0.75rem;">${family.type.replace(/-/g, ' ').toUpperCase()}</strong>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                    <div style="width: 35px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-                                        <div style="width: ${confidencePercent}%; height: 100%; background: ${confidenceColor};"></div>
-                                    </div>
-                                    <span style="color: ${confidenceColor}; font-size: 0.7rem; font-weight: bold; min-width: 30px;">${confidencePercent}%</span>
-                                </div>
-                            </div>`;
-                        });
-                        
-                        cipherHtml += '</div>';
-                        cipherDetectionContent.innerHTML = cipherHtml;
-                        
-                        // Language Probability
-                        try {
-                            const langRanking = Scorers.rankLanguages(text);
-                            let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
-                            
-                            if (!langRanking || langRanking.length === 0) {
-                                langHtml += '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">No language data available</div>';
-                            } else {
-                                // Filter out invalid scores (NaN, undefined, null)
-                                const validRanking = langRanking.filter(lang => 
-                                    lang && 
-                                    typeof lang.score === 'number' && 
-                                    !isNaN(lang.score) && 
-                                    isFinite(lang.score)
-                                );
+                        (async () => {
+                            try {
+                                const { CipherIdentifier } = window.nigmajs;
+                                const result = await CipherIdentifier.identify(text, 'auto');
                                 
-                                if (validRanking.length === 0) {
-                                    langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to analyze language</div>';
-                                } else {
-                                    const maxScore = validRanking[0].score;
-                                    const minScore = validRanking[validRanking.length - 1].score;
-                                    const scoreRange = maxScore - minScore;
-                                    
-                                    validRanking.slice(0, 5).forEach((lang, index) => {
-                                        const langName = lang.lang ? lang.lang.charAt(0).toUpperCase() + lang.lang.slice(1) : 'Unknown';
+                                // Build HTML for cipher detection (compact for sidebar)
+                                let cipherHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                                
+                                if (result.families && result.families.length > 0) {
+                                    result.families.slice(0, 5).forEach((family, index) => {
+                                        const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index === 3 ? '4️⃣' : '5️⃣';
+                                        const confidencePercent = (family.confidence * 100).toFixed(0);
+                                        const confidenceColor = family.confidence > 0.7 ? '#10b981' : family.confidence > 0.4 ? '#f59e0b' : '#94a3b8';
                                         
-                                        // Calculate probability with proper validation
-                                        let probability = '0';
-                                        if (scoreRange > 0.001) { // Avoid division by zero and very small ranges
-                                            const normalizedScore = ((lang.score - minScore) / scoreRange) * 100;
-                                            probability = Math.max(0, Math.min(100, normalizedScore)).toFixed(0);
-                                        } else {
-                                            // All scores are very similar, distribute evenly
-                                            probability = Math.round(100 / validRanking.length).toString();
-                                        }
+                                        // Format cipher type name
+                                        const typeName = family.type
+                                            .replace(/-/g, ' ')
+                                            .split(' ')
+                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                            .join(' ');
                                         
-                                        // Ensure probability is a valid number
-                                        if (isNaN(probability) || !isFinite(parseFloat(probability))) {
-                                            probability = '0';
-                                        }
-                                        
-                                        const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
-                                    
-                                        langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-                                            <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
+                                        cipherHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                            <div style="flex: 1;">
+                                                <span style="margin-right: 0.4rem;">${icon}</span>
+                                                <strong style="color: #e2e8f0; font-size: 0.75rem;">${typeName}</strong>
+                                            </div>
                                             <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                                <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-                                                    <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
+                                                <div style="width: 35px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                                    <div style="width: ${confidencePercent}%; height: 100%; background: ${confidenceColor};"></div>
                                                 </div>
-                                                <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
+                                                <span style="color: ${confidenceColor}; font-size: 0.7rem; font-weight: bold; min-width: 30px;">${confidencePercent}%</span>
                                             </div>
                                         </div>`;
                                     });
+                                } else {
+                                    cipherHtml += '<div style="color: #f59e0b; font-size: 0.75rem;">Unable to detect cipher type</div>';
                                 }
+                                
+                                cipherHtml += '</div>';
+                                cipherDetectionContent.innerHTML = cipherHtml;
+                            } catch (error) {
+                                console.error('Cipher detection error:', error);
+                                cipherDetectionContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Cipher detection error</div>';
                             }
-                            
-                            langHtml += '</div>';
-                            languageProbContent.innerHTML = langHtml;
-                        } catch (langError) {
-                            console.error('Language probability error:', langError);
-                            languageProbContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Language analysis error</div>';
-                        }
+                        })(),
                         
-                        langHtml += '</div>';
-                        languageProbContent.innerHTML = langHtml;
-                        
-                    } catch (e) {
-                        console.error('Analysis error:', e);
+                        // Language Probability
+                        (async () => {
+                            try {
+                                const { LanguageAnalysis } = window.nigmajs;
+                                const langResults = await LanguageAnalysis.detectLanguage(text);
+                                
+                                let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
+                                
+                                if (!langResults || langResults.length === 0) {
+                                    langHtml += '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">No language data available</div>';
+                                } else {
+                                    // Calculate probabilities from identityScore (lower is better for identityScore)
+                                    const validResults = langResults.filter(lang => 
+                                        lang && 
+                                        typeof lang.identityScore === 'number' && 
+                                        !isNaN(lang.identityScore) && 
+                                        isFinite(lang.identityScore)
+                                    );
+                                    
+                                    if (validResults.length === 0) {
+                                        langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to analyze language</div>';
+                                    } else {
+                                        // Convert identityScore to probability (lower score = higher probability)
+                                        const maxScore = Math.max(...validResults.map(l => l.identityScore));
+                                        const minScore = Math.min(...validResults.map(l => l.identityScore));
+                                        const scoreRange = maxScore - minScore;
+                                        
+                                        validResults.slice(0, 5).forEach((lang, index) => {
+                                            const langName = lang.language ? lang.language.charAt(0).toUpperCase() + lang.language.slice(1) : 'Unknown';
+                                            
+                                            // Calculate probability: lower identityScore = higher probability
+                                            let probability = '0';
+                                            if (scoreRange > 0.001) {
+                                                // Invert: (maxScore - identityScore) / range * 100
+                                                const normalizedScore = ((maxScore - lang.identityScore) / scoreRange) * 100;
+                                                probability = Math.max(0, Math.min(100, normalizedScore)).toFixed(0);
+                                            } else {
+                                                // All scores are very similar, distribute evenly
+                                                probability = Math.round(100 / validResults.length).toString();
+                                            }
+                                            
+                                            // Ensure probability is a valid number
+                                            if (isNaN(probability) || !isFinite(parseFloat(probability))) {
+                                                probability = '0';
+                                            }
+                                            
+                                            const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
+                                        
+                                            langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                                                <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
+                                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                                    <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                                        <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
+                                                    </div>
+                                                    <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
+                                                </div>
+                                            </div>`;
+                                        });
+                                    }
+                                }
+                                
+                                langHtml += '</div>';
+                                languageProbContent.innerHTML = langHtml;
+                            } catch (langError) {
+                                console.error('Language probability error:', langError);
+                                languageProbContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Language analysis error</div>';
+                            }
+                        })()
+                    ]).catch(error => {
+                        console.error('Analysis error:', error);
                         cipherDetectionContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Analysis error</div>';
-                    }
+                    });
                 }, 500); // 500ms debounce
             });
             
             // Initial button state
             updateButtonState();
 
+            // Console management
+            const analysisConsole = document.getElementById('analysisConsole');
+            const consoleContent = document.getElementById('consoleContent');
+            const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+            
+            function addConsoleMessage(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const colors = {
+                    info: '#3b82f6',
+                    success: '#10b981',
+                    warning: '#f59e0b',
+                    error: '#ef4444',
+                    progress: '#a78bfa'
+                };
+                const icons = {
+                    info: 'ℹ️',
+                    success: '✓',
+                    warning: '⚠️',
+                    error: '✗',
+                    progress: '⏳'
+                };
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = `display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem; background: rgba(255,255,255,0.02); border-left: 2px solid ${colors[type]}; border-radius: 4px;`;
+                messageDiv.innerHTML = `
+                    <span style="color: ${colors[type]}; font-size: 0.7rem; min-width: 50px;">${timestamp}</span>
+                    <span style="color: ${colors[type]}; margin-right: 0.3rem;">${icons[type]}</span>
+                    <span style="color: #e2e8f0; flex: 1;">${message}</span>
+                `;
+                
+                consoleContent.appendChild(messageDiv);
+                // Auto-scroll to bottom
+                analysisConsole.scrollTop = analysisConsole.scrollHeight;
+            }
+            
+            clearConsoleBtn.addEventListener('click', () => {
+                consoleContent.innerHTML = '';
+            });
+            
             btnSolve.addEventListener('click', async () => {
                 const text = input.value;
                 if (!text) return;
@@ -401,6 +498,8 @@
                 output.innerText = "";
                 container.style.display = 'block'; 
                 progressContainer.style.display = 'block';
+                analysisConsole.style.display = 'block';
+                consoleContent.innerHTML = ''; // Clear console
                 methodBadge.innerText = "Method: Detecting...";
                 progressText.innerText = "Decrypting...";
                 
@@ -414,20 +513,130 @@
                         const { Orchestrator } = window.nigmajs;
                         if (!Orchestrator) throw new Error("Orchestrator not loaded.");
 
-                        // --- Use Orchestrator with Dictionary Validation ---
-                        const orchestrator = new Orchestrator('english');
+                        // --- Use Orchestrator with Auto Language Detection & Dictionary Validation ---
+                        // 'auto' enables automatic language detection before decryption
+                        const orchestrator = new Orchestrator('auto');
                         
-                        // Update progress
-                        progressBar.style.width = '50%';
-                        progressText.innerText = "Analyzing cipher...";
+                        let finalResult = null;
                         
-                        // Use autoDecrypt (non-generator) for dictionary validation
-                        const result = await orchestrator.autoDecrypt(text, {
-                            tryMultiple: true, // Try multiple strategies for best result
-                            useDictionary: true // Enable dictionary validation
+                        // Use generator for real-time progress
+                        for await (const update of orchestrator.autoDecryptGenerator(text, {
+                            tryMultiple: true,
+                            useDictionary: true,
+                            maxTime: 60000
+                        })) {
+                            // Update progress bar
+                            if (update.progress !== undefined) {
+                                progressBar.style.width = `${update.progress}%`;
+                                progressText.innerText = `${Math.round(update.progress)}%`;
+                            }
+                            
+                            // Add console message based on stage
+                            if (update.stage === 'language-detection') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'language-detected') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'cipher-detection') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'cipher-detected') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'strategies-selected') {
+                                addConsoleMessage(update.message, 'info');
+                            } else if (update.stage === 'trying-strategy') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'solving') {
+                                // Don't spam console with every iteration, only show significant progress
+                                if (update.progress % 10 < 2) { // Show every ~10%
+                                    addConsoleMessage(update.message, 'progress');
+                                }
+                            } else if (update.stage === 'strategy-complete') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'strategy-failed') {
+                                addConsoleMessage(update.message, 'warning');
+                            } else if (update.stage === 'early-stop') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'validating') {
+                                addConsoleMessage(update.message, 'progress');
+                            } else if (update.stage === 'validation-complete') {
+                                addConsoleMessage(update.message, 'success');
+                            } else if (update.stage === 'validation-failed') {
+                                addConsoleMessage(update.message, 'warning');
+                            } else if (update.stage === 'complete') {
+                                addConsoleMessage(update.message, 'success');
+                                finalResult = update;
+                                console.log('[Demo] Final result received (complete):', {
+                                    method: update.method,
+                                    confidence: update.confidence,
+                                    plaintextLength: update.plaintext?.length || 0,
+                                    hasPlaintext: !!update.plaintext
+                                });
+                            } else if (update.stage === 'failed') {
+                                addConsoleMessage(update.message, 'error');
+                                finalResult = update;
+                                console.log('[Demo] Final result received (failed):', {
+                                    method: update.method,
+                                    confidence: update.confidence,
+                                    plaintextLength: update.plaintext?.length || 0
+                                });
+                            } else if (update.stage === 'timeout') {
+                                addConsoleMessage(update.message, 'warning');
+                            }
+                            
+                            // Update preview if we have plaintext (from any stage)
+                            if (update.plaintext) {
+                                if (update.stage === 'solving' || update.stage === 'strategy-complete' || update.stage === 'complete') {
+                                    output.innerText = update.plaintext;
+                                }
+                                // Update finalResult if:
+                                // 1. It's the final complete stage (always use this)
+                                // 2. Or it has plaintext and method and we don't have a finalResult yet
+                                // 3. Or it has better confidence than current finalResult
+                                if (update.plaintext && update.method && update.method !== 'none') {
+                                    if (update.stage === 'complete' || update.stage === 'failed') {
+                                        // Always use final stage result
+                                        console.log('[Demo] Setting finalResult from final stage:', {
+                                            stage: update.stage,
+                                            method: update.method,
+                                            confidence: update.confidence,
+                                            plaintextLength: update.plaintext.length
+                                        });
+                                        finalResult = update;
+                                    } else if (!finalResult) {
+                                        // First result, use it temporarily
+                                        console.log('[Demo] Setting temporary finalResult from update:', {
+                                            method: update.method,
+                                            confidence: update.confidence,
+                                            plaintextLength: update.plaintext.length
+                                        });
+                                        finalResult = update;
+                                    } else if (update.confidence && finalResult.confidence && update.confidence > finalResult.confidence) {
+                                        // Better confidence, update (but only if not from final stage)
+                                        console.log('[Demo] Updating finalResult with better confidence:', {
+                                            method: update.method,
+                                            confidence: update.confidence,
+                                            previousConfidence: finalResult.confidence
+                                        });
+                                        finalResult = update;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Use final result
+                        const result = finalResult || {
+                            plaintext: text,
+                            method: 'none',
+                            confidence: 0
+                        };
+                        
+                        console.log('[Demo] Decryption result:', {
+                            method: result.method,
+                            confidence: result.confidence,
+                            plaintextLength: result.plaintext?.length || 0,
+                            plaintextPreview: result.plaintext?.substring(0, 100) || 'N/A',
+                            hasPlaintext: !!result.plaintext,
+                            finalResultWasNull: !finalResult
                         });
-                        
-                        console.log('[Demo] Decryption result:', result);
                         
                         // Check if decryption was successful
                         const isSuccess = result.plaintext && result.plaintext.length > 0 && result.method !== 'none';
@@ -443,6 +652,35 @@
                         }
                         
                         output.innerText = result.plaintext || "❌ Decryption failed.";
+                        
+                        // Show and setup copy button if decryption was successful
+                        const copyDecryptedBtn = document.getElementById('copyDecryptedBtn');
+                        if (copyDecryptedBtn && isSuccess && result.plaintext) {
+                            copyDecryptedBtn.style.display = 'inline-flex';
+                            copyDecryptedBtn.onclick = () => {
+                                navigator.clipboard.writeText(result.plaintext).then(() => {
+                                    const originalText = copyDecryptedBtn.innerHTML;
+                                    copyDecryptedBtn.innerHTML = '✓ Copied!';
+                                    copyDecryptedBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+                                    copyDecryptedBtn.style.borderColor = '#10b981';
+                                    copyDecryptedBtn.style.color = '#10b981';
+                                    setTimeout(() => {
+                                        copyDecryptedBtn.innerHTML = originalText;
+                                        copyDecryptedBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                                        copyDecryptedBtn.style.borderColor = 'var(--accent)';
+                                        copyDecryptedBtn.style.color = 'var(--accent)';
+                                    }, 2000);
+                                }).catch(err => {
+                                    console.error('Failed to copy:', err);
+                                    copyDecryptedBtn.innerHTML = '✗ Error';
+                                    setTimeout(() => {
+                                        copyDecryptedBtn.innerHTML = '📋 Copy';
+                                    }, 2000);
+                                });
+                            };
+                        } else if (copyDecryptedBtn) {
+                            copyDecryptedBtn.style.display = 'none';
+                        }
                         
                         // Update badge with method and confidence
                         const confidencePercent = (result.confidence * 100).toFixed(0);
@@ -538,7 +776,9 @@
                             // Try to manually validate if we have the DictionaryValidator
                             if (window.nigmajs.DictionaryValidator && isSuccess) {
                                 try {
-                                    const validator = new window.nigmajs.DictionaryValidator('english');
+                                    // Use detected language from orchestrator, fallback to 'english'
+                                    const detectedLanguage = orchestrator.language || 'english';
+                                    const validator = new window.nigmajs.DictionaryValidator(detectedLanguage);
                                     const manualValidation = await validator.validate(result.plaintext);
                                     
                                     console.log('[Demo] Manual validation:', manualValidation);

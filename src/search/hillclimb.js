@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import { Scorer } from './scorer.js';
 import { TextUtils } from '../core/text-utils.js';
+import { LanguageAnalysis } from '../analysis/analysis.js';
 
 /**
  * Hill Climbing algorithm for breaking substitution ciphers.
@@ -34,20 +35,22 @@ export class HillClimb {
      * @param {string} options.initMethod - Initialization method ('random', 'frequency', 'identity').
      * @param {number} options.maxIterations - Maximum iterations before giving up (default: 10000).
      * @param {number} options.restarts - Number of random restarts (default: 1).
+     * @param {boolean} options.useDictionary - Use dictionary validation in scoring (default: true).
      * @returns {Object} Result object with { plaintext, key, score, iterations }.
      */
     solve(ciphertext, options = {}) {
         const {
             initMethod = 'frequency',
             maxIterations = 10000,
-            restarts = 1
+            restarts = 1,
+            useDictionary = true
         } = options;
         
         let bestResult = null;
         
         // Try multiple restarts to avoid local maxima
         for (let restart = 0; restart < restarts; restart++) {
-            const result = this._singleRun(ciphertext, initMethod, maxIterations);
+            const result = this._singleRun(ciphertext, initMethod, maxIterations, useDictionary);
             
             if (!bestResult || result.score > bestResult.score) {
                 bestResult = result;
@@ -56,17 +59,63 @@ export class HillClimb {
         
         return bestResult;
     }
+
+    /**
+     * Scores text using N-gram scoring + dictionary validation (hybrid).
+     * @private
+     * @param {string} cleanText - Clean text (letters only) for N-gram scoring
+     * @param {string} fullText - Full text (with punctuation) for dictionary validation
+     * @param {Object} key - Current substitution key
+     * @returns {number} Combined score (higher is better)
+     */
+    _scoreWithDictionary(cleanText, fullText, key) {
+        // N-gram score (primary)
+        const ngramScore = this.scorer.scoreWithKey(cleanText, key);
+        
+        // Dictionary validation score (bonus)
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        if (!dict) return ngramScore; // No dictionary, return N-gram only
+        
+        // Extract words from full text and check against dictionary
+        const words = fullText.toUpperCase()
+            .split(/\s+/)
+            .map(w => TextUtils.onlyLetters(w))
+            .filter(w => w.length >= 3); // Only consider words >= 3 chars
+        
+        if (words.length === 0) return ngramScore;
+        
+        // Count valid words
+        let validWords = 0;
+        for (const word of words) {
+            if (dict.has(word)) {
+                validWords++;
+            }
+        }
+        
+        // Dictionary score: percentage of valid words (0-1)
+        const dictScore = validWords / words.length;
+        
+        // Combine: 70% N-gram, 30% dictionary
+        // Dictionary bonus: if 0.8 valid, add 0.8 * 50 = 40 to score
+        const dictBonus = dictScore * 50;
+        
+        // Final score: N-gram score + dictionary bonus
+        return ngramScore + dictBonus;
+    }
     
     /**
      * Single hill climbing run.
      * @private
      */
-    _singleRun(ciphertext, initMethod, maxIterations) {
+    _singleRun(ciphertext, initMethod, maxIterations, useDictionary = true) {
         const cleaned = TextUtils.onlyLetters(ciphertext);
         
         // Initialize key
         let currentKey = this._initializeKey(cleaned, initMethod);
-        let currentScore = this.scorer.scoreWithKey(cleaned, currentKey);
+        // Use hybrid scoring if dictionary is enabled
+        let currentScore = useDictionary 
+            ? this._scoreWithDictionary(cleaned, ciphertext, currentKey)
+            : this.scorer.scoreWithKey(cleaned, currentKey);
         
         let iteration = 0;
         let improved = true;
@@ -86,7 +135,10 @@ export class HillClimb {
                     
                     // Swap
                     const newKey = Scorer.swapKey(currentKey, char1, char2);
-                    const newScore = this.scorer.scoreWithKey(cleaned, newKey);
+                    // Use hybrid scoring if dictionary is enabled
+                    const newScore = useDictionary
+                        ? this._scoreWithDictionary(cleaned, ciphertext, newKey)
+                        : this.scorer.scoreWithKey(cleaned, newKey);
                     
                     // If improvement, accept and restart inner loop
                     if (newScore > currentScore) {

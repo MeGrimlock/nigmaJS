@@ -1,26 +1,28 @@
 import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
-import { HMMSolver } from './hmm-solver.js';
-import { VigenereSolver } from './vigenere-solver.js';
-import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
+import { StrategySelector } from './helpers/strategy-selector.js';
+import { LanguageHandler } from './helpers/language-handler.js';
+import { ResultValidator } from './helpers/result-validator.js';
 import { HillClimb } from '../search/hillclimb.js';
 import { SimulatedAnnealing } from '../search/simulated-annealing.js';
-import { Scorer } from '../search/scorer.js';
-import { TextUtils } from '../core/text-utils.js';
 import { DictionaryValidator } from '../language/dictionary-validator.js';
 
 /**
  * Orchestrator: Intelligent attack coordinator for classical ciphers.
  * 
+ * This is the main coordinator class that orchestrates the decryption process.
+ * It delegates specific responsibilities to specialized modules:
+ * - LanguageHandler: Language detection and management
+ * - StrategySelector: Strategy selection based on cipher type
+ * - Individual Strategy classes: Actual decryption work
+ * - ResultValidator: Result validation with dictionaries
+ * 
  * Workflow:
- * 1. Detect cipher type using CipherIdentifier (Phase 3)
- * 2. Select appropriate attack strategy:
- *    - Caesar/Simple Shift → Brute Force (26 rotations)
- *    - Vigenère-like → Friedman Test + Column solving
- *    - Monoalphabetic Substitution → Hill Climbing / Simulated Annealing
- *    - Transposition → (Future: anagramming, column permutation)
- * 3. Execute attack(s) with multiple strategies
- * 4. Return best result based on scoring
+ * 1. Detect language (if auto-detection enabled)
+ * 2. Detect cipher type using CipherIdentifier
+ * 3. Select appropriate attack strategies
+ * 4. Execute strategies for each language candidate
+ * 5. Validate and return best result
  * 
  * References:
  * - "Automated Cryptanalysis of Monoalphabetic Substitution Ciphers" (Jakobsen, 1995)
@@ -29,10 +31,11 @@ import { DictionaryValidator } from '../language/dictionary-validator.js';
 export class Orchestrator {
     /**
      * Creates an orchestrator.
-     * @param {string} language - Target language ('english', 'spanish', etc.)
+     * @param {string} language - Target language ('english', 'spanish', etc.) or 'auto' for automatic detection
      */
     constructor(language = 'english') {
         this.language = language;
+        this.autoDetectLanguage = (language === 'auto' || !language);
     }
     
     /**
@@ -54,99 +57,124 @@ export class Orchestrator {
         
         const startTime = Date.now();
         
-        // Step 1: Detect cipher type
-        const detection = CipherIdentifier.identify(ciphertext);
+        // Step 0: Auto-detect language if needed
+        const langInfo = await LanguageHandler.detectLanguage(
+            ciphertext, 
+            this.autoDetectLanguage, 
+            this.language
+        );
+        this.language = langInfo.language;
+        this.languageDetectionResults = langInfo.languageDetectionResults;
+        const languageCandidates = langInfo.languageCandidates;
+        
+        // Step 1: Detect cipher type (use first language candidate for detection)
+        const languageForDetection = languageCandidates[0] === 'auto' ? 'english' : languageCandidates[0];
+        const detection = await CipherIdentifier.identify(ciphertext, languageForDetection);
         const topCandidate = detection.families[0];
         
-        console.log(`[Orchestrator] Detected: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
+        console.log(`[Orchestrator] Detected cipher: ${topCandidate.type} (confidence: ${topCandidate.confidence})`);
         
         // Step 2: Select attack strategy based on detection
-        const strategies = this._selectStrategies(topCandidate, detection.stats);
+        const strategies = StrategySelector.selectStrategies(
+            topCandidate, 
+            detection.stats, 
+            ciphertext,
+            this.language,
+            this.languageDetectionResults,
+            this.autoDetectLanguage
+        );
+        console.log(`[Orchestrator] Selected ${strategies.length} strategy/strategies`);
         
-        // Step 3: Execute strategies
+        // Step 3: Execute strategies for EACH language candidate
         const results = [];
+        let bestResultAcrossLanguages = null;
+        let bestScoreAcrossLanguages = -Infinity;
+        const originalLanguage = this.language;
         
-        for (const strategy of strategies) {
-            const elapsed = Date.now() - startTime;
-            if (elapsed > maxTime) {
-                console.log(`[Orchestrator] Timeout reached (${maxTime}ms)`);
-                break;
-            }
+        for (const tryLanguage of languageCandidates) {
+            console.log(`\n[Orchestrator] ===== Trying ALL methods for language: ${tryLanguage} =====`);
             
-            try {
-                console.log(`[Orchestrator] Trying strategy: ${strategy.name}`);
-                const result = await strategy.execute(ciphertext);
-                
-                if (result) {
-                    results.push({
-                        ...result,
-                        cipherType: topCandidate.type,
-                        detectionConfidence: topCandidate.confidence
-                    });
-                }
-                
-                // If we found a very good result, stop early
-                if (result && result.confidence > 0.9) {
-                    console.log(`[Orchestrator] High confidence result found, stopping early`);
+            // Temporarily change language for this iteration
+            this.language = tryLanguage;
+            
+            // Try to load dictionary for this language
+            await LanguageHandler.loadDictionary(tryLanguage);
+            
+            // Execute ALL strategies for this language
+            for (let i = 0; i < strategies.length; i++) {
+                const strategy = strategies[i];
+                const elapsed = Date.now() - startTime;
+                if (elapsed > maxTime) {
+                    console.log(`[Orchestrator] Timeout reached (${maxTime}ms)`);
                     break;
                 }
                 
-                if (!tryMultiple) break; // Only try first strategy
-            } catch (e) {
-                console.error(`[Orchestrator] Strategy ${strategy.name} failed:`, e.message);
-            }
-        }
-        
-        // Step 4: Validate with dictionary (if enabled and results exist)
-        if (useDictionary && results.length > 0) {
-            console.log('[Orchestrator] Validating results with dictionary...');
-            const validator = new DictionaryValidator(this.language);
-            
-            try {
-                const validatedResults = await validator.validateMultiple(results);
-                // validatedResults are already sorted by updated confidence
-                
-                // Add dictionary validation info to top result
-                const bestResult = validatedResults[0];
-                const dictConfidence = bestResult.validation.confidence;
-                const wordCoverage = parseFloat(bestResult.validation.metrics.wordCoverage) / 100;
-                
-                console.log(`[Orchestrator] Best result after dictionary validation: confidence=${bestResult.confidence.toFixed(2)}, validWords=${bestResult.validation.metrics.validWords}, wordCoverage=${wordCoverage.toFixed(2)}`);
-
-                // REJECT if dictionary validation is too low (< 30% word coverage)
-                // This prevents false positives like Vigenère decrypting Porta as gibberish
-                if (wordCoverage < 0.30 && dictConfidence < 0.40) {
-                    console.warn(`[Orchestrator] Best result rejected: word coverage too low (${(wordCoverage * 100).toFixed(0)}%). Trying next strategy...`);
+                try {
+                    console.log(`[Orchestrator] [${tryLanguage}] Trying strategy ${i + 1}/${strategies.length}: ${strategy.name}`);
+                    const result = await strategy.execute(ciphertext);
                     
-                    // Try to find a better result
-                    for (let i = 1; i < validatedResults.length; i++) {
-                        const altResult = validatedResults[i];
-                        const altCoverage = parseFloat(altResult.validation.metrics.wordCoverage) / 100;
-                        if (altCoverage >= 0.30 || altResult.validation.confidence >= 0.40) {
-                            console.log(`[Orchestrator] Using alternative result: ${altResult.method} with ${(altCoverage * 100).toFixed(0)}% coverage`);
-                            return {
-                                ...altResult,
-                                dictionaryValidation: altResult.validation
+                    if (result && result.plaintext) {
+                        // Validate result with dictionary for this language
+                        const validatedResult = await ResultValidator.validateResult(result, tryLanguage);
+                        results.push({
+                            ...validatedResult,
+                            language: tryLanguage,
+                            cipherType: topCandidate.type,
+                            detectionConfidence: topCandidate.confidence
+                        });
+                        
+                        // Track best result across all languages
+                        if (validatedResult.combinedScore > bestScoreAcrossLanguages) {
+                            bestScoreAcrossLanguages = validatedResult.combinedScore;
+                            bestResultAcrossLanguages = {
+                                ...validatedResult,
+                                language: tryLanguage,
+                                cipherType: topCandidate.type,
+                                detectionConfidence: topCandidate.confidence
                             };
                         }
+                        
+                        console.log(`[Orchestrator] [${tryLanguage}] ${strategy.name}: confidence=${(validatedResult.confidence * 100).toFixed(0)}%, wordCoverage=${((validatedResult.wordCoverage || 0) * 100).toFixed(0)}%, combinedScore=${validatedResult.combinedScore.toFixed(2)}`);
+                        
+                        // Early termination: If we found a VERY good result
+                        if (ResultValidator.isExcellentResult(validatedResult)) {
+                            console.log(`[Orchestrator] ✓ Excellent result found for ${tryLanguage}! Stopping early.`);
+                            // Restore original language
+                            this.language = originalLanguage;
+                            // Return best result
+                            if (useDictionary && bestResultAcrossLanguages) {
+                                try {
+                                    const validator = new DictionaryValidator(bestResultAcrossLanguages.language);
+                                    const validation = await validator.validate(bestResultAcrossLanguages.plaintext);
+                                    return {
+                                        ...bestResultAcrossLanguages,
+                                        dictionaryValidation: validation
+                                    };
+                                } catch (e) {
+                                    return bestResultAcrossLanguages;
+                                }
+                            }
+                            return bestResultAcrossLanguages;
+                        }
                     }
-                    
-                    // No good result found - return best with warning
-                    console.warn('[Orchestrator] No result passed dictionary validation threshold');
+                } catch (e) {
+                    console.warn(`[Orchestrator] Strategy ${strategy.name} failed for ${tryLanguage}:`, e.message);
                 }
-                
-                return {
-                    ...bestResult,
-                    dictionaryValidation: bestResult.validation
-                };
-            } catch (error) {
-                console.warn('[Orchestrator] Dictionary validation failed:', error);
-                // Fall back to non-validated results
+            }
+            
+            // If we found a good result for this language, we can stop trying other languages
+            if (bestResultAcrossLanguages && ResultValidator.isGoodResult(bestResultAcrossLanguages)) {
+                console.log(`[Orchestrator] ✓ Good result found for ${tryLanguage}, stopping language iteration`);
+                break;
             }
         }
         
-        // Step 5: Return best result (without dictionary validation)
+        // Restore original language
+        this.language = originalLanguage;
+        
+        // Step 4: Return best result across all languages
         if (results.length === 0) {
+            console.warn('[Orchestrator] No successful decryption found for any language');
             return {
                 plaintext: ciphertext,
                 method: 'none',
@@ -157,201 +185,30 @@ export class Orchestrator {
             };
         }
         
-        // Sort by score (higher is better)
-        results.sort((a, b) => (b.score || -Infinity) - (a.score || -Infinity));
+        // Sort by combined score (higher is better)
+        results.sort((a, b) => (b.combinedScore || -Infinity) - (a.combinedScore || -Infinity));
         
-        return results[0];
-    }
-    
-    /**
-     * Selects appropriate attack strategies based on cipher detection.
-     * @private
-     */
-    _selectStrategies(topCandidate, stats) {
-        const strategies = [];
+        // Use best result across all languages
+        const bestResult = bestResultAcrossLanguages || results[0];
         
-        // ALWAYS try Caesar first - it's fast and catches ROT13/simple shifts
-        strategies.push({
-            name: 'Brute Force (Caesar/ROT13)',
-            execute: (text) => this._bruteForceCaesar(text)
-        });
+        console.log(`[Orchestrator] Best result: method=${bestResult.method}, language=${bestResult.language}, confidence=${(bestResult.confidence * 100).toFixed(0)}%, wordCoverage=${((bestResult.wordCoverage || 0) * 100).toFixed(0)}%`);
         
-        switch (topCandidate.type) {
-            case 'caesar-shift':
-                // Already added Caesar above
-                break;
-                
-            case 'vigenere-like':
-                // IMPORTANT: Try advanced polyalphabetic FIRST (Porta, Beaufort, Gronsfeld)
-                // These are more specific and should be tested before generic Vigenère
-                strategies.push({
-                    name: 'Advanced Polyalphabetic (Porta/Beaufort/Gronsfeld/Quagmire)',
-                    execute: (text) => this._solveAdvancedPolyalphabetic(text)
-                });
-                // Then try standard Vigenère (most common polyalphabetic)
-                strategies.push({
-                    name: 'Vigenère Solver (Friedman)',
-                    execute: (text) => this._solveVigenere(text, topCandidate.suggestedKeyLength)
-                });
-                // Fallback to substitution if all polyalphabetic methods fail
-                strategies.push({
-                    name: 'Hill Climbing (Fallback)',
-                    execute: (text) => this._solveSubstitution(text, 'hillclimb')
-                });
-                break;
-                
-            case 'monoalphabetic-substitution':
-                // Try Hill Climbing first (faster)
-                strategies.push({
-                    name: 'Hill Climbing',
-                    execute: (text) => this._solveSubstitution(text, 'hillclimb')
-                });
-                // Then Simulated Annealing (more thorough)
-                strategies.push({
-                    name: 'Simulated Annealing',
-                    execute: (text) => this._solveSubstitution(text, 'annealing')
-                });
-                break;
-                
-            case 'transposition':
-                // For now, try substitution as fallback
-                strategies.push({
-                    name: 'Hill Climbing (Transposition Fallback)',
-                    execute: (text) => this._solveSubstitution(text, 'hillclimb')
-                });
-                break;
-                
-            case 'random-unknown':
-            default:
-                // Try everything
-                strategies.push({
-                    name: 'Brute Force (Caesar)',
-                    execute: (text) => this._bruteForceCaesar(text)
-                });
-                strategies.push({
-                    name: 'Hill Climbing',
-                    execute: (text) => this._solveSubstitution(text, 'hillclimb')
-                });
-                break;
-        }
-        
-        return strategies;
-    }
-    
-    /**
-     * Brute force attack for Caesar shift (including ROT13).
-     * @private
-     */
-    async _bruteForceCaesar(ciphertext) {
-        const cleaned = TextUtils.onlyLetters(ciphertext);
-        const scorer = new Scorer(this.language, 4); // Use quadgrams
-        
-        let bestShift = 0;
-        let bestScore = -Infinity;
-        let bestPlaintext = '';
-        
-        // Try all 26 shifts
-        for (let shift = 0; shift < 26; shift++) {
-            let decrypted = '';
-            for (const char of cleaned) {
-                const charCode = char.charCodeAt(0);
-                const shifted = ((charCode - 65 - shift + 26) % 26) + 65;
-                decrypted += String.fromCharCode(shifted);
-            }
-            
-            const score = scorer.score(decrypted);
-            
-            if (score > bestScore) {
-                bestScore = score;
-                bestShift = shift;
-                bestPlaintext = decrypted;
+        // Final dictionary validation if enabled
+        if (useDictionary && bestResult.plaintext) {
+            try {
+                const validator = new DictionaryValidator(bestResult.language || this.language);
+                const validation = await validator.validate(bestResult.plaintext);
+                return {
+                    ...bestResult,
+                    dictionaryValidation: validation
+                };
+            } catch (error) {
+                console.warn('[Orchestrator] Final dictionary validation failed:', error);
+                return bestResult;
             }
         }
         
-        // Calculate confidence based on score
-        // Good quadgram scores are typically > -3 for English
-        let confidence = 0.5;
-        if (bestScore > -3) {
-            confidence = 0.95;
-        } else if (bestScore > -4) {
-            confidence = 0.8;
-        } else if (bestScore > -5) {
-            confidence = 0.6;
-        }
-        
-        return {
-            plaintext: TextUtils.matchLayout(ciphertext, bestPlaintext),
-            method: bestShift === 13 ? 'rot13' : 'caesar-shift',
-            confidence: confidence,
-            score: bestScore,
-            key: bestShift
-        };
-    }
-    
-    /**
-     * Vigenère solver using Friedman test.
-     * @private
-     */
-    async _solveVigenere(ciphertext, suggestedKeyLength) {
-        const solver = new VigenereSolver(this.language);
-        const result = solver.solve(ciphertext);
-        
-        // VigenereSolver may return confidence 0 if it fails
-        // Use IoC as a proxy for confidence
-        const confidence = result.confidence || (result.analysis.ioc > 1.3 ? 0.7 : 0.3);
-        
-        return {
-            plaintext: result.plaintext,
-            method: 'vigenere-friedman',
-            confidence: confidence,
-            score: result.analysis.ioc || 0,
-            key: result.key
-        };
-    }
-    
-    /**
-     * Substitution solver using heuristic search.
-     * @private
-     */
-    async _solveSubstitution(ciphertext, method = 'hillclimb') {
-        const solver = method === 'annealing' 
-            ? new SimulatedAnnealing(this.language)
-            : new HillClimb(this.language);
-        
-        const result = solver.solve(ciphertext, {
-            initMethod: 'frequency',
-            maxIterations: method === 'annealing' ? 20000 : 5000,
-            restarts: 2
-        });
-        
-        // Calculate confidence based on score
-        // Good English quadgram scores are typically > -3
-        const confidence = Math.min(1, Math.max(0, (result.score + 7) / 4));
-        
-        return {
-            plaintext: result.plaintext,
-            method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
-            confidence: confidence,
-            score: result.score,
-            key: result.key
-        };
-    }
-    
-    /**
-     * Solve advanced polyalphabetic ciphers (Beaufort, Porta, Gronsfeld, Quagmire).
-     * @private
-     */
-    async _solveAdvancedPolyalphabetic(ciphertext) {
-        const polyalphabeticSolver = new PolyalphabeticSolver(this.language);
-        const result = polyalphabeticSolver.solve(ciphertext);
-        
-        return {
-            plaintext: result.plaintext,
-            method: result.method || 'polyalphabetic',
-            confidence: result.confidence || 0.5,
-            score: result.score,
-            key: result.key
-        };
+        return bestResult;
     }
     
     /**
@@ -359,78 +216,337 @@ export class Orchestrator {
      * 
      * @param {string} ciphertext - The ciphertext to decrypt.
      * @param {Object} options - Options.
-     * @yields {Object} Progress updates.
+     * @param {boolean} options.tryMultiple - Try multiple strategies (default: true).
+     * @param {number} options.maxTime - Maximum time in ms (default: 60000).
+     * @param {boolean} options.useDictionary - Use dictionary validation (default: true).
+     * @yields {Object} Progress updates with stage, method, progress, message, etc.
      */
     async *autoDecryptGenerator(ciphertext, options = {}) {
         const {
-            tryMultiple = false // For generator, usually stick to one strategy
+            tryMultiple = true,
+            maxTime = 60000,
+            useDictionary = true
         } = options;
         
-        // Detect cipher type
-        const detection = CipherIdentifier.identify(ciphertext);
-        const topCandidate = detection.families[0];
+        const startTime = Date.now();
         
+        // Step 0: Auto-detect language
+        let languageCandidates = [this.language];
+        if (this.autoDetectLanguage) {
+            yield {
+                stage: 'language-detection',
+                message: 'Detecting language...',
+                progress: 5
+            };
+            
+            const langInfo = await LanguageHandler.detectLanguage(ciphertext, true, this.language);
+            this.language = langInfo.language;
+            this.languageDetectionResults = langInfo.languageDetectionResults;
+            languageCandidates = langInfo.languageCandidates;
+            
+            yield {
+                stage: 'language-detected',
+                message: `Language detected: ${langInfo.language}. Will try ALL methods for each language: ${languageCandidates.join(', ')}`,
+                language: langInfo.language,
+                languageCandidates: languageCandidates,
+                progress: 8
+            };
+        }
+        
+        // Step 1: Detect cipher type (use first language candidate)
+        const languageForDetection = languageCandidates[0] === 'auto' ? 'english' : languageCandidates[0];
         yield {
-            stage: 'detection',
-            cipherType: topCandidate.type,
-            confidence: topCandidate.confidence,
+            stage: 'cipher-detection',
+            message: 'Analyzing cipher type...',
             progress: 10
         };
         
-        // Select strategy
-        const strategies = this._selectStrategies(topCandidate, detection.stats);
-        const strategy = strategies[0]; // Use first strategy for generator
+        const detection = await CipherIdentifier.identify(ciphertext, languageForDetection);
+        const topCandidate = detection.families[0];
         
         yield {
-            stage: 'strategy-selection',
-            strategy: strategy.name,
-            progress: 20
+            stage: 'cipher-detected',
+            message: `Detected: ${topCandidate.type} (${(topCandidate.confidence * 100).toFixed(0)}% confidence)`,
+            cipherType: topCandidate.type,
+            confidence: topCandidate.confidence,
+            progress: 15
         };
         
-        // Execute with progress
-        if (strategy.name.includes('Hill Climbing') || strategy.name.includes('Simulated Annealing')) {
-            const method = strategy.name.includes('Annealing') ? 'annealing' : 'hillclimb';
-            const solver = method === 'annealing' 
-                ? new SimulatedAnnealing(this.language)
-                : new HillClimb(this.language);
+        // Step 2: Select strategies
+        const strategies = StrategySelector.selectStrategies(
+            topCandidate, 
+            detection.stats, 
+            ciphertext,
+            this.language,
+            this.languageDetectionResults,
+            this.autoDetectLanguage
+        );
+        
+        yield {
+            stage: 'strategies-selected',
+            message: `Selected ${strategies.length} strategy/strategies. Will try ALL for each language.`,
+            strategies: strategies.map(s => s.name),
+            progress: 18
+        };
+        
+        // Step 3: Execute strategies for EACH language candidate
+        const results = [];
+        let bestResultAcrossLanguages = null;
+        let bestScoreAcrossLanguages = -Infinity;
+        const originalLanguage = this.language;
+        let totalStrategies = strategies.length * languageCandidates.length;
+        let currentStrategyIndex = 0;
+        
+        for (const tryLanguage of languageCandidates) {
+            yield {
+                stage: 'trying-language',
+                message: `===== Trying ALL methods for language: ${tryLanguage} =====`,
+                language: tryLanguage,
+                progress: 18 + (languageCandidates.indexOf(tryLanguage) / languageCandidates.length) * 10
+            };
             
-            let lastProgress = 20;
-            for (const status of solver.solveGenerator(ciphertext, {
-                initMethod: 'frequency',
-                maxIterations: method === 'annealing' ? 20000 : 5000
-            })) {
-                const progress = 20 + (status.progress || 0) * 0.7; // 20-90%
-                if (progress > lastProgress + 5) { // Only yield every 5%
+            // Temporarily change language
+            this.language = tryLanguage;
+            
+            // Try to load dictionary
+            await LanguageHandler.loadDictionary(tryLanguage);
+            
+            // Execute ALL strategies for this language
+            for (const strategy of strategies) {
+                const elapsed = Date.now() - startTime;
+                if (elapsed > maxTime) {
                     yield {
-                        stage: 'solving',
-                        method: strategy.name,
-                        plaintext: status.plaintext,
-                        score: status.score,
-                        progress: progress
+                        stage: 'timeout',
+                        message: `Timeout reached (${maxTime}ms)`,
+                        progress: 100
                     };
-                    lastProgress = progress;
+                    break;
                 }
+                
+                currentStrategyIndex++;
+                const strategyProgress = 18 + (currentStrategyIndex / totalStrategies) * 70; // 18-88%
+                
+                yield {
+                    stage: 'trying-strategy',
+                    message: `[${tryLanguage}] Trying: ${strategy.name} (${currentStrategyIndex}/${totalStrategies})`,
+                    method: strategy.name,
+                    language: tryLanguage,
+                    strategyIndex: currentStrategyIndex,
+                    totalStrategies: totalStrategies,
+                    progress: strategyProgress
+                };
+                
+                try {
+                    let result = null;
+                    
+                    // Execute with progress for iterative methods
+                    if (strategy.name.includes('Hill Climbing') || strategy.name.includes('Simulated Annealing')) {
+                        const method = strategy.name.includes('Annealing') ? 'annealing' : 'hillclimb';
+                        const solver = method === 'annealing' 
+                            ? new SimulatedAnnealing(tryLanguage)
+                            : new HillClimb(tryLanguage);
+                        
+                        let lastYieldProgress = strategyProgress;
+                        let lastStatus = null;
+                        for (const status of solver.solveGenerator(ciphertext, {
+                            initMethod: 'frequency',
+                            maxIterations: method === 'annealing' ? 20000 : 5000
+                        })) {
+                            lastStatus = status;
+                            const innerProgress = strategyProgress + (status.progress || 0) * 0.15;
+                            if (innerProgress > lastYieldProgress + 2) {
+                                yield {
+                                    stage: 'solving',
+                                    message: `${strategy.name}: ${(status.progress || 0).toFixed(0)}% complete`,
+                                    method: strategy.name,
+                                    plaintext: status.plaintext || ciphertext,
+                                    score: status.score,
+                                    progress: innerProgress
+                                };
+                                lastYieldProgress = innerProgress;
+                            }
+                        }
+                        
+                        if (!lastStatus || !lastStatus.plaintext) {
+                            const directResult = solver.solve(ciphertext, {
+                                initMethod: 'frequency',
+                                maxIterations: method === 'annealing' ? 20000 : 5000,
+                                restarts: 2
+                            });
+                            const finalPlaintext = directResult.plaintext || ciphertext;
+                            const finalScore = directResult.score || -Infinity;
+                            const confidence = Math.min(1, Math.max(0, (finalScore + 7) / 4));
+                            result = {
+                                plaintext: finalPlaintext,
+                                method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
+                                confidence: confidence,
+                                score: finalScore,
+                                key: directResult.key
+                            };
+                        } else {
+                            const finalPlaintext = lastStatus.plaintext || ciphertext;
+                            const finalScore = lastStatus.score || -Infinity;
+                            const confidence = Math.min(1, Math.max(0, (finalScore + 7) / 4));
+                            result = {
+                                plaintext: finalPlaintext,
+                                method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
+                                confidence: confidence,
+                                score: finalScore,
+                                key: lastStatus.key
+                            };
+                        }
+                    } else {
+                        // For brute force or other methods, execute directly
+                        result = await strategy.execute(ciphertext);
+                    }
+                    
+                    if (result && result.plaintext) {
+                        // Validate result with dictionary for this language
+                        const validatedResult = await ResultValidator.validateResult(result, tryLanguage);
+                        
+                        result.cipherType = topCandidate.type;
+                        result.detectionConfidence = topCandidate.confidence;
+                        result.language = tryLanguage;
+                        results.push(validatedResult);
+                        
+                        // Track best result across all languages
+                        if (validatedResult.combinedScore > bestScoreAcrossLanguages) {
+                            bestScoreAcrossLanguages = validatedResult.combinedScore;
+                            bestResultAcrossLanguages = {
+                                ...validatedResult,
+                                language: tryLanguage,
+                                cipherType: topCandidate.type,
+                                detectionConfidence: topCandidate.confidence
+                            };
+                        }
+                        
+                        console.log(`[Orchestrator] [${tryLanguage}] ${strategy.name} result: method=${result.method}, confidence=${result.confidence}, wordCoverage=${((validatedResult.wordCoverage || 0) * 100).toFixed(0)}%`);
+                        
+                        yield {
+                            stage: 'strategy-complete',
+                            message: `✓ [${tryLanguage}] ${strategy.name}: ${(result.confidence * 100).toFixed(0)}% confidence, ${((validatedResult.wordCoverage || 0) * 100).toFixed(0)}% words`,
+                            method: result.method,
+                            language: tryLanguage,
+                            confidence: result.confidence,
+                            score: result.score,
+                            wordCoverage: validatedResult.wordCoverage,
+                            plaintext: result.plaintext,
+                            progress: strategyProgress + 5
+                        };
+                        
+                        // Early termination: If we found a VERY good result
+                        if (ResultValidator.isExcellentResult(validatedResult)) {
+                            yield {
+                                stage: 'early-stop',
+                                message: `✓ Excellent result found for ${tryLanguage}! Stopping early.`,
+                                progress: 90
+                            };
+                            // Restore original language
+                            this.language = originalLanguage;
+                            // Return best result
+                            if (useDictionary && bestResultAcrossLanguages) {
+                                try {
+                                    const validator = new DictionaryValidator(bestResultAcrossLanguages.language);
+                                    const validation = await validator.validate(bestResultAcrossLanguages.plaintext);
+                                    yield {
+                                        stage: 'complete',
+                                        ...bestResultAcrossLanguages,
+                                        dictionaryValidation: validation,
+                                        progress: 100
+                                    };
+                                    return;
+                                } catch (e) {
+                                    yield {
+                                        stage: 'complete',
+                                        ...bestResultAcrossLanguages,
+                                        progress: 100
+                                    };
+                                    return;
+                                }
+                            }
+                            yield {
+                                stage: 'complete',
+                                ...bestResultAcrossLanguages,
+                                progress: 100
+                            };
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    yield {
+                        stage: 'strategy-failed',
+                        message: `✗ [${tryLanguage}] ${strategy.name} failed: ${e.message}`,
+                        method: strategy.name,
+                        language: tryLanguage,
+                        error: e.message,
+                        progress: strategyProgress + 2
+                    };
+                }
+                
+                if (!tryMultiple) break;
             }
             
-            // Final result
-            const confidence = Math.min(1, Math.max(0, (status.score + 7) / 4));
-            yield {
-                stage: 'complete',
-                plaintext: status.plaintext,
-                method: method === 'annealing' ? 'simulated-annealing' : 'hill-climbing',
-                confidence: confidence,
-                score: status.score,
-                progress: 100
-            };
-        } else {
-            // For brute force or Vigenère, execute directly
-            const result = await strategy.execute(ciphertext);
-            yield {
-                stage: 'complete',
-                ...result,
-                progress: 100
-            };
+            // If we found a good result for this language, we can stop trying other languages
+            if (bestResultAcrossLanguages && ResultValidator.isGoodResult(bestResultAcrossLanguages)) {
+                yield {
+                    stage: 'language-complete',
+                    message: `✓ Good result found for ${tryLanguage}, stopping language iteration`,
+                    language: tryLanguage,
+                    progress: 88
+                };
+                break;
+            }
         }
+        
+        // Restore original language
+        this.language = originalLanguage;
+        
+        // Step 4: Return best result across all languages
+        if (results.length === 0) {
+            yield {
+                stage: 'failed',
+                message: 'No successful decryption found for any language',
+                plaintext: ciphertext,
+                method: 'none',
+                confidence: 0,
+                progress: 100
+            };
+            return;
+        }
+        
+        // Sort by combined score (higher is better)
+        results.sort((a, b) => (b.combinedScore || -Infinity) - (a.combinedScore || -Infinity));
+        
+        const bestResult = bestResultAcrossLanguages || results[0];
+        
+        console.log(`[Orchestrator] Best result: method=${bestResult.method}, language=${bestResult.language}, confidence=${(bestResult.confidence * 100).toFixed(0)}%, wordCoverage=${((bestResult.wordCoverage || 0) * 100).toFixed(0)}%`);
+        
+        // Final dictionary validation if enabled
+        if (useDictionary && bestResult.plaintext) {
+            try {
+                const validator = new DictionaryValidator(bestResult.language || this.language);
+                const validation = await validator.validate(bestResult.plaintext);
+                const finalResult = {
+                    stage: 'complete',
+                    message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence, language: ${bestResult.language})`,
+                    ...bestResult,
+                    dictionaryValidation: validation,
+                    progress: 100
+                };
+                console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+                return finalResult;
+            } catch (error) {
+                console.warn('[Orchestrator] Final dictionary validation failed:', error);
+            }
+        }
+        
+        const finalResult = {
+            stage: 'complete',
+            message: `✓ Decryption complete: ${bestResult.method} (${(bestResult.confidence * 100).toFixed(0)}% confidence, language: ${bestResult.language})`,
+            ...bestResult,
+            progress: 100
+        };
+        console.log(`[Orchestrator] Returning final result: method=${finalResult.method}, confidence=${finalResult.confidence}, plaintext length=${finalResult.plaintext?.length || 0}`);
+        return finalResult;
     }
 }
-

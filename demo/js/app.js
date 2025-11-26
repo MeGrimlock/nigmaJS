@@ -597,4 +597,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   checkLibrary();
+
+  // Copy button functionality
+  function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = button.innerHTML;
+      button.innerHTML = '✓ Copied!';
+      button.classList.add('copied');
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('copied');
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      button.innerHTML = '✗ Error';
+      setTimeout(() => {
+        button.innerHTML = '📋 Copy';
+      }, 2000);
+    });
+  }
+
+  // Add event listeners to all copy buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('copy-btn')) {
+      const targetId = e.target.getAttribute('data-copy-target');
+      const targetElement = document.getElementById(targetId);
+      if (targetElement && targetElement.textContent.trim()) {
+        copyToClipboard(targetElement.textContent.trim(), e.target);
+      }
+    }
+  });
 });

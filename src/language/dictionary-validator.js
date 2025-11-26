@@ -218,19 +218,67 @@ export class DictionaryValidator {
         const validatedResults = [];
 
         for (const result of results) {
-            const validation = await this.validate(result.plaintext);
-            validatedResults.push({
-                ...result,
-                validation,
-                // Update confidence to be weighted average of original + dictionary validation
-                confidence: result.confidence 
-                    ? (result.confidence * 0.6 + validation.confidence * 0.4)
-                    : validation.confidence
-            });
+            // Skip results without plaintext or with invalid plaintext
+            if (!result.plaintext || typeof result.plaintext !== 'string' || result.plaintext.length === 0) {
+                console.warn(`[DictionaryValidator] Skipping result with invalid plaintext: method=${result.method}, plaintext type=${typeof result.plaintext}`);
+                validatedResults.push({
+                    ...result,
+                    validation: {
+                        valid: false,
+                        confidence: 0,
+                        error: 'No plaintext available',
+                        metrics: {
+                            validWords: 0,
+                            wordCoverage: '0.00',
+                            charCoverage: '0.00',
+                            avgWordLength: '0.00'
+                        },
+                        summary: 'No plaintext to validate'
+                    },
+                    confidence: result.confidence || 0
+                });
+                continue;
+            }
+
+            try {
+                const validation = await this.validate(result.plaintext);
+                validatedResults.push({
+                    ...result,
+                    validation,
+                    // Update confidence to be weighted average of original + dictionary validation
+                    confidence: result.confidence && !isNaN(result.confidence)
+                        ? (result.confidence * 0.6 + validation.confidence * 0.4)
+                        : validation.confidence
+                });
+            } catch (error) {
+                console.error(`[DictionaryValidator] Error validating result for method ${result.method}:`, error);
+                validatedResults.push({
+                    ...result,
+                    validation: {
+                        valid: false,
+                        confidence: 0,
+                        error: error.message || 'Validation failed',
+                        metrics: {
+                            validWords: 0,
+                            wordCoverage: '0.00',
+                            charCoverage: '0.00',
+                            avgWordLength: '0.00'
+                        },
+                        summary: 'Validation error occurred'
+                    },
+                    confidence: result.confidence || 0
+                });
+            }
         }
 
         // Sort by updated confidence (descending)
-        validatedResults.sort((a, b) => b.confidence - a.confidence);
+        validatedResults.sort((a, b) => {
+            const confA = a.confidence || 0;
+            const confB = b.confidence || 0;
+            if (isNaN(confA)) return 1; // NaN goes to end
+            if (isNaN(confB)) return -1;
+            return confB - confA;
+        });
 
         return validatedResults;
     }
@@ -257,13 +305,8 @@ if (!LanguageAnalysis.getDictionary) {
     LanguageAnalysis.getDictionary = function(language) {
         // Access private dictionaries object
         // This is a workaround - ideally LanguageAnalysis should expose this method
-        const dictionaries = {
-            english: null,
-            spanish: null
-        };
-        
-        // Try to access from module scope (requires modification to analysis.js)
-        // For now, return null and rely on proper integration
+        // Note: This is now handled by LanguageAnalysis.getDictionary() directly
+        // Supported languages: english, spanish, italian, french, portuguese, german
         return null;
     };
 }

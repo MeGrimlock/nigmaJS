@@ -1,6 +1,6 @@
 
-import { HMMSolver } from './hmm-solver';
-import { VigenereSolver } from './vigenere-solver';
+import { HMMSolver } from './strategies/hmm-solver';
+import { VigenereSolver } from './strategies/vigenere-solver';
 import Shift from '../ciphers/shift/shift';
 import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic';
 import Dictionary from '../ciphers/dictionary/dictionary';

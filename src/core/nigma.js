@@ -14,9 +14,9 @@ import { default as Dictionary } from '../ciphers/dictionary/dictionary.js';
 import { default as Shift } from '../ciphers/shift/shift.js';
 import { default as Enigma } from '../ciphers/enigma/enigma.js';
 import { default as Polyalphabetic } from '../ciphers/polyalphabetic/polyalphabetic.js';
-import { HMMSolver } from '../attacks/hmm-solver.js';
-import { VigenereSolver } from '../attacks/vigenere-solver.js';
-import { PolyalphabeticSolver } from '../attacks/polyalphabetic-solver.js';
+import { HMMSolver } from '../attacks/strategies/hmm-solver.js';
+import { VigenereSolver } from '../attacks/strategies/vigenere-solver.js';
+import { PolyalphabeticSolver } from '../attacks/strategies/polyalphabetic-solver.js';
 import { Orchestrator } from '../attacks/orchestrator.js';
 import { Stats } from '../analysis/stats.js';
 import { Scorers } from '../language/scorers.js';
@@ -134,10 +134,11 @@ export default class Nigma {
     /**
      * Identifies the probable cipher type(s) for a given ciphertext.
      * @param {string} text - The ciphertext to analyze.
-     * @returns {Object} An object containing cipher families with confidence scores.
+     * @param {string} language - Target language for dictionary validation (default: 'english').
+     * @returns {Promise<Object>} An object containing cipher families with confidence scores.
      */
-    static identifyCipher(text) {
-        return CipherIdentifier.identify(text);
+    static async identifyCipher(text, language = 'english') {
+        return await CipherIdentifier.identify(text, language);
     }
 
 	// -------------------------------------------Dictionary Criptoanalysis Methods -------------------------------------------

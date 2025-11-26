@@ -44,7 +44,10 @@
           <label>Shift:</label>
           <input type="number" id="caesarShift" value="3">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="caesarOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="caesarOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="caesarDecoded"></div>
@@ -54,7 +57,10 @@
       <div class="card">
         <h3>ROT13</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="rot13Output" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="rot13Output"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="rot13Decoded"></div>
@@ -65,7 +71,10 @@
       <div class="card">
         <h3>ROT5</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="rot5Output" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="rot5Output"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="rot5Decoded"></div>
@@ -76,7 +85,10 @@
       <div class="card">
         <h3>ROT18</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="rot18Output" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="rot18Output"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="rot18Decoded"></div>
@@ -87,7 +99,10 @@
       <div class="card">
         <h3>ROT47</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="rot47Output" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="rot47Output"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="rot47Decoded"></div>
@@ -112,7 +127,10 @@
           <label>Keyword:</label>
           <input type="text" id="vigenereKey" value="KEY">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="vigenereOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="vigenereOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="vigenereDecoded"></div>
@@ -125,7 +143,10 @@
           <label>Keyword:</label>
           <input type="text" id="beaufortKey" value="KEY">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="beaufortOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="beaufortOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="beaufortDecoded"></div>
@@ -138,7 +159,10 @@
           <label>Keyword:</label>
           <input type="text" id="portaKey" value="KEY">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="portaOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="portaOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="portaDecoded"></div>
@@ -151,7 +175,10 @@
           <label>Numeric Key:</label>
           <input type="text" id="gronsfeldKey" value="12345" placeholder="e.g., 12345">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="gronsfeldOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="gronsfeldOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="gronsfeldDecoded"></div>
@@ -164,7 +191,10 @@
           <label>Keyword:</label>
           <input type="text" id="quagmire1Key" value="KEY">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="quagmire1Output" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="quagmire1Output"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="quagmire1Decoded"></div>
@@ -181,7 +211,10 @@
           <label>Indicator:</label>
           <input type="text" id="quagmire2Indicator" value="A" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="quagmire2Output" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="quagmire2Output"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="quagmire2Decoded"></div>
@@ -198,7 +231,10 @@
           <label>Indicator:</label>
           <input type="text" id="quagmire3Indicator" value="A" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="quagmire3Output" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="quagmire3Output"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="quagmire3Decoded"></div>
@@ -215,7 +251,10 @@
           <label>Indicator:</label>
           <input type="text" id="quagmire4Indicator" value="ABC" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="quagmire4Output" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="quagmire4Output"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="quagmire4Decoded"></div>
@@ -242,7 +281,10 @@
             <input type="text" id="enigmaPlugs" value="PO ML IU KJ NH YT GB VF RE DC" style="width: 100%;">
           </div>
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="enigmaOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="enigmaOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="enigmaDecoded"></div>
@@ -266,7 +308,10 @@
           <label>Key:</label>
           <input type="text" id="simpleSubKey" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" style="width: 200px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="simpleSubOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="simpleSubOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="simpleSubDecoded"></div>
@@ -276,7 +321,10 @@
       <div class="card">
         <h3>Atbash</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="atbashOutput" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="atbashOutput"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="atbashDecoded"></div>
@@ -287,7 +335,10 @@
       <div class="card">
         <h3>Morse Code</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="morseOutput" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="morseOutput"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="morseDecoded"></div>
@@ -301,7 +352,10 @@
           <label>Key:</label>
           <input type="text" id="autokeyKey" value="SECRET">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="autokeyOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="autokeyOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="autokeyDecoded"></div>
@@ -311,7 +365,10 @@
       <div class="card">
         <h3>Baconian</h3>
         <div class="card-content">
-          <label>Encoded:</label>
+          <div class="output-label">
+            <label>Encoded:</label>
+            <button class="copy-btn" data-copy-target="baconianOutput" title="Copy encoded text">📋 Copy</button>
+          </div>
           <div class="output" id="baconianOutput"></div>
           <label>Decoded (Verify):</label>
           <div class="output" id="baconianDecoded"></div>
@@ -325,7 +382,10 @@
           <label>Keyword (optional):</label>
           <input type="text" id="polybiusKey" value="" placeholder="Leave empty for default">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="polybiusOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="polybiusOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="polybiusDecoded"></div>
@@ -338,7 +398,10 @@
           <label>Keyword (optional):</label>
           <input type="text" id="bifidKey" value="" placeholder="Leave empty for default">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="bifidOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="bifidOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="bifidDecoded"></div>
@@ -351,7 +414,10 @@
           <label>Keyword:</label>
           <input type="text" id="playfairKey" value="KEYWORD">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="playfairOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="playfairOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="playfairDecoded"></div>
@@ -368,7 +434,10 @@
           <label>Keyword 2:</label>
           <input type="text" id="fourSquareKey2" value="KEYWORD" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="fourSquareOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="fourSquareOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="fourSquareDecoded"></div>
@@ -381,7 +450,10 @@
           <label>Keyword:</label>
           <input type="text" id="twoSquareKey" value="KEYWORD">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="twoSquareOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="twoSquareOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="twoSquareDecoded"></div>
@@ -398,7 +470,10 @@
           <label>Transposition Key:</label>
           <input type="text" id="adfgvxTransKey" value="KEY" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="adfgvxOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="adfgvxOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="adfgvxDecoded"></div>
@@ -415,7 +490,10 @@
           <label>Transposition Key:</label>
           <input type="text" id="adfgxTransKey" value="KEY" style="width: 100px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="adfgxOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="adfgxOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="adfgxDecoded"></div>
@@ -439,7 +517,10 @@
           <label>Number of Rails:</label>
           <input type="number" id="railFenceRails" value="3" min="2" style="width: 80px;">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="railFenceOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="railFenceOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="railFenceDecoded"></div>
@@ -464,7 +545,10 @@
             <option value="column">Column</option>
           </select>
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="routeOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="routeOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="routeDecoded"></div>
@@ -477,7 +561,10 @@
           <label>Key:</label>
           <input type="text" id="amscoKey" value="132">
         </div>
-        <label>Encoded:</label>
+        <div class="output-label">
+          <label>Encoded:</label>
+          <button class="copy-btn" data-copy-target="amscoOutput" title="Copy encoded text">📋 Copy</button>
+        </div>
         <div class="output" id="amscoOutput"></div>
         <label>Decoded (Verify):</label>
         <div class="output" id="amscoDecoded"></div>

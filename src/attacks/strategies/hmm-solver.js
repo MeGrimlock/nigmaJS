@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import HMM from 'hidden-markov-model-tf';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
 import 'regenerator-runtime/runtime';
 
 export class HMMSolver {
