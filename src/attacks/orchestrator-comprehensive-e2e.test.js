@@ -1,6 +1,7 @@
 import { Orchestrator } from './orchestrator.js';
 import Shift from '../ciphers/shift/shift.js';
 import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
+import Dictionary from '../ciphers/dictionary/dictionary.js';
 import { CipherIdentifier } from '../analysis/identifier.js';
 import { LanguageAnalysis } from '../analysis/analysis.js';
 import fs from 'fs';
@@ -664,6 +665,166 @@ describe('Orchestrator Comprehensive E2E Tests', () => {
                 expect(result.method).toMatch(/quagmire|polyalphabetic/);
             }
         }, 180000);
+    });
+
+    // ==================== Dictionary Ciphers Tests ====================
+    
+    describe('Atbash Cipher', () => {
+        test('should decrypt Atbash in English', async () => {
+            const plaintext = testTexts.english.medium;
+            const atbash = new Dictionary.Atbash(plaintext);
+            const ciphertext = atbash.encode();
+            
+            console.log(`\n[Test] Testing Atbash - English`);
+            console.log(`[Test] Plaintext: ${plaintext.substring(0, 50)}...`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 30000
+            });
+            
+            // Verify language detection
+            expect(orchestrator.language).toBe('english');
+            console.log(`✓ Language detected: ${orchestrator.language}`);
+            
+            // Verify decryption
+            expect(result).toBeDefined();
+            expect(result.method).toBe('atbash');
+            expect(result.confidence).toBeGreaterThan(0.7);
+            console.log(`✓ Method detected: ${result.method} (${(result.confidence * 100).toFixed(0)}% confidence)`);
+            
+            // Verify plaintext matches
+            const matches = textsMatch(result.plaintext, plaintext, 0.90);
+            expect(matches).toBe(true);
+            console.log(`✓ Plaintext matches original (90% threshold)`);
+        }, 60000);
+
+        test('should decrypt Atbash in Spanish', async () => {
+            const plaintext = testTexts.spanish.medium;
+            const atbash = new Dictionary.Atbash(plaintext);
+            const ciphertext = atbash.encode();
+            
+            console.log(`\n[Test] Testing Atbash - Spanish`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 30000
+            });
+            
+            expect(orchestrator.language).toBe('spanish');
+            expect(result.method).toBe('atbash');
+            expect(result.confidence).toBeGreaterThan(0.7);
+            
+            const matches = textsMatch(result.plaintext, plaintext, 0.90);
+            expect(matches).toBe(true);
+        }, 60000);
+    });
+
+    describe('Autokey Cipher', () => {
+        test('should decrypt Autokey in English', async () => {
+            const plaintext = testTexts.english.medium;
+            const key = 'KEY';
+            const autokey = new Dictionary.Autokey(plaintext, key);
+            const ciphertext = autokey.encode();
+            
+            console.log(`\n[Test] Testing Autokey - English`);
+            console.log(`[Test] Key: ${key}`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 60000
+            });
+            
+            expect(orchestrator.language).toBe('english');
+            expect(result.method).toBe('autokey');
+            expect(result.confidence).toBeGreaterThan(0.6);
+            console.log(`✓ Method detected: ${result.method} (${(result.confidence * 100).toFixed(0)}% confidence)`);
+            
+            const matches = textsMatch(result.plaintext, plaintext, 0.80);
+            expect(matches).toBe(true);
+        }, 120000);
+    });
+
+    describe('Baconian Cipher', () => {
+        test('should decrypt Baconian in English', async () => {
+            const plaintext = testTexts.english.short;
+            const baconian = new Dictionary.Baconian(plaintext);
+            const ciphertext = baconian.encode();
+            
+            console.log(`\n[Test] Testing Baconian - English`);
+            console.log(`[Test] Ciphertext pattern: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 30000
+            });
+            
+            expect(orchestrator.language).toBe('english');
+            expect(result.method).toBe('baconian');
+            expect(result.confidence).toBeGreaterThan(0.6);
+            console.log(`✓ Method detected: ${result.method} (${(result.confidence * 100).toFixed(0)}% confidence)`);
+            
+            const matches = textsMatch(result.plaintext, plaintext, 0.80);
+            expect(matches).toBe(true);
+        }, 60000);
+    });
+
+    describe('Polybius Square Cipher', () => {
+        test('should decrypt Polybius in English (no keyword)', async () => {
+            const plaintext = testTexts.english.medium;
+            const polybius = new Dictionary.Polybius(plaintext, ''); // No keyword
+            const ciphertext = polybius.encode();
+            
+            console.log(`\n[Test] Testing Polybius - English (no keyword)`);
+            console.log(`[Test] Ciphertext: ${ciphertext.substring(0, 50)}...`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 30000
+            });
+            
+            expect(orchestrator.language).toBe('english');
+            expect(result.method).toBe('polybius');
+            expect(result.confidence).toBeGreaterThan(0.7);
+            console.log(`✓ Method detected: ${result.method} (${(result.confidence * 100).toFixed(0)}% confidence)`);
+            
+            const matches = textsMatch(result.plaintext, plaintext, 0.90);
+            expect(matches).toBe(true);
+        }, 60000);
+
+        test('should decrypt Polybius in English (with keyword)', async () => {
+            const plaintext = testTexts.english.medium;
+            const keyword = 'KEY';
+            const polybius = new Dictionary.Polybius(plaintext, keyword);
+            const ciphertext = polybius.encode();
+            
+            console.log(`\n[Test] Testing Polybius - English (keyword: ${keyword})`);
+            
+            const orchestrator = new Orchestrator('auto');
+            const result = await orchestrator.autoDecrypt(ciphertext, {
+                tryMultiple: true,
+                useDictionary: true,
+                maxTime: 60000
+            });
+            
+            expect(orchestrator.language).toBe('english');
+            expect(result.method).toBe('polybius');
+            expect(result.confidence).toBeGreaterThan(0.6);
+            
+            const matches = textsMatch(result.plaintext, plaintext, 0.80);
+            expect(matches).toBe(true);
+        }, 120000);
     });
 });
 

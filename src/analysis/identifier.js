@@ -162,6 +162,39 @@ export class CipherIdentifier {
             scores['random-unknown'] += 0.2;
         }
 
+        // --- Heuristic 7: Specific Cipher Pattern Detection ---
+        // Detect patterns that indicate specific cipher types
+        
+        // Polybius Square: Contains number pairs (11-55)
+        const numberPairs = text.match(/\d{2}/g);
+        if (numberPairs && numberPairs.length >= 5) {
+            // Check if pairs are in valid range (11-55)
+            const validPairs = numberPairs.filter(p => {
+                const num = parseInt(p);
+                return num >= 11 && num <= 55;
+            });
+            if (validPairs.length >= numberPairs.length * 0.8) {
+                // High percentage of valid Polybius pairs
+                scores['monoalphabetic-substitution'] += 0.5;
+                scores['caesar-shift'] += 0.2; // Polybius is a substitution cipher
+            }
+        }
+        
+        // Baconian: Contains A/B patterns (5-bit groups) or binary patterns
+        const baconianPattern = /[ABab]{5,}/.test(text) || /[01]{5,}/.test(text);
+        if (baconianPattern) {
+            scores['monoalphabetic-substitution'] += 0.4;
+        }
+        
+        // Atbash: Very high IC (>= 1.6) with monoalphabetic characteristics
+        // Atbash is essentially Caesar shift 25, so it has very high IC
+        // It's hard to distinguish from other monoalphabetic ciphers statistically,
+        // but we can boost monoalphabetic score when IC is very high
+        if (ic >= 1.6 && !kasiski.hasRepetitions) {
+            scores['monoalphabetic-substitution'] += 0.3;
+            scores['caesar-shift'] += 0.2; // Atbash is similar to Caesar shift 25
+        }
+
         // Normalize scores to [0, 1] and filter out very low scores
         const maxScore = Math.max(...Object.values(scores));
         const families = [];

@@ -9,6 +9,7 @@ import { SimulatedAnnealing } from '../search/simulated-annealing.js';
 import { Scorer } from '../search/scorer.js';
 import { TextUtils } from '../core/text-utils.js';
 import { DictionaryValidator } from '../language/dictionary-validator.js';
+import { default as Dictionary } from '../ciphers/dictionary/dictionary.js';
 
 /**
  * Orchestrator: Intelligent attack coordinator for classical ciphers.
@@ -237,7 +238,12 @@ export class Orchestrator {
         
         switch (topCandidate.type) {
             case 'caesar-shift':
-                // For Caesar, try ROT47 first (if text contains printable ASCII beyond letters)
+                // For Caesar, try Atbash first (it's a special case: Caesar shift 25)
+                strategies.push({
+                    name: 'Atbash',
+                    execute: (text) => this._solveAtbash(text)
+                });
+                // Try ROT47 if text contains printable ASCII beyond letters
                 // ROT47 handles all printable ASCII (33-126), not just letters
                 if (hasNonLetterASCII) {
                     // Get language candidates from detection (if available)
@@ -272,6 +278,11 @@ export class Orchestrator {
                     name: 'Vigenère Solver (Friedman)',
                     execute: (text) => this._solveVigenere(text, topCandidate.suggestedKeyLength)
                 });
+                // Try Autokey (polyalphabetic variant)
+                strategies.push({
+                    name: 'Autokey',
+                    execute: (text) => this._solveAutokey(text)
+                });
                 // Then try advanced polyalphabetic (Porta, Beaufort, Gronsfeld, Quagmire)
                 // These are alternatives if Vigenère doesn't work
                 strategies.push({
@@ -291,8 +302,27 @@ export class Orchestrator {
                 break;
                 
             case 'monoalphabetic-substitution':
-                // For monoalphabetic, try Caesar/ROT brute force FIRST
-                // This is faster and more accurate for simple shifts like ROT13
+                // For monoalphabetic, try specific dictionary ciphers FIRST (fast and accurate)
+                // Atbash is very common and fast to check
+                strategies.push({
+                    name: 'Atbash',
+                    execute: (text) => this._solveAtbash(text)
+                });
+                // Try Polybius if text contains number pairs
+                if (/\d{2}/.test(text)) {
+                    strategies.push({
+                        name: 'Polybius Square',
+                        execute: (text) => this._solvePolybius(text)
+                    });
+                }
+                // Try Baconian if text contains A/B patterns or binary-like patterns
+                if (/[ABab]{5,}/.test(text) || /[01]{5,}/.test(text)) {
+                    strategies.push({
+                        name: 'Baconian',
+                        execute: (text) => this._solveBaconian(text)
+                    });
+                }
+                // Try Caesar/ROT brute force (faster than Hill Climbing)
                 strategies.push({
                     name: 'Brute Force (Caesar/ROT13)',
                     execute: (text) => this._bruteForceCaesar(text)
@@ -336,10 +366,32 @@ export class Orchestrator {
                 
             case 'random-unknown':
             default:
-                // Try everything
+                // Try everything, starting with fast dictionary ciphers
+                strategies.push({
+                    name: 'Atbash',
+                    execute: (text) => this._solveAtbash(text)
+                });
+                // Try Polybius if text contains number pairs
+                if (/\d{2}/.test(text)) {
+                    strategies.push({
+                        name: 'Polybius Square',
+                        execute: (text) => this._solvePolybius(text)
+                    });
+                }
+                // Try Baconian if text contains A/B patterns
+                if (/[ABab]{5,}/.test(text) || /[01]{5,}/.test(text)) {
+                    strategies.push({
+                        name: 'Baconian',
+                        execute: (text) => this._solveBaconian(text)
+                    });
+                }
                 strategies.push({
                     name: 'Brute Force (Caesar)',
                     execute: (text) => this._bruteForceCaesar(text)
+                });
+                strategies.push({
+                    name: 'Autokey',
+                    execute: (text) => this._solveAutokey(text)
                 });
                 strategies.push({
                     name: 'Hill Climbing',
@@ -693,6 +745,345 @@ export class Orchestrator {
             score: result.score,
             key: result.key
         };
+    }
+    
+    /**
+     * Solve Atbash cipher.
+     * Atbash is self-reciprocal: applying it twice returns the original text.
+     * Strategy: Simply apply Atbash transformation and validate with dictionary + n-grams.
+     * @private
+     */
+    async _solveAtbash(ciphertext) {
+        try {
+            // Atbash is self-reciprocal, so we can just decode it
+            const atbash = new Dictionary.Atbash(ciphertext, true); // encoded = true
+            const plaintext = atbash.decode();
+            
+            // Score with n-grams
+            const scorer = new Scorer(this.language, 4); // Use quadgrams
+            const cleanText = TextUtils.onlyLetters(plaintext);
+            const score = scorer.score(cleanText);
+            
+            // Validate with dictionary
+            const dict = LanguageAnalysis.getDictionary(this.language);
+            let wordCoverage = 0;
+            let confidence = 0.5;
+            
+            if (dict) {
+                const words = plaintext.toUpperCase()
+                    .split(/\s+/)
+                    .map(w => TextUtils.onlyLetters(w))
+                    .filter(w => w.length >= 3);
+                
+                if (words.length > 0) {
+                    let validWords = 0;
+                    for (const word of words) {
+                        if (dict.has(word)) {
+                            validWords++;
+                        }
+                    }
+                    wordCoverage = validWords / words.length;
+                }
+            }
+            
+            // Calculate confidence based on dictionary validation and n-gram score
+            if (wordCoverage > 0.80) {
+                confidence = 0.98;
+            } else if (wordCoverage > 0.70) {
+                confidence = 0.95;
+            } else if (wordCoverage > 0.60) {
+                confidence = 0.90;
+            } else if (wordCoverage > 0.50) {
+                confidence = 0.85;
+            } else if (score > -3) {
+                // Good quadgram score even without dictionary
+                confidence = 0.90;
+            } else if (score > -4) {
+                confidence = 0.75;
+            } else if (score > -5) {
+                confidence = 0.60;
+            }
+            
+            return {
+                plaintext: TextUtils.matchLayout(ciphertext, plaintext),
+                method: 'atbash',
+                confidence: confidence,
+                score: score,
+                key: null, // Atbash has no key
+                wordCoverage: wordCoverage
+            };
+        } catch (error) {
+            console.warn('[Orchestrator] Atbash solver error:', error);
+            return {
+                plaintext: ciphertext,
+                method: 'atbash',
+                confidence: 0,
+                score: -Infinity,
+                key: null
+            };
+        }
+    }
+    
+    /**
+     * Solve Autokey cipher.
+     * Autokey is a polyalphabetic cipher where the key is generated from the plaintext itself.
+     * Strategy: Try common short keys and validate with dictionary + n-grams.
+     * @private
+     */
+    async _solveAutokey(ciphertext) {
+        const commonKeys = ['THE', 'AND', 'KEY', 'SECRET', 'MESSAGE', 'A', 'I'];
+        const scorer = new Scorer(this.language, 4);
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        
+        let bestResult = {
+            plaintext: ciphertext,
+            method: 'autokey',
+            confidence: 0,
+            score: -Infinity,
+            key: null
+        };
+        
+        for (const key of commonKeys) {
+            try {
+                const autokey = new Dictionary.Autokey(ciphertext, key, true); // encoded = true
+                const plaintext = autokey.decode();
+                const cleanText = TextUtils.onlyLetters(plaintext);
+                
+                if (cleanText.length < 10) continue;
+                
+                const score = scorer.score(cleanText);
+                
+                // Validate with dictionary
+                let wordCoverage = 0;
+                if (dict) {
+                    const words = plaintext.toUpperCase()
+                        .split(/\s+/)
+                        .map(w => TextUtils.onlyLetters(w))
+                        .filter(w => w.length >= 3);
+                    
+                    if (words.length > 0) {
+                        let validWords = 0;
+                        for (const word of words) {
+                            if (dict.has(word)) {
+                                validWords++;
+                            }
+                        }
+                        wordCoverage = validWords / words.length;
+                    }
+                }
+                
+                // Combined score: n-gram + dictionary bonus
+                const combinedScore = score + (wordCoverage * 50);
+                
+                if (combinedScore > bestResult.score) {
+                    let confidence = 0.5;
+                    if (wordCoverage > 0.80) {
+                        confidence = 0.98;
+                    } else if (wordCoverage > 0.70) {
+                        confidence = 0.95;
+                    } else if (wordCoverage > 0.60) {
+                        confidence = 0.90;
+                    } else if (score > -3) {
+                        confidence = 0.85;
+                    }
+                    
+                    bestResult = {
+                        plaintext: TextUtils.matchLayout(ciphertext, plaintext),
+                        method: 'autokey',
+                        confidence: confidence,
+                        score: combinedScore,
+                        key: key,
+                        wordCoverage: wordCoverage
+                    };
+                    
+                    // Early termination if we find a very good match
+                    if (wordCoverage > 0.80 && score > -3) {
+                        break;
+                    }
+                }
+            } catch (error) {
+                // Continue trying other keys
+                continue;
+            }
+        }
+        
+        return bestResult;
+    }
+    
+    /**
+     * Solve Baconian cipher.
+     * Baconian encodes letters as 5-bit patterns (A/B or 0/1).
+     * Strategy: Try both A/B and 0/1 patterns, validate with dictionary + n-grams.
+     * @private
+     */
+    async _solveBaconian(ciphertext) {
+        const scorer = new Scorer(this.language, 4);
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        
+        let bestResult = {
+            plaintext: ciphertext,
+            method: 'baconian',
+            confidence: 0,
+            score: -Infinity,
+            key: null
+        };
+        
+        // Try A/B pattern first (most common)
+        try {
+            const baconian = new Dictionary.Baconian(ciphertext, true); // encoded = true
+            const plaintext = baconian.decode();
+            const cleanText = TextUtils.onlyLetters(plaintext);
+            
+            if (cleanText.length >= 10) {
+                const score = scorer.score(cleanText);
+                
+                // Validate with dictionary
+                let wordCoverage = 0;
+                if (dict) {
+                    const words = plaintext.toUpperCase()
+                        .split(/\s+/)
+                        .map(w => TextUtils.onlyLetters(w))
+                        .filter(w => w.length >= 3);
+                    
+                    if (words.length > 0) {
+                        let validWords = 0;
+                        for (const word of words) {
+                            if (dict.has(word)) {
+                                validWords++;
+                            }
+                        }
+                        wordCoverage = validWords / words.length;
+                    }
+                }
+                
+                const combinedScore = score + (wordCoverage * 50);
+                
+                if (combinedScore > bestResult.score) {
+                    let confidence = 0.5;
+                    if (wordCoverage > 0.80) {
+                        confidence = 0.98;
+                    } else if (wordCoverage > 0.70) {
+                        confidence = 0.95;
+                    } else if (wordCoverage > 0.60) {
+                        confidence = 0.90;
+                    } else if (score > -3) {
+                        confidence = 0.85;
+                    }
+                    
+                    bestResult = {
+                        plaintext: TextUtils.matchLayout(ciphertext, plaintext),
+                        method: 'baconian',
+                        confidence: confidence,
+                        score: combinedScore,
+                        key: null,
+                        wordCoverage: wordCoverage
+                    };
+                }
+            }
+        } catch (error) {
+            // Continue to try other patterns if A/B fails
+        }
+        
+        return bestResult;
+    }
+    
+    /**
+     * Solve Polybius Square cipher.
+     * Polybius encodes letters as pairs of numbers (11-55).
+     * Strategy: Detect number pairs, decode with standard grid, validate with dictionary + n-grams.
+     * If keyword is used, try common keywords.
+     * @private
+     */
+    async _solvePolybius(ciphertext) {
+        // Check if text contains number pairs (11-55 pattern)
+        const numberPairs = ciphertext.match(/\d{2}/g);
+        if (!numberPairs || numberPairs.length < 5) {
+            // Not likely to be Polybius
+            return {
+                plaintext: ciphertext,
+                method: 'polybius',
+                confidence: 0,
+                score: -Infinity,
+                key: null
+            };
+        }
+        
+        const scorer = new Scorer(this.language, 4);
+        const dict = LanguageAnalysis.getDictionary(this.language);
+        const commonKeywords = ['', 'KEY', 'SECRET', 'CIPHER', 'CODE'];
+        
+        let bestResult = {
+            plaintext: ciphertext,
+            method: 'polybius',
+            confidence: 0,
+            score: -Infinity,
+            key: null
+        };
+        
+        for (const keyword of commonKeywords) {
+            try {
+                const polybius = new Dictionary.Polybius(ciphertext, keyword, true); // encoded = true
+                const plaintext = polybius.decode();
+                const cleanText = TextUtils.onlyLetters(plaintext);
+                
+                if (cleanText.length < 10) continue;
+                
+                const score = scorer.score(cleanText);
+                
+                // Validate with dictionary
+                let wordCoverage = 0;
+                if (dict) {
+                    const words = plaintext.toUpperCase()
+                        .split(/\s+/)
+                        .map(w => TextUtils.onlyLetters(w))
+                        .filter(w => w.length >= 3);
+                    
+                    if (words.length > 0) {
+                        let validWords = 0;
+                        for (const word of words) {
+                            if (dict.has(word)) {
+                                validWords++;
+                            }
+                        }
+                        wordCoverage = validWords / words.length;
+                    }
+                }
+                
+                const combinedScore = score + (wordCoverage * 50);
+                
+                if (combinedScore > bestResult.score) {
+                    let confidence = 0.5;
+                    if (wordCoverage > 0.80) {
+                        confidence = 0.98;
+                    } else if (wordCoverage > 0.70) {
+                        confidence = 0.95;
+                    } else if (wordCoverage > 0.60) {
+                        confidence = 0.90;
+                    } else if (score > -3) {
+                        confidence = 0.85;
+                    }
+                    
+                    bestResult = {
+                        plaintext: TextUtils.matchLayout(ciphertext, plaintext),
+                        method: 'polybius',
+                        confidence: confidence,
+                        score: combinedScore,
+                        key: keyword || null,
+                        wordCoverage: wordCoverage
+                    };
+                    
+                    // Early termination if we find a very good match
+                    if (wordCoverage > 0.80 && score > -3) {
+                        break;
+                    }
+                }
+            } catch (error) {
+                // Continue trying other keywords
+                continue;
+            }
+        }
+        
+        return bestResult;
     }
     
     /**
