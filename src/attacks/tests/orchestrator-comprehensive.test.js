@@ -1,8 +1,8 @@
-import { Orchestrator } from './orchestrator.js';
-import Shift from '../ciphers/shift/shift.js';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
-import { Scorer } from '../search/scorer.js';
-import { PolyalphabeticSolver } from './strategies/polyalphabetic-solver.js';
+import { Orchestrator } from '../orchestrator.js';
+import Shift from '../../ciphers/shift/shift.js';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
+import { Scorer } from '../../search/scorer.js';
+import { PolyalphabeticSolver } from '../strategies/polyalphabetic-solver.js';
 
 /**
  * Comprehensive Orchestrator Tests

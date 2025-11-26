@@ -1,4 +1,4 @@
-import { PolyalphabeticSolver } from './polyalphabetic-solver.js';
+import { PolyalphabeticSolver } from '../strategies/polyalphabetic-solver.js';
 import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
 
 describe('PolyalphabeticSolver', () => {

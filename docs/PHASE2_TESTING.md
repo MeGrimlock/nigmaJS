@@ -4,7 +4,16 @@
 
 This document describes the comprehensive testing suite for Phase 2 improvements to cipher detection in NigmaJS.
 
-## Test Suite: `orchestrator-phase2-detection.test.js`
+## Test Suite: Phase 2 Detection Tests
+
+The test suite is organized in `src/attacks/tests/`:
+- `phase2-english.test.js` - English language tests
+- `phase2-spanish.test.js` - Spanish language tests
+- `phase2-italian.test.js` - Italian language tests
+- `phase2-french.test.js` - French language tests
+- `phase2-portuguese.test.js` - Portuguese language tests
+- `phase2-german.test.js` - German language tests
+- `phase2-test-helpers.js` - Shared helper functions
 
 ### Purpose
 
@@ -69,7 +78,13 @@ When tests fail, issues are automatically documented in `docs/PHASE2_ROADMAP.md`
 ### Running the Tests
 
 ```bash
-npm test -- orchestrator-phase2-detection.test.js
+# Run all Phase 2 tests
+npm test -- phase2-
+
+# Run tests for a specific language
+npm test -- phase2-english.test.js
+npm test -- phase2-spanish.test.js
+# etc.
 ```
 
 **Note**: These tests are comprehensive and may take 30-60 minutes to complete due to the large number of combinations.

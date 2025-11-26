@@ -1,8 +1,8 @@
-import { Orchestrator } from './orchestrator.js';
-import Shift from '../ciphers/shift/shift.js';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
-import { CipherIdentifier } from '../analysis/identifier.js';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { Orchestrator } from '../orchestrator.js';
+import Shift from '../../ciphers/shift/shift.js';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
+import { CipherIdentifier } from '../../analysis/identifier.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
 
 /**
  * End-to-End Tests for Orchestrator
