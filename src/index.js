@@ -15,10 +15,19 @@ import Nigma, {
     TextUtils,
     Kasiski,
     CipherIdentifier,
+    PeriodicAnalysis,
+    TranspositionDetector,
     HillClimb,
     SimulatedAnnealing,
     Scorer,
-    DictionaryValidator
+    DictionaryValidator,
+    normalizeCiphertext,
+    groupText,
+    formatTextLines,
+    wordSegmentText,
+    segmentTextWithConfidence,
+    CipherText,
+    ALPHABETS
 } from './core/nigma.js';
 
 export default Nigma;
@@ -39,8 +48,17 @@ export {
     TextUtils,
     Kasiski,
     CipherIdentifier,
+    PeriodicAnalysis,
+    TranspositionDetector,
     HillClimb,
     SimulatedAnnealing,
     Scorer,
-    DictionaryValidator
+    DictionaryValidator,
+    normalizeCiphertext,
+    groupText,
+    formatTextLines,
+    wordSegmentText,
+    segmentTextWithConfidence,
+    CipherText,
+    ALPHABETS
 };

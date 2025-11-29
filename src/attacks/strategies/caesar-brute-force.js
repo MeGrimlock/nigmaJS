@@ -1,6 +1,7 @@
 import { Scorer } from '../../search/scorer.js';
 import { TextUtils } from '../../core/text-utils.js';
 import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { segmentText } from '../../language/word-segmenter.js';
 
 /**
  * Caesar Cipher Brute Force Solver
@@ -48,10 +49,26 @@ export class CaesarBruteForce {
                 try {
                     // Extract words from decrypted text
                     const fullDecrypted = TextUtils.matchLayout(ciphertext, decrypted);
-                    const words = fullDecrypted.toUpperCase()
+                    const hasSpacesInOriginal = /\s/.test(fullDecrypted);
+                    let words = fullDecrypted.toUpperCase()
                         .split(/\s+/)
                         .map(w => TextUtils.onlyLetters(w))
                         .filter(w => w.length >= 3); // Only consider words >= 3 chars
+                    
+                    // Only use word segmentation if original text has NO spaces
+                    if (!hasSpacesInOriginal && words.length > 0 && words[0].length > 10) {
+                        try {
+                            const segmented = segmentText(decrypted, dict, { maxWordLength: 20, minWordLength: 2 });
+                            if (segmented && segmented !== decrypted) {
+                                words = segmented.toUpperCase()
+                                    .split(/\s+/)
+                                    .map(w => TextUtils.onlyLetters(w))
+                                    .filter(w => w.length >= 3);
+                            }
+                        } catch (segError) {
+                            // Segmentation failed, continue with original words
+                        }
+                    }
                     
                     if (words.length > 0) {
                         let validWords = 0;

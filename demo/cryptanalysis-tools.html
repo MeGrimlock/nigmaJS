@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptanalysis Tools - NigmaJS</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guesser.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <style>
+        .analysis-tab {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .analysis-tab:hover {
+            background: rgba(255,255,255,0.1);
+            color: #e2e8f0;
+        }
+        .analysis-tab.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+            color: #a78bfa;
+        }
+        .analysis-tab-content {
+            display: none;
+        }
+        .analysis-tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Initializing NigmaJS...</div>
+        </div>
+    </div>
+
+    <!-- Navbar injected by navbar.js -->
+    <div class="container">
+        <header class="guesser-header">
+            <h1>🔬 Advanced Cryptanalysis Tools</h1>
+            <p class="subtitle">In-depth statistical analysis of ciphertext. Analyze patterns, frequencies, and cryptographic properties.</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="input-card">
+            <h2>📝 Enter Text to Analyze</h2>
+            <textarea id="analysisInput" placeholder="Paste ciphertext or plaintext here to analyze..." style="min-height: 200px; font-family: monospace;"></textarea>
+            
+            <!-- Normalized Text Preview -->
+            <div id="normalizedPreview" style="margin-top: 1rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">🔤 Normalized Text (for analysis)</span>
+                    <button class="copy-btn" id="copyNormalizedBtn" title="Copy normalized text" style="font-size: 0.7rem; padding: 2px 6px;">📋 Copy</button>
+                </div>
+                <div id="normalizedTextDisplay" style="font-family: monospace; font-size: 0.85rem; color: #e2e8f0; word-break: break-all; line-height: 1.6;"></div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.5rem;">
+                    <em>Spaces, punctuation, and non-alphabetic characters removed. This is what the system analyzes.</em>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Tabs -->
+        <div class="input-card" style="margin-top: 1.5rem;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <button class="analysis-tab active" data-tab="kasiski">🔍 Kasiski</button>
+                <button class="analysis-tab" data-tab="periodic">📈 Periodic IC</button>
+                <button class="analysis-tab" data-tab="transposition">🔄 Transposition</button>
+                <button class="analysis-tab" data-tab="chi-squared">📊 Chi-squared</button>
+                <button class="analysis-tab" data-tab="ngrams">📝 N-grams</button>
+                <button class="analysis-tab" data-tab="frequencies">📉 Frequencies</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="kasiskiContent" class="analysis-tab-content active">
+                <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #a78bfa;">What is Kasiski Examination?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        Kasiski examination detects repeating patterns in ciphertext to identify polyalphabetic ciphers (like Vigenère). 
+                        It finds repeated n-grams and calculates distances between them. If these distances share common factors, 
+                        those factors likely indicate the key length.
+                    </p>
+                </div>
+                <div id="kasiskiAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+
+            <div id="periodicContent" class="analysis-tab-content" style="display: none;">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">What is Periodic IC Analysis?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        Periodic Index of Coincidence divides text into columns for different periods and calculates IC for each column. 
+                        Polyalphabetic ciphers show high variance (columns differ), while monoalphabetic ciphers show low variance (columns similar).
+                    </p>
+                </div>
+                <div id="periodicAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+
+            <div id="transpositionContent" class="analysis-tab-content" style="display: none;">
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #10b981;">What is Transposition Detection?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        Transposition detection analyzes the "linguisticity" of ciphertext. If the ciphertext itself looks like language 
+                        (high n-gram scores, good letter frequencies), it's likely transposition. If it looks random, it's likely substitution.
+                    </p>
+                </div>
+                <div id="transpositionAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+
+            <div id="chi-squaredContent" class="analysis-tab-content" style="display: none;">
+                <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #f59e0b;">What is Chi-squared Test?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        Chi-squared compares observed letter frequencies in the ciphertext against expected frequencies for a language. 
+                        Lower values indicate better match to the language, suggesting monoalphabetic substitution or transposition 
+                        (which preserve letter frequencies). Higher values suggest polyalphabetic or random text.
+                    </p>
+                </div>
+                <div id="chiSquaredAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+
+            <div id="ngramsContent" class="analysis-tab-content" style="display: none;">
+                <div style="background: rgba(236, 72, 153, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #ec4899;">What are N-gram Scores?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        N-grams are sequences of N consecutive letters. N-gram scoring measures how "language-like" text appears 
+                        by comparing it against language models. Higher scores (closer to 1.0) indicate text that matches the language 
+                        patterns. Used to validate decryption results.
+                    </p>
+                </div>
+                <div id="ngramsAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+
+            <div id="frequenciesContent" class="analysis-tab-content" style="display: none;">
+                <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #a78bfa;">What is Frequency Analysis?</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                        Frequency analysis counts how often letters, bigrams (2-letter pairs), trigrams (3-letter sequences), 
+                        and quadgrams (4-letter sequences) appear in text. Each language has characteristic frequency patterns. 
+                        Comparing ciphertext frequencies to expected patterns helps identify the cipher type and language.
+                    </p>
+                </div>
+                <div id="frequenciesAnalysisContent" style="font-size: 0.85rem; color: #e2e8f0;">
+                    <div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/nigma.min.js"></script>
+    <script src="js/navbar.js"></script>
+    <script src="js/footer.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Suppress TensorFlow.js kernel registration warnings
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                const message = args[0];
+                if (typeof message === 'string' && (
+                    message.includes('kernel') && message.includes('already registered') ||
+                    message.includes('backend was already registered')
+                )) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+
+            const input = document.getElementById('analysisInput');
+            const normalizedPreview = document.getElementById('normalizedPreview');
+            const normalizedTextDisplay = document.getElementById('normalizedTextDisplay');
+            const copyNormalizedBtn = document.getElementById('copyNormalizedBtn');
+
+            // Analysis Tabs
+            const analysisTabs = document.querySelectorAll('.analysis-tab');
+            const analysisTabContents = document.querySelectorAll('.analysis-tab-content');
+            
+            analysisTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Remove active class from all tabs and contents
+                    analysisTabs.forEach(t => t.classList.remove('active'));
+                    analysisTabContents.forEach(c => {
+                        c.classList.remove('active');
+                        c.style.display = 'none';
+                    });
+                    
+                    // Add active class to clicked tab and corresponding content
+                    tab.classList.add('active');
+                    const targetContent = document.getElementById(`${targetTab}Content`);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                        targetContent.style.display = 'block';
+                    }
+                });
+            });
+
+            // Live Analysis on Input Change (with debounce)
+            let analysisTimeout;
+            input.addEventListener('input', () => {
+                clearTimeout(analysisTimeout);
+                analysisTimeout = setTimeout(() => {
+                    const text = input.value.trim();
+                    
+                    if (text.length === 0) {
+                        // Clear all analysis
+                        document.querySelectorAll('[id$="AnalysisContent"]').forEach(el => {
+                            el.innerHTML = '<div style="color: #64748b; font-style: italic;">Enter text to analyze...</div>';
+                        });
+                        if (normalizedPreview) normalizedPreview.style.display = 'none';
+                        return;
+                    }
+
+                    // Normalize text
+                    let normalized = null;
+                    let cleaned = '';
+                    try {
+                        const { normalizeCiphertext, groupText } = window.nigmajs;
+                        if (normalizeCiphertext) {
+                            normalized = normalizeCiphertext(text);
+                            cleaned = normalized.cleaned;
+                            
+                            // Show normalized preview
+                            if (normalizedPreview && normalizedTextDisplay && cleaned.length > 0) {
+                                const grouped = groupText(cleaned, 5);
+                                normalizedTextDisplay.textContent = grouped;
+                                normalizedPreview.style.display = 'block';
+                            }
+                        } else {
+                            cleaned = text.toUpperCase().replace(/[^A-Z]/g, '');
+                        }
+                    } catch (e) {
+                        console.warn('[Cryptanalysis Tools] Normalization failed:', e);
+                        cleaned = text.toUpperCase().replace(/[^A-Z]/g, '');
+                    }
+
+                    // Update analysis
+                    updateAdvancedAnalysis(cleaned || text);
+                }, 300); // 300ms debounce
+            });
+
+            // Copy normalized text
+            if (copyNormalizedBtn) {
+                copyNormalizedBtn.addEventListener('click', () => {
+                    const rawText = input.value.trim();
+                    if (!rawText) return;
+                    
+                    const { normalizeCiphertext } = window.nigmajs;
+                    if (normalizeCiphertext) {
+                        try {
+                            const normalized = normalizeCiphertext(rawText);
+                            navigator.clipboard.writeText(normalized.cleaned).then(() => {
+                                copyNormalizedBtn.textContent = '✓ Copied!';
+                                setTimeout(() => {
+                                    copyNormalizedBtn.textContent = '📋 Copy';
+                                }, 2000);
+                            }).catch(err => {
+                                console.error('Failed to copy:', err);
+                            });
+                        } catch (e) {
+                            console.warn('Normalization failed for copy:', e);
+                        }
+                    }
+                });
+            }
+
+            // Function to update advanced analysis
+            async function updateAdvancedAnalysis(text) {
+                if (!text || text.length < 20) {
+                    // Clear all analysis content
+                    const ids = ['kasiskiAnalysisContent', 'periodicAnalysisContent', 'transpositionAnalysisContent', 
+                                 'chiSquaredAnalysisContent', 'ngramsAnalysisContent', 'frequenciesAnalysisContent'];
+                    ids.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.innerHTML = '<div style="color: #64748b; font-style: italic;">Need at least 20 characters for analysis</div>';
+                        }
+                    });
+                    return;
+                }
+
+                // Wait for nigmajs to be available
+                if (!window.nigmajs) {
+                    console.warn('[Advanced Analysis] NigmaJS not loaded yet, waiting...');
+                    const checkNigma = setInterval(() => {
+                        if (window.nigmajs) {
+                            clearInterval(checkNigma);
+                            updateAdvancedAnalysis(text);
+                        }
+                    }, 100);
+                    setTimeout(() => clearInterval(checkNigma), 5000);
+                    return;
+                }
+
+                const { Stats, Kasiski, PeriodicAnalysis, TranspositionDetector, Scorers, LanguageAnalysis, TextUtils } = window.nigmajs;
+                if (!Stats || !Kasiski) {
+                    console.error('[Advanced Analysis] Required tools not available:', { 
+                        Stats: !!Stats, 
+                        Kasiski: !!Kasiski,
+                        PeriodicAnalysis: !!PeriodicAnalysis,
+                        TranspositionDetector: !!TranspositionDetector,
+                        Scorers: !!Scorers,
+                        LanguageAnalysis: !!LanguageAnalysis
+                    });
+                    const errorMsg = '<div style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">Error: NigmaJS tools not loaded. Please refresh the page.</div>';
+                    document.querySelectorAll('[id$="AnalysisContent"]').forEach(el => {
+                        if (el) el.innerHTML = errorMsg;
+                    });
+                    return;
+                }
+
+                // Assume text is already cleaned
+                const cleanText = text;
+                const detectedLanguage = await LanguageAnalysis.detectLanguage(cleanText || text).then(results => results?.[0]?.language || 'english').catch(() => 'english');
+
+                // 1. Kasiski Analysis
+                try {
+                    const kasiski = Kasiski.examine(cleanText);
+                    let kasiskiHtml = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                    
+                    if (kasiski.hasRepetitions) {
+                        kasiskiHtml += `<div style="padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px;">
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Repeated Patterns Found</div>
+                            <div style="font-size: 0.9rem; color: #10b981; font-weight: bold;">${Object.keys(kasiski.repeatedNGrams).length} unique patterns</div>
+                        </div>`;
+                        
+                        if (kasiski.suggestedKeyLengths && kasiski.suggestedKeyLengths.length > 0) {
+                            kasiskiHtml += '<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;"><div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Suggested Key Lengths:</div>';
+                            kasiski.suggestedKeyLengths.slice(0, 5).forEach((kl, idx) => {
+                                const scorePercent = (kl.score * 100).toFixed(0);
+                                kasiskiHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px; margin-bottom: 0.3rem;">
+                                    <span style="color: #e2e8f0;">Length ${kl.keyLength}</span>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="width: 60px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                            <div style="width: ${scorePercent}%; height: 100%; background: #a78bfa;"></div>
+                                        </div>
+                                        <span style="color: #a78bfa; font-size: 0.75rem;">${scorePercent}%</span>
+                                    </div>
+                                </div>`;
+                            });
+                            kasiskiHtml += '</div>';
+                        }
+                    } else {
+                        kasiskiHtml += '<div style="color: #64748b; font-style: italic;">No repeating patterns found. Likely monoalphabetic cipher.</div>';
+                    }
+                    
+                    kasiskiHtml += '</div>';
+                    const kasiskiEl = document.getElementById('kasiskiAnalysisContent');
+                    if (kasiskiEl) kasiskiEl.innerHTML = kasiskiHtml;
+                } catch (e) {
+                    const kasiskiEl = document.getElementById('kasiskiAnalysisContent');
+                    if (kasiskiEl) kasiskiEl.innerHTML = '<div style="color: #ef4444;">Error analyzing Kasiski</div>';
+                }
+
+                // 2. Periodic Analysis
+                try {
+                    if (PeriodicAnalysis) {
+                        const periodic = PeriodicAnalysis.analyze(cleanText, { maxPeriod: Math.min(20, Math.floor(cleanText.length / 4)) });
+                        let periodicHtml = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                        
+                        if (periodic.recommendation === 'insufficient_data') {
+                            periodicHtml += '<div style="color: #f59e0b;">Insufficient data for periodic analysis</div>';
+                        } else {
+                            const scorePercent = (periodic.polyalphabeticScore * 100).toFixed(0);
+                            const recommendation = periodic.recommendation === 'likely_polyalphabetic' ? 'Likely Polyalphabetic' : 
+                                                  periodic.recommendation === 'likely_monoalphabetic' ? 'Likely Monoalphabetic' : 'Ambiguous';
+                            const recColor = periodic.recommendation === 'likely_polyalphabetic' ? '#3b82f6' : 
+                                           periodic.recommendation === 'likely_monoalphabetic' ? '#10b981' : '#f59e0b';
+                            
+                            periodicHtml += `<div style="padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Recommendation</div>
+                                <div style="font-size: 0.9rem; color: ${recColor}; font-weight: bold;">${recommendation}</div>
+                            </div>`;
+                            
+                            periodicHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Polyalphabetic Score</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                        <div style="width: ${scorePercent}%; height: 100%; background: #3b82f6;"></div>
+                                    </div>
+                                    <span style="color: #3b82f6; font-size: 0.85rem; font-weight: bold; min-width: 40px;">${scorePercent}%</span>
+                                </div>
+                            </div>`;
+                        }
+                        
+                        periodicHtml += '</div>';
+                        const periodicEl = document.getElementById('periodicAnalysisContent');
+                        if (periodicEl) periodicEl.innerHTML = periodicHtml;
+                    }
+                } catch (e) {
+                    const periodicEl = document.getElementById('periodicAnalysisContent');
+                    if (periodicEl) periodicEl.innerHTML = '<div style="color: #ef4444;">Error analyzing periodic patterns</div>';
+                }
+
+                // 3. Transposition Detection
+                try {
+                    if (TranspositionDetector) {
+                        const transposition = TranspositionDetector.analyze(cleanText, detectedLanguage);
+                        let transHtml = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                        
+                        if (transposition.recommendation === 'insufficient_data') {
+                            transHtml += '<div style="color: #f59e0b;">Insufficient data for transposition analysis</div>';
+                        } else {
+                            const scorePercent = (transposition.transpositionScore * 100).toFixed(0);
+                            const recommendation = transposition.recommendation === 'likely_transposition' ? 'Likely Transposition' : 
+                                                  transposition.recommendation === 'likely_substitution' ? 'Likely Substitution' : 'Ambiguous';
+                            const recColor = transposition.recommendation === 'likely_transposition' ? '#10b981' : 
+                                           transposition.recommendation === 'likely_substitution' ? '#3b82f6' : '#f59e0b';
+                            
+                            transHtml += `<div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Recommendation</div>
+                                <div style="font-size: 0.9rem; color: ${recColor}; font-weight: bold;">${recommendation}</div>
+                            </div>`;
+                            
+                            transHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Transposition Score</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                        <div style="width: ${scorePercent}%; height: 100%; background: #10b981;"></div>
+                                    </div>
+                                    <span style="color: #10b981; font-size: 0.85rem; font-weight: bold; min-width: 40px;">${scorePercent}%</span>
+                                </div>
+                            </div>`;
+                            
+                            if (transposition.chiSquaredLetters !== null) {
+                                transHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">Chi-squared (Letters)</div>
+                                    <div style="font-size: 0.9rem; color: #e2e8f0; font-weight: bold;">${transposition.chiSquaredLetters.toFixed(2)}</div>
+                                    <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">Lower = better match to language</div>
+                                </div>`;
+                            }
+                            
+                            if (transposition.ngramScoreCipher !== null) {
+                                const ngramPercent = (transposition.ngramScoreCipher * 100).toFixed(0);
+                                transHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">N-gram Score (Ciphertext)</div>
+                                    <div style="font-size: 0.9rem; color: #e2e8f0; font-weight: bold;">${ngramPercent}%</div>
+                                    <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">How "language-like" the ciphertext appears</div>
+                                </div>`;
+                            }
+                        }
+                        
+                        transHtml += '</div>';
+                        const transEl = document.getElementById('transpositionAnalysisContent');
+                        if (transEl) transEl.innerHTML = transHtml;
+                    }
+                } catch (e) {
+                    const transEl = document.getElementById('transpositionAnalysisContent');
+                    if (transEl) transEl.innerHTML = '<div style="color: #ef4444;">Error analyzing transposition</div>';
+                }
+
+                // 4. Chi-squared Test
+                try {
+                    const langData = LanguageAnalysis.languages[detectedLanguage] || LanguageAnalysis.languages.english;
+                    const expectedFreqs = langData ? langData.monograms : null;
+                    
+                    if (expectedFreqs) {
+                        const observedFreqs = Stats.frequency(cleanText, true).histogram;
+                        let chiSquared = 0;
+                        for (let i = 0; i < 26; i++) {
+                            const letter = String.fromCharCode(65 + i);
+                            const p = (expectedFreqs[letter] || 0) / 100;
+                            const O = observedFreqs[letter] || 0;
+                            const E = p * cleanText.length;
+                            
+                            if (E > 0) {
+                                chiSquared += Math.pow(O - E, 2) / E;
+                            } else if (O > 0) {
+                                chiSquared += O * 10;
+                            }
+                        }
+                        
+                        const interpretation = chiSquared < 50 ? 'Excellent match' : 
+                                            chiSquared < 100 ? 'Good match' : 
+                                            chiSquared < 200 ? 'Moderate match' : 'Poor match';
+                        const color = chiSquared < 50 ? '#10b981' : 
+                                     chiSquared < 100 ? '#3b82f6' : 
+                                     chiSquared < 200 ? '#f59e0b' : '#ef4444';
+                        
+                        let chiHtml = `<div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="padding: 0.75rem; background: rgba(245, 158, 11, 0.1); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Chi-squared Value</div>
+                                <div style="font-size: 1.2rem; color: ${color}; font-weight: bold;">${chiSquared.toFixed(2)}</div>
+                                <div style="font-size: 0.75rem; color: ${color}; margin-top: 0.25rem;">${interpretation} to ${detectedLanguage}</div>
+                            </div>
+                            <div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Interpretation</div>
+                                <div style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.5;">
+                                    <strong>Lower is better.</strong> Values less than 50 suggest monoalphabetic substitution or transposition. 
+                                    Values greater than 200 suggest polyalphabetic or random text.
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        const chiEl = document.getElementById('chiSquaredAnalysisContent');
+                        if (chiEl) chiEl.innerHTML = chiHtml;
+                    }
+                } catch (e) {
+                    const chiEl = document.getElementById('chiSquaredAnalysisContent');
+                    if (chiEl) chiEl.innerHTML = '<div style="color: #ef4444;">Error calculating Chi-squared test</div>';
+                }
+
+                // 5. N-gram Scores
+                try {
+                    if (Scorers) {
+                        const ngram4 = Scorers.scoreTextNormalized(cleanText, detectedLanguage, { useFallback: true });
+                        const ngram3 = cleanText.length >= 3 ? Scorers.scoreTextNormalized(cleanText, detectedLanguage, { useFallback: false }) : null;
+                        
+                        let ngramsHtml = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                        
+                        ngramsHtml += `<div style="padding: 0.75rem; background: rgba(236, 72, 153, 0.1); border-radius: 6px;">
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">4-gram Score</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${(ngram4 * 100).toFixed(0)}%; height: 100%; background: #ec4899;"></div>
+                                </div>
+                                <span style="color: #ec4899; font-size: 0.85rem; font-weight: bold; min-width: 40px;">${(ngram4 * 100).toFixed(0)}%</span>
+                            </div>
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">How well text matches ${detectedLanguage} 4-gram patterns</div>
+                        </div>`;
+                        
+                        if (ngram3 !== null) {
+                            ngramsHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">3-gram Score</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                        <div style="width: ${(ngram3 * 100).toFixed(0)}%; height: 100%; background: #a78bfa;"></div>
+                                    </div>
+                                    <span style="color: #a78bfa; font-size: 0.85rem; font-weight: bold; min-width: 40px;">${(ngram3 * 100).toFixed(0)}%</span>
+                                </div>
+                            </div>`;
+                        }
+                        
+                        ngramsHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Interpretation</div>
+                            <div style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.5;">
+                                <strong>Higher is better.</strong> Scores greater than 70% indicate text matches language patterns well. 
+                                Used to validate decryption results.
+                            </div>
+                        </div>`;
+                        ngramsHtml += '</div>';
+                        
+                        const ngramsEl = document.getElementById('ngramsAnalysisContent');
+                        if (ngramsEl) ngramsEl.innerHTML = ngramsHtml;
+                    }
+                } catch (e) {
+                    const ngramsEl = document.getElementById('ngramsAnalysisContent');
+                    if (ngramsEl) ngramsEl.innerHTML = '<div style="color: #ef4444;">Error calculating n-gram scores</div>';
+                }
+
+                // 6. Frequency Analysis
+                try {
+                    const freqData = Stats.frequency(cleanText, true);
+                    const topLetters = Object.entries(freqData.histogram)
+                        .map(([letter, freq]) => ({ letter, freq: freq * 100 }))
+                        .sort((a, b) => b.freq - a.freq)
+                        .slice(0, 10);
+                    
+                    let freqHtml = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                    freqHtml += '<div style="padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px;">';
+                    freqHtml += '<div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.75rem;">Top 10 Letter Frequencies</div>';
+                    
+                    topLetters.forEach((item, idx) => {
+                        freqHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px; margin-bottom: 0.3rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: #64748b; font-size: 0.7rem; min-width: 20px;">${idx + 1}.</span>
+                                <span style="color: #e2e8f0; font-family: monospace; font-weight: bold; min-width: 30px;">${item.letter}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 200px;">
+                                <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: ${item.freq}%; height: 100%; background: #a78bfa;"></div>
+                                </div>
+                                <span style="color: #a78bfa; font-size: 0.75rem; min-width: 45px; text-align: right;">${item.freq.toFixed(2)}%</span>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    freqHtml += '</div>';
+                    freqHtml += `<div style="padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">Interpretation</div>
+                        <div style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.5;">
+                            Compare these frequencies to expected language patterns. Monoalphabetic ciphers preserve frequency distribution, 
+                            while polyalphabetic ciphers flatten it.
+                        </div>
+                    </div>`;
+                    freqHtml += '</div>';
+                    
+                    const freqEl = document.getElementById('frequenciesAnalysisContent');
+                    if (freqEl) freqEl.innerHTML = freqHtml;
+                } catch (e) {
+                    const freqEl = document.getElementById('frequenciesAnalysisContent');
+                    if (freqEl) freqEl.innerHTML = '<div style="color: #ef4444;">Error calculating frequencies</div>';
+                }
+            }
+
+            // Hide loading overlay when nigmajs is ready
+            function hideLoadingOverlay() {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+            
+            // Initialize: Check if there's text in the input and analyze it
+            function initializeAnalysis() {
+                const text = input.value.trim();
+                if (text.length >= 20) {
+                    // Normalize and analyze
+                    try {
+                        const { normalizeCiphertext, groupText } = window.nigmajs;
+                        if (normalizeCiphertext) {
+                            const normalized = normalizeCiphertext(text);
+                            const cleaned = normalized.cleaned;
+                            
+                            // Show normalized preview
+                            if (normalizedPreview && normalizedTextDisplay && cleaned.length > 0) {
+                                const grouped = groupText(cleaned, 5);
+                                normalizedTextDisplay.textContent = grouped;
+                                normalizedPreview.style.display = 'block';
+                            }
+                            
+                            // Run analysis
+                            updateAdvancedAnalysis(cleaned);
+                        }
+                    } catch (e) {
+                        console.warn('[Cryptanalysis Tools] Initial analysis failed:', e);
+                    }
+                }
+            }
+            
+            if (window.nigmajs && window.nigmajs.Stats) {
+                hideLoadingOverlay();
+                initializeAnalysis();
+            } else {
+                // Wait for nigma.min.js to load
+                const checkInterval = setInterval(() => {
+                    if (window.nigmajs && window.nigmajs.Stats) {
+                        clearInterval(checkInterval);
+                        hideLoadingOverlay();
+                        initializeAnalysis();
+                    }
+                }, 100);
+                
+                // Fallback: hide after 3 seconds
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    hideLoadingOverlay();
+                    if (window.nigmajs && window.nigmajs.Stats) {
+                        initializeAnalysis();
+                    }
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
+

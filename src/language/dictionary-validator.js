@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import { TextUtils } from '../core/text-utils.js';
 import { LanguageAnalysis } from '../analysis/analysis.js';
+import { segmentText } from '../language/word-segmenter.js';
 
 // Flag to check if we're in browser environment
 const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
@@ -95,11 +96,42 @@ export class DictionaryValidator {
             };
         }
 
+        // Check if original text has spaces
+        const hasSpacesInOriginal = /\s/.test(text);
+        
         // Extract words (split by spaces in original text, then clean)
-        const words = text.toUpperCase()
+        let words = text.toUpperCase()
             .split(/\s+/)
             .map(w => TextUtils.onlyLetters(w))
             .filter(w => w.length > 0);
+
+        // Only use word segmentation if text has NO spaces in original
+        // This handles cases where ciphertext was normalized (spaces removed)
+        if (!hasSpacesInOriginal && words.length > 0 && words[0].length > 10) {
+            // Get dictionary for segmentation
+            const dictionary = LanguageAnalysis.getDictionary(this.language);
+            if (dictionary) {
+                try {
+                    // Try to segment the continuous text
+                    const segmented = segmentText(cleanText, dictionary, {
+                        maxWordLength: 20,
+                        minWordLength: 2,
+                        preserveUnknown: true
+                    });
+                    
+                    // If segmentation found words, use them
+                    if (segmented && segmented !== cleanText) {
+                        words = segmented.toUpperCase()
+                            .split(/\s+/)
+                            .map(w => TextUtils.onlyLetters(w))
+                            .filter(w => w.length > 0);
+                    }
+                } catch (error) {
+                    // Segmentation failed, continue with original words
+                    console.warn('[DictionaryValidator] Word segmentation failed:', error);
+                }
+            }
+        }
 
         if (words.length === 0) {
             return {

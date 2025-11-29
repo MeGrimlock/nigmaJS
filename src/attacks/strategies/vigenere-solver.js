@@ -1,7 +1,9 @@
 import { LanguageAnalysis } from '../../analysis/analysis.js';
 import { DictionaryValidator } from '../../language/dictionary-validator.js';
 import { TextUtils } from '../../core/text-utils.js';
+import { Scorers } from '../../language/scorers.js';
 import Shift from '../../ciphers/shift/shift.js';
+import { segmentText } from '../../language/word-segmenter.js';
 
 export class VigenereSolver {
     constructor(language = 'english') {
@@ -47,7 +49,13 @@ export class VigenereSolver {
             // 4. Decrypt
             const plaintext = this.decryptVigenere(ciphertext, key);
             
-            // 5. Validate result with dictionary if available
+            // 5. Score result using advanced n-gram scoring (primary) + dictionary validation (secondary)
+            const cleanPlaintext = TextUtils.onlyLetters(plaintext);
+            
+            // N-gram score (normalized [0, 1], higher is better)
+            const ngramScore = Scorers.scoreTextNormalized(cleanPlaintext, this.language, { useFallback: true });
+            
+            // Dictionary validation score (0-1)
             let validationScore = 0;
             let validWords = 0;
             let totalWords = 0;
@@ -70,10 +78,14 @@ export class VigenereSolver {
                 }
             }
             
-            console.log(`[VigenereSolver] Key ${key}: ${validWords}/${totalWords} valid words (${(validationScore * 100).toFixed(0)}%)`);
+            console.log(`[VigenereSolver] Key ${key}: N-gram=${ngramScore.toFixed(3)}, ValidWords=${validWords}/${totalWords} (${(validationScore * 100).toFixed(0)}%)`);
             
-            // Combined score: IoC confidence + dictionary validation
-            const combinedScore = (keyLengthData.confidence || 0.5) + (validationScore * 0.5);
+            // Combined score: 70% n-gram (more reliable) + 30% dictionary + 10% IoC confidence
+            // All components are [0, 1], so final score is also [0, 1]
+            const combinedScore = (ngramScore * 0.7) + (validationScore * 0.3) + ((keyLengthData.confidence || 0.5) * 0.1);
+            
+            // CRITICAL: Mark if this is a polyalphabetic candidate (keyLength > 1)
+            const isPolyalphabeticCandidate = candidateLen > 1;
             
             if (combinedScore > bestScore) {
                 bestScore = combinedScore;
@@ -82,7 +94,10 @@ export class VigenereSolver {
                     key: key,
                     confidence: Math.min(1, combinedScore),
                     analysis: { ...keyLengthData, keyLength: candidateLen },
-                    validationScore: validationScore
+                    validationScore: validationScore,
+                    ngramScore: ngramScore,  // Add n-gram score for ResultAggregator
+                    isPolyalphabeticCandidate: isPolyalphabeticCandidate,  // CRITICAL: len > 1 = polyalphabetic
+                    dictionaryCoverage: validationScore  // Alias for ResultAggregator
                 };
                 
                 // Early termination: if we found a key with >70% valid words, use it
@@ -153,27 +168,43 @@ export class VigenereSolver {
         // Sort by score (lower is better)
         candidates.sort((a, b) => a.score - b.score);
         
-        // Prefer shorter keys if scores are similar (within 15%)
-        // Also check if shorter key is a divisor of longer key (e.g., 3 vs 6, 9)
-        let bestCandidate = candidates[0];
-        for (let i = 1; i < candidates.length && i < 5; i++) {
-            const candidate = candidates[i];
-            // If this candidate is shorter and:
-            // 1. Score is within 15%, OR
-            // 2. Longer candidate is a multiple of shorter (e.g., 6 is multiple of 3)
-            const isMultiple = bestCandidate.length > candidate.length && 
-                              (bestCandidate.length % candidate.length === 0);
-            const scoreSimilar = candidate.score <= bestCandidate.score * 1.15;
-            
-            if (candidate.length < bestCandidate.length && (scoreSimilar || isMultiple)) {
-                bestCandidate = candidate;
+        // CRITICAL: Prefer candidates with len > 1 (polyalphabetic) over len=1 (monoalphabetic)
+        // This ensures keyLength=1 is never selected as evidence for polyalphabetic ciphers
+        function selectBestKeyLength(candidates) {
+            // 1. First, try to find the best candidate with len > 1
+            const nonTrivial = candidates.filter(c => c.length > 1);
+            if (nonTrivial.length > 0) {
+                // Find best among non-trivial (len > 1)
+                let best = nonTrivial[0];
+                for (let i = 1; i < nonTrivial.length && i < 5; i++) {
+                    const candidate = nonTrivial[i];
+                    // Prefer shorter key if scores are very similar (within 5%)
+                    const scoreVerySimilar = candidate.score <= best.score * 1.05;
+                    const isMultiple = best.length > candidate.length && 
+                                      (best.length % candidate.length === 0);
+                    const scoreSimilarForMultiple = isMultiple && candidate.score <= best.score * 1.10;
+                    
+                    if (candidate.length < best.length && (scoreVerySimilar || scoreSimilarForMultiple)) {
+                        best = candidate;
+                    } else if (candidate.score < best.score) {
+                        // If score is significantly better, prefer it even if longer
+                        best = candidate;
+                    }
+                }
+                return best;
             }
+            
+            // 2. Only if NO candidate with len > 1 exists, return the best overall (may be len=1)
+            // This will be marked as non-polyalphabetic later
+            return candidates[0];
         }
+        
+        const bestCandidate = selectBestKeyLength(candidates);
         
         console.log(`[VigenereSolver] Key length candidates:`, candidates.slice(0, 3).map(c => 
             `len=${c.length}, score=${c.score.toFixed(3)}, IoC=${c.avgIoC.toFixed(2)}, variance=${c.variance.toFixed(2)}`
         ));
-        console.log(`[VigenereSolver] Selected key length: ${bestCandidate.length}`);
+        console.log(`[VigenereSolver] Selected key length: ${bestCandidate.length} (best score: ${bestCandidate.score.toFixed(3)})`);
 
         // Confidence: How close is the IoC to English?
         // 1.0 = Random, 1.73 = English. Map this range to 0-1.
@@ -210,10 +241,29 @@ export class VigenereSolver {
             // Check if dictionary is loaded (non-blocking)
             const dict = LanguageAnalysis.getDictionary(this.language);
             if (dict) {
+                // Check if original text has spaces
+                const hasSpacesInOriginal = /\s/.test(text);
+                
                 // Extract words from text and check against dictionary
-                const words = text.split(/\s+/)
+                let words = text.split(/\s+/)
                     .map(w => TextUtils.onlyLetters(w))
                     .filter(w => w.length >= 3);
+                
+                // Only use word segmentation if original text has NO spaces
+                if (!hasSpacesInOriginal && words.length > 0 && words[0].length > 10) {
+                    try {
+                        const cleanText = TextUtils.onlyLetters(text);
+                        const segmented = segmentText(cleanText, dict, { maxWordLength: 20, minWordLength: 2 });
+                        if (segmented && segmented !== cleanText) {
+                            words = segmented.toUpperCase()
+                                .split(/\s+/)
+                                .map(w => TextUtils.onlyLetters(w))
+                                .filter(w => w.length >= 3);
+                        }
+                    } catch (segError) {
+                        // Segmentation failed, continue with original words
+                    }
+                }
                 
                 if (words.length > 0) {
                     let validWords = 0;

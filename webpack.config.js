@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const packageJson = require("./package.json");
 
 module.exports = {
   entry: {
@@ -44,6 +45,9 @@ module.exports = {
     new webpack.ProvidePlugin({
       process: 'process/browser',
       Buffer: ['buffer', 'Buffer']
+    }),
+    new webpack.DefinePlugin({
+      'NIGMAJS_VERSION': JSON.stringify(packageJson.version)
     })
   ]
 };

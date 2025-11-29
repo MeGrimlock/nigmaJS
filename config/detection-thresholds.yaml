@@ -1,127 +1,104 @@
-# NigmaJS Detection Thresholds Configuration
-# This file contains all configurable thresholds and values for language detection,
-# cipher identification, and validation. Update these values to fine-tune the system.
+# Detection Thresholds Configuration
+# This file contains tunable parameters for cryptographic analysis algorithms
+# Modify these values to adjust detection sensitivity and accuracy
 
+# Language Detection Configuration
 language_detection:
-  # Text length thresholds (in characters)
-  text_length:
-    very_short: 50      # Texts shorter than this are considered very short
-    short: 100           # Texts shorter than this are considered short
-    medium: 200          # Texts shorter than this are considered medium
-    long: 200            # Texts longer than this are considered long
-  
-  # Statistical analysis weights (for chi-squared and shape scores)
-  weights:
-    # Chi-squared (Identity Match) weights
-    chi_squared:
-      monogram:
-        very_short: 0.3
-        short: 0.4
-        medium: 0.5
-        long: 0.5
-      bigram:
-        very_short: 2.0
-        short: 2.5
-        medium: 3.0
-        long: 3.0
-    
-    # Shape Score (Distribution Match) weights
-    shape_score:
-      monogram:
-        very_short: 0.3
-        short: 0.4
-        medium: 0.5
-        long: 0.5
-      bigram:
-        very_short: 2.0
-        short: 2.5
-        medium: 3.0
-        long: 3.0
-      trigram:
-        very_short: 1.0
-        short: 1.5
-        medium: 2.0
-        long: 2.0
-      quadgram:
-        very_short: 0.5
-        short: 0.75
-        medium: 1.0
-        long: 1.0
-  
-  # Index of Coincidence (IoC) weights
-  ioc:
-    weight:
-      very_short: 20
-      short: 35
-      medium: 50
-      long: 50
-  
-  # Dictionary validation weights and thresholds
-  dictionary:
-    # Weight multiplier for dictionary score (higher = more important)
-    weight_multiplier:
-      very_short: 2.0
-      short: 1.5
-      medium: 1.2
-      long: 1.0
-    
-    # Minimum word length to consider for validation
-    min_word_length: 2
-    
-    # Minimum dictionary score to apply bonus (0-1)
-    min_score_for_bonus: 0.2
-    
-    # Dictionary score bonus multiplier
-    bonus_multiplier: 50
-    
-    # Cross-validation thresholds (for comparing languages)
-    cross_validation:
-      # Minimum difference to consider one language significantly better
-      significant_difference: 0.2
-      # Bonus/penalty for cross-validation
-      bonus: -30
-      penalty: 30
-    
-    # Additional penalty when dictionary validation fails for short texts
-    low_score_penalty:
-      very_short: 150
-      short: 100
-      medium: 50
-      long: 0
-    
-    # Minimum score threshold for low score penalty
-    low_score_threshold: 0.1
-    
-    # Dictionary validation bonuses
-    bonuses:
-      # Bonus for longer valid words (max bonus)
-      length_bonus_max: 0.3
-      length_bonus_divisor: 8
-      
-      # Bonus for very short texts with at least one valid word
-      short_text_bonus: 0.2
-      short_text_max_words: 3
+  # Supported languages for detection
+  supported_languages: ['english', 'spanish', 'french', 'german', 'italian', 'portuguese', 'russian', 'chinese']
 
-  # Plaintext re-detection thresholds (in orchestrator)
-  plaintext_redetection:
-    # Maximum score for confident detection
-    confident_score_threshold: 250
-    
-    # Minimum score difference to override original language
-    min_score_difference: 100
-    
-    # Minimum dictionary validation score to support new language
-    min_dict_validation: 0.3
+  # Penalization factors for similar languages
+  penalization_factors:
+    latin_languages: 0.2  # Penalty multiplier for French, Italian, Portuguese
+    german: 0.3  # Penalty multiplier for German vs English
 
-# IC (Index of Coincidence) validation thresholds
+  # Ambiguity handling thresholds
+  ambiguity:
+    difference_threshold: 0.05  # Minimum difference ratio between top 2 scores (5%)
+    preference_threshold: 0.98  # Score threshold for preferring non-penalized languages (98%)
+
+# Cipher Identifier Configuration
+cipher_identifier:
+  # Caesar cipher detection thresholds
+  caesar_test:
+    primary_threshold:
+      score: 0.5          # Minimum chi-squared score for primary detection
+      improvement: 0.12   # Minimum improvement over baseline
+
+    secondary_threshold:
+      score: 0.3          # Secondary detection threshold
+      improvement: 0.06   # Secondary improvement threshold
+
+    minimum_threshold:
+      score: 0.2          # Minimum viable threshold
+      improvement: 0.03   # Minimum improvement
+
+    # Score multipliers and penalties
+    primary_multiplier: 2.2     # Score boost for primary detection
+    secondary_multiplier: 1.5   # Score boost for secondary detection
+    monoalphabetic_boost: 1.3   # Boost for monoalphabetic substitution
+    vigenere_penalty: 1.8       # Penalty applied to Vigenère-like scores
+    transposition_penalty: 1.8  # Penalty applied to transposition scores
+
+  # Text length categories
+  text_categories:
+    short_threshold: 50  # Texts shorter than this are considered "short"
+
+  # Confidence score thresholds
+  confidence_thresholds:
+    minimum_family_score: 0.2      # Minimum normalized score for family inclusion
+    random_unknown_fallback: 0.7   # Confidence for random-unknown fallback
+
+# Periodic Analysis Configuration
+periodic_analysis:
+  # Analysis parameters
+  analyze:
+    minimum_text_length: 10  # Minimum text length for analysis
+
+  # Periodic IC calculation
+  periodic_ic:
+    minimum_column_length: 5     # Minimum column length for IC calculation
+    use_normalized_ic: false     # Whether to use normalized IC
+    max_period: 20               # Maximum period to test
+    min_period: 1                # Minimum period to test
+
+  # Repetition score calculation
+  repetition_score:
+    minimum_text_length: 3   # Minimum text length for repetition analysis
+    minimum_run_length: 3    # Minimum consecutive identical letters to count
+
+  # General thresholds
+  variance_threshold: 0.1   # Variance threshold for periodicity detection
+  peak_threshold: 0.08      # Peak threshold for autocorrelation
+
+# Short Text Patterns Configuration
+short_text_patterns:
+  # Scoring parameters
+  score:
+    minimum_text_length: 3    # Minimum text length for scoring
+    minimum_word_length: 2    # Minimum word length to consider
+
+  # Symmetry analysis
+  symmetry_analysis:
+    minimum_length: 6     # Minimum length for symmetry analysis
+    symmetry_threshold: 1 # Minimum symmetric pairs required
+
+# IC Sample Correction Configuration
 ic_analysis:
-  # Tolerance for IC validation (by text length)
+  # Tolerance values by text category
   tolerance:
-    very_short: Infinity  # Don't validate IC for very short texts
-    short: 0.8
-    medium: 0.5
-    long: 0.3
-  
+    very_short: Infinity   # Very short texts have infinite tolerance
+    short: 0.8             # Short texts tolerance
+    medium: 0.5            # Medium texts tolerance
+    long: 0.3              # Long texts tolerance
+
+  # Percentage tolerance
+  tolerance_percent:
+    very_short: 50   # 50% tolerance for very short texts
+    short: 30        # 30% tolerance for short texts
+    medium: 20       # 20% tolerance for medium texts
+    long: 10         # 10% tolerance for long texts
+
   # Expected IC values by language
   expected_values:
     english: 1.73
@@ -132,344 +109,3 @@ ic_analysis:
     spanish: 1.94
     russian: 1.76
     chinese: 0.0
-
-# Stop words for language detection (common words specific to each language)
-# These help improve detection accuracy, especially for short texts
-stop_words:
-  english:
-    - THE
-    - AND
-    - FOR
-    - ARE
-    - BUT
-    - NOT
-    - YOU
-    - ALL
-    - CAN
-    - HER
-    - WAS
-    - ONE
-    - OUR
-    - OUT
-    - DAY
-    - GET
-    - HAS
-    - HIM
-    - HIS
-    - HOW
-    - MAN
-    - NEW
-    - NOW
-    - OLD
-    - SEE
-    - TWO
-    - WAY
-    - WHO
-    - BOY
-    - DID
-    - ITS
-    - LET
-    - PUT
-    - SAY
-    - SHE
-    - TOO
-    - USE
-  
-  spanish:
-    - EL
-    - LA
-    - DE
-    - QUE
-    - Y
-    - A
-    - EN
-    - UN
-    - SER
-    - SE
-    - NO
-    - HABER
-    - POR
-    - CON
-    - SU
-    - PARA
-    - COMO
-    - ESTAR
-    - TENER
-    - LE
-    - LO
-    - TODO
-    - PERO
-    - MAS
-    - HACER
-    - O
-    - PODER
-    - DECIR
-    - ESTE
-    - IR
-    - OTRO
-    - ESE
-    - LA
-    - SI
-    - ME
-    - YA
-    - VER
-    - PORQUE
-    - DAR
-    - CUANDO
-    - EL
-    - MUY
-    - SIN
-    - VEZ
-    - MUCHO
-    - SABER
-    - QUÉ
-    - SOBRE
-    - MI
-    - ALGUNO
-    - MISMO
-    - YO
-    - TAMBIÉN
-    - HASTA
-  
-  italian:
-    - IL
-    - DI
-    - CHE
-    - E
-    - LA
-    - A
-    - UN
-    - PER
-    - IN
-    - UNA
-    - ESSERE
-    - AVER
-    - FARE
-    - DA
-    - STARE
-    - DARE
-    - ANDARE
-    - VEDERE
-    - SAPERE
-    - VOLERE
-    - DARE
-    - POTERE
-    - DOVERE
-    - VENIRE
-    - DIRE
-    - TROVARE
-    - PRENDERE
-    - METTERE
-    - LASCIARE
-    - PASSARE
-    - GUARDARE
-    - SENTIRE
-    - PENSARE
-    - ASPETTARE
-    - CERCARE
-    - CHIAMARE
-    - PORTARE
-    - TENERE
-    - PARLARE
-    - CREDERE
-    - VIVERE
-    - RIMANERE
-    - PARTIRE
-    - ENTRARE
-    - USCIRE
-    - TORNARE
-    - MORIRE
-    - NASCERE
-    - DIVENTARE
-    - RESTARE
-  
-  portuguese:
-    - O
-    - DE
-    - A
-    - E
-    - DO
-    - DA
-    - EM
-    - UM
-    - PARA
-    - É
-    - COM
-    - NÃO
-    - UMA
-    - OS
-    - NO
-    - SE
-    - NA
-    - POR
-    - MAIS
-    - AS
-    - DOS
-    - COMO
-    - MAS
-    - FOI
-    - AO
-    - ELE
-    - DAS
-    - TEM
-    - À
-    - SEU
-    - SUA
-    - OU
-    - SER
-    - QUANDO
-    - MUITO
-    - HÁ
-    - NOS
-    - JÁ
-    - ESTÁ
-    - EU
-    - TAMBÉM
-    - SÓ
-    - PELO
-    - PELA
-    - ATÉ
-    - ISSO
-    - ELE
-    - TER
-    - SEUS
-    - SUAS
-    - NUMA
-    - PELOS
-    - PELAS
-  
-  french:
-    - LE
-    - DE
-    - ET
-    - À
-    - UN
-    - IL
-    - ÊTRE
-    - ET
-    - EN
-    - AVOIR
-    - QUE
-    - POUR
-    - DANS
-    - CE
-    - SON
-    - UNE
-    - SUR
-    - AVEC
-    - NE
-    - SE
-    - PAS
-    - TOUT
-    - PLUS
-    - PAR
-    - GRAND
-    - ENCORE
-    - UNE
-    - FAIRE
-    - TOUS
-    - COMME
-    - ÊTRE
-    - TRÈS
-    - IL
-    - OU
-    - LEUR
-    - BIEN
-    - PEU
-    - CEUX
-    - TOUTE
-    - AUSSI
-    - NOUVEAU
-    - APRÈS
-    - DEUX
-    - VOUloir
-    - CONTRE
-    - SANS
-    - AUTRE
-    - TOUJOURS
-    - CHAQUE
-    - PEUT
-    - AINSI
-    - ENCORE
-    - TOUTE
-    - PEU
-    - ÊTRE
-    - TRÈS
-    - IL
-    - OU
-    - LEUR
-    - BIEN
-    - PEU
-    - CEUX
-    - TOUTE
-    - AUSSI
-  
-  german:
-    - DER
-    - DIE
-    - UND
-    - IN
-    - DEN
-    - VON
-    - ZU
-    - DAS
-    - MIT
-    - SICH
-    - DES
-    - AUF
-    - FÜR
-    - IST
-    - IM
-    - DEM
-    - NICHT
-    - EIN
-    - EINE
-    - ALS
-    - AUCH
-    - ES
-    - AN
-    - WERDEN
-    - AUS
-    - ER
-    - HAT
-    - DASS
-    - SIE
-    - NACH
-    - WIRD
-    - BEI
-    - EINEM
-    - ÜBER
-    - EINEN
-    - SO
-    - ZUM
-    - WAR
-    - HABEN
-    - NUR
-    - ODER
-    - ABER
-    - VOR
-    - ZUR
-    - BIS
-    - MEHR
-    - EINE
-    - WENN
-    - DURCH
-    - MAN
-    - SEIN
-    - WIRD
-    - BEI
-    - SEINE
-    - DEM
-    - SEINER
-
-# Stop words scoring (how much weight to give stop words in detection)
-stop_words_scoring:
-  # Weight for stop words in language detection (0-1)
-  weight: 0.3
-  
-  # Minimum number of stop words to consider
-  min_count: 1
-  
-  # Bonus per stop word found
-  bonus_per_word: 20
-
