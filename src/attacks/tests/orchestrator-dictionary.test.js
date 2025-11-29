@@ -1,5 +1,5 @@
-import { Orchestrator } from './orchestrator.js';
-import Shift from '../ciphers/shift/shift.js';
+import { Orchestrator } from '../orchestrator.js';
+import Shift from '../../ciphers/shift/shift.js';
 import fs from 'fs';
 import path from 'path';
 

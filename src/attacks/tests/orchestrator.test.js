@@ -1,7 +1,7 @@
-import { Orchestrator } from './orchestrator.js';
-import Shift from '../ciphers/shift/shift.js';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
-import { Scorer } from '../search/scorer.js';
+import { Orchestrator } from '../orchestrator.js';
+import Shift from '../../ciphers/shift/shift.js';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
+import { Scorer } from '../../search/scorer.js';
 
 describe('Orchestrator', () => {
     describe('Caesar Cipher Detection and Decryption', () => {

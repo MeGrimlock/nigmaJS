@@ -1,9 +1,9 @@
-import { Orchestrator } from './orchestrator.js';
-import Shift from '../ciphers/shift/shift.js';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic.js';
-import Dictionary from '../ciphers/dictionary/dictionary.js';
-import { CipherIdentifier } from '../analysis/identifier.js';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { Orchestrator } from '../orchestrator.js';
+import Shift from '../../ciphers/shift/shift.js';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
+import Dictionary from '../../ciphers/dictionary/dictionary.js';
+import { CipherIdentifier } from '../../analysis/identifier.js';
+import { LanguageAnalysis } from '../../analysis/analysis.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -14,8 +14,8 @@ async function loadDictionariesForTests() {
     const possiblePaths = [
         path.join(process.cwd(), 'demo/data'),
         path.join(process.cwd(), 'data'),
-        path.join(__dirname, '../../demo/data'),
-        path.join(__dirname, '../../data')
+        path.join(__dirname, '../../../demo/data'),
+        path.join(__dirname, '../../../data')
     ];
     
     // Store loaded dictionaries to inject into LanguageAnalysis

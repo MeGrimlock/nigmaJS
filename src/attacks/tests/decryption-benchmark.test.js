@@ -1,10 +1,10 @@
 
-import { HMMSolver } from './strategies/hmm-solver';
-import { VigenereSolver } from './strategies/vigenere-solver';
-import Shift from '../ciphers/shift/shift';
-import Polyalphabetic from '../ciphers/polyalphabetic/polyalphabetic';
-import Dictionary from '../ciphers/dictionary/dictionary';
-import Columnar from '../ciphers/columnar/columnar';
+import { HMMSolver } from '../strategies/hmm-solver';
+import { VigenereSolver } from '../strategies/vigenere-solver';
+import Shift from '../../ciphers/shift/shift';
+import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic';
+import Dictionary from '../../ciphers/dictionary/dictionary';
+import Columnar from '../../ciphers/columnar/columnar';
 import 'regenerator-runtime/runtime';
 
 // Use a longer text for reliable statistical analysis (Vigenere/HMM)

@@ -1,0 +1,475 @@
+# NigmaJS Detection Thresholds Configuration
+# This file contains all configurable thresholds and values for language detection,
+# cipher identification, and validation. Update these values to fine-tune the system.
+
+language_detection:
+  # Text length thresholds (in characters)
+  text_length:
+    very_short: 50      # Texts shorter than this are considered very short
+    short: 100           # Texts shorter than this are considered short
+    medium: 200          # Texts shorter than this are considered medium
+    long: 200            # Texts longer than this are considered long
+  
+  # Statistical analysis weights (for chi-squared and shape scores)
+  weights:
+    # Chi-squared (Identity Match) weights
+    chi_squared:
+      monogram:
+        very_short: 0.3
+        short: 0.4
+        medium: 0.5
+        long: 0.5
+      bigram:
+        very_short: 2.0
+        short: 2.5
+        medium: 3.0
+        long: 3.0
+    
+    # Shape Score (Distribution Match) weights
+    shape_score:
+      monogram:
+        very_short: 0.3
+        short: 0.4
+        medium: 0.5
+        long: 0.5
+      bigram:
+        very_short: 2.0
+        short: 2.5
+        medium: 3.0
+        long: 3.0
+      trigram:
+        very_short: 1.0
+        short: 1.5
+        medium: 2.0
+        long: 2.0
+      quadgram:
+        very_short: 0.5
+        short: 0.75
+        medium: 1.0
+        long: 1.0
+  
+  # Index of Coincidence (IoC) weights
+  ioc:
+    weight:
+      very_short: 20
+      short: 35
+      medium: 50
+      long: 50
+  
+  # Dictionary validation weights and thresholds
+  dictionary:
+    # Weight multiplier for dictionary score (higher = more important)
+    weight_multiplier:
+      very_short: 2.0
+      short: 1.5
+      medium: 1.2
+      long: 1.0
+    
+    # Minimum word length to consider for validation
+    min_word_length: 2
+    
+    # Minimum dictionary score to apply bonus (0-1)
+    min_score_for_bonus: 0.2
+    
+    # Dictionary score bonus multiplier
+    bonus_multiplier: 50
+    
+    # Cross-validation thresholds (for comparing languages)
+    cross_validation:
+      # Minimum difference to consider one language significantly better
+      significant_difference: 0.2
+      # Bonus/penalty for cross-validation
+      bonus: -30
+      penalty: 30
+    
+    # Additional penalty when dictionary validation fails for short texts
+    low_score_penalty:
+      very_short: 150
+      short: 100
+      medium: 50
+      long: 0
+    
+    # Minimum score threshold for low score penalty
+    low_score_threshold: 0.1
+    
+    # Dictionary validation bonuses
+    bonuses:
+      # Bonus for longer valid words (max bonus)
+      length_bonus_max: 0.3
+      length_bonus_divisor: 8
+      
+      # Bonus for very short texts with at least one valid word
+      short_text_bonus: 0.2
+      short_text_max_words: 3
+
+  # Plaintext re-detection thresholds (in orchestrator)
+  plaintext_redetection:
+    # Maximum score for confident detection
+    confident_score_threshold: 250
+    
+    # Minimum score difference to override original language
+    min_score_difference: 100
+    
+    # Minimum dictionary validation score to support new language
+    min_dict_validation: 0.3
+
+# IC (Index of Coincidence) validation thresholds
+ic_analysis:
+  # Tolerance for IC validation (by text length)
+  tolerance:
+    very_short: Infinity  # Don't validate IC for very short texts
+    short: 0.8
+    medium: 0.5
+    long: 0.3
+  
+  # Expected IC values by language
+  expected_values:
+    english: 1.73
+    french: 2.02
+    german: 2.05
+    italian: 1.94
+    portuguese: 1.94
+    spanish: 1.94
+    russian: 1.76
+    chinese: 0.0
+
+# Stop words for language detection (common words specific to each language)
+# These help improve detection accuracy, especially for short texts
+stop_words:
+  english:
+    - THE
+    - AND
+    - FOR
+    - ARE
+    - BUT
+    - NOT
+    - YOU
+    - ALL
+    - CAN
+    - HER
+    - WAS
+    - ONE
+    - OUR
+    - OUT
+    - DAY
+    - GET
+    - HAS
+    - HIM
+    - HIS
+    - HOW
+    - MAN
+    - NEW
+    - NOW
+    - OLD
+    - SEE
+    - TWO
+    - WAY
+    - WHO
+    - BOY
+    - DID
+    - ITS
+    - LET
+    - PUT
+    - SAY
+    - SHE
+    - TOO
+    - USE
+  
+  spanish:
+    - EL
+    - LA
+    - DE
+    - QUE
+    - Y
+    - A
+    - EN
+    - UN
+    - SER
+    - SE
+    - NO
+    - HABER
+    - POR
+    - CON
+    - SU
+    - PARA
+    - COMO
+    - ESTAR
+    - TENER
+    - LE
+    - LO
+    - TODO
+    - PERO
+    - MAS
+    - HACER
+    - O
+    - PODER
+    - DECIR
+    - ESTE
+    - IR
+    - OTRO
+    - ESE
+    - LA
+    - SI
+    - ME
+    - YA
+    - VER
+    - PORQUE
+    - DAR
+    - CUANDO
+    - EL
+    - MUY
+    - SIN
+    - VEZ
+    - MUCHO
+    - SABER
+    - QUÉ
+    - SOBRE
+    - MI
+    - ALGUNO
+    - MISMO
+    - YO
+    - TAMBIÉN
+    - HASTA
+  
+  italian:
+    - IL
+    - DI
+    - CHE
+    - E
+    - LA
+    - A
+    - UN
+    - PER
+    - IN
+    - UNA
+    - ESSERE
+    - AVER
+    - FARE
+    - DA
+    - STARE
+    - DARE
+    - ANDARE
+    - VEDERE
+    - SAPERE
+    - VOLERE
+    - DARE
+    - POTERE
+    - DOVERE
+    - VENIRE
+    - DIRE
+    - TROVARE
+    - PRENDERE
+    - METTERE
+    - LASCIARE
+    - PASSARE
+    - GUARDARE
+    - SENTIRE
+    - PENSARE
+    - ASPETTARE
+    - CERCARE
+    - CHIAMARE
+    - PORTARE
+    - TENERE
+    - PARLARE
+    - CREDERE
+    - VIVERE
+    - RIMANERE
+    - PARTIRE
+    - ENTRARE
+    - USCIRE
+    - TORNARE
+    - MORIRE
+    - NASCERE
+    - DIVENTARE
+    - RESTARE
+  
+  portuguese:
+    - O
+    - DE
+    - A
+    - E
+    - DO
+    - DA
+    - EM
+    - UM
+    - PARA
+    - É
+    - COM
+    - NÃO
+    - UMA
+    - OS
+    - NO
+    - SE
+    - NA
+    - POR
+    - MAIS
+    - AS
+    - DOS
+    - COMO
+    - MAS
+    - FOI
+    - AO
+    - ELE
+    - DAS
+    - TEM
+    - À
+    - SEU
+    - SUA
+    - OU
+    - SER
+    - QUANDO
+    - MUITO
+    - HÁ
+    - NOS
+    - JÁ
+    - ESTÁ
+    - EU
+    - TAMBÉM
+    - SÓ
+    - PELO
+    - PELA
+    - ATÉ
+    - ISSO
+    - ELE
+    - TER
+    - SEUS
+    - SUAS
+    - NUMA
+    - PELOS
+    - PELAS
+  
+  french:
+    - LE
+    - DE
+    - ET
+    - À
+    - UN
+    - IL
+    - ÊTRE
+    - ET
+    - EN
+    - AVOIR
+    - QUE
+    - POUR
+    - DANS
+    - CE
+    - SON
+    - UNE
+    - SUR
+    - AVEC
+    - NE
+    - SE
+    - PAS
+    - TOUT
+    - PLUS
+    - PAR
+    - GRAND
+    - ENCORE
+    - UNE
+    - FAIRE
+    - TOUS
+    - COMME
+    - ÊTRE
+    - TRÈS
+    - IL
+    - OU
+    - LEUR
+    - BIEN
+    - PEU
+    - CEUX
+    - TOUTE
+    - AUSSI
+    - NOUVEAU
+    - APRÈS
+    - DEUX
+    - VOUloir
+    - CONTRE
+    - SANS
+    - AUTRE
+    - TOUJOURS
+    - CHAQUE
+    - PEUT
+    - AINSI
+    - ENCORE
+    - TOUTE
+    - PEU
+    - ÊTRE
+    - TRÈS
+    - IL
+    - OU
+    - LEUR
+    - BIEN
+    - PEU
+    - CEUX
+    - TOUTE
+    - AUSSI
+  
+  german:
+    - DER
+    - DIE
+    - UND
+    - IN
+    - DEN
+    - VON
+    - ZU
+    - DAS
+    - MIT
+    - SICH
+    - DES
+    - AUF
+    - FÜR
+    - IST
+    - IM
+    - DEM
+    - NICHT
+    - EIN
+    - EINE
+    - ALS
+    - AUCH
+    - ES
+    - AN
+    - WERDEN
+    - AUS
+    - ER
+    - HAT
+    - DASS
+    - SIE
+    - NACH
+    - WIRD
+    - BEI
+    - EINEM
+    - ÜBER
+    - EINEN
+    - SO
+    - ZUM
+    - WAR
+    - HABEN
+    - NUR
+    - ODER
+    - ABER
+    - VOR
+    - ZUR
+    - BIS
+    - MEHR
+    - EINE
+    - WENN
+    - DURCH
+    - MAN
+    - SEIN
+    - WIRD
+    - BEI
+    - SEINE
+    - DEM
+    - SEINER
+
+# Stop words scoring (how much weight to give stop words in detection)
+stop_words_scoring:
+  # Weight for stop words in language detection (0-1)
+  weight: 0.3
+  
+  # Minimum number of stop words to consider
+  min_count: 1
+  
+  # Bonus per stop word found
+  bonus_per_word: 20
+
