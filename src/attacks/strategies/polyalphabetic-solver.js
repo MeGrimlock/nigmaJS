@@ -5,6 +5,7 @@ import { Kasiski } from '../../analysis/kasiski.js';
 import { Scorers } from '../../language/scorers.js';
 import { LanguageAnalysis } from '../../analysis/analysis.js';
 import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
+import { segmentText } from '../../language/word-segmenter.js';
 
 /**
  * Advanced Polyalphabetic Cipher Solver
@@ -58,11 +59,30 @@ export class PolyalphabeticSolver {
         const dict = LanguageAnalysis.getDictionary(this.language);
         if (!dict) return 0; // No dictionary available
         
+        // Check if original text has spaces
+        const hasSpacesInOriginal = /\s/.test(text);
+        
         // Extract words from text
-        const words = text.toUpperCase()
+        let words = text.toUpperCase()
             .split(/\s+/)
             .map(w => TextUtils.onlyLetters(w))
             .filter(w => w.length >= 3); // Only consider words >= 3 chars
+        
+        // Only use word segmentation if original text has NO spaces
+        if (!hasSpacesInOriginal && words.length > 0 && words[0].length > 10) {
+            try {
+                const cleanText = TextUtils.onlyLetters(text);
+                const segmented = segmentText(cleanText, dict, { maxWordLength: 20, minWordLength: 2 });
+                if (segmented && segmented !== cleanText) {
+                    words = segmented.toUpperCase()
+                        .split(/\s+/)
+                        .map(w => TextUtils.onlyLetters(w))
+                        .filter(w => w.length >= 3);
+                }
+            } catch (segError) {
+                // Segmentation failed, continue with original words
+            }
+        }
         
         if (words.length === 0) return 0;
         
@@ -86,18 +106,18 @@ export class PolyalphabeticSolver {
      * @returns {number} Combined score (higher is better)
      */
     _scoreWithDictionary(cleanText, fullText) {
-        // N-gram score (primary)
-        const ngramScore = Scorers.scoreText(cleanText, this.language);
+        // N-gram score (normalized [0, 1], primary metric)
+        const ngramScore = Scorers.scoreTextNormalized(cleanText, this.language, { useFallback: true });
         
-        // Dictionary validation score (bonus)
+        // Dictionary validation score (0-1, secondary metric)
         const dictScore = this._validatePartialKey(fullText);
         
-        // Combine: 70% N-gram, 30% dictionary
-        // Dictionary score is 0-1, convert to bonus: if 0.8 valid, add 0.8 * 100 = 80 to score
-        const dictBonus = dictScore * 100;
+        // Combine: 70% N-gram (more reliable, especially for short texts) + 30% dictionary
+        // Both are [0, 1], so final score is also [0, 1]
+        const combinedScore = (ngramScore * 0.7) + (dictScore * 0.3);
         
-        // Final score: N-gram score + dictionary bonus
-        return ngramScore + dictBonus;
+        // Return normalized score for comparability
+        return combinedScore;
     }
 
     /**
@@ -187,7 +207,9 @@ export class PolyalphabeticSolver {
             score: finalScore,
             confidence,
             method: 'beaufort',
-            keyLength
+            keyLength,
+            isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
+            dictionaryCoverage: this._validatePartialKey(finalPlaintext)
         };
     }
 
@@ -232,7 +254,9 @@ export class PolyalphabeticSolver {
                             score, 
                             confidence, 
                             method: 'porta', 
-                            keyLength 
+                            keyLength,
+                            isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
+                            dictionaryCoverage: this._validatePartialKey(plaintext)  // Add dictionary coverage
                         };
                         console.log(`[Porta] Found better key: ${testKey}, score=${score.toFixed(2)}, confidence=${confidence.toFixed(2)}`);
                     }
@@ -291,7 +315,16 @@ export class PolyalphabeticSolver {
             if (hybridScore > bestResult.score) {
                 const ic = Stats.indexOfCoincidence(plaintext);
                 const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
-                bestResult = { plaintext, key, score: hybridScore, confidence, method: 'porta', keyLength };
+                bestResult = { 
+                    plaintext, 
+                    key, 
+                    score: hybridScore, 
+                    confidence, 
+                    method: 'porta', 
+                    keyLength,
+                    isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
+                    dictionaryCoverage: this._validatePartialKey(plaintext)  // Add dictionary coverage
+                };
             }
         }
 
@@ -618,7 +651,9 @@ export class PolyalphabeticSolver {
             score: ngramScore,
             confidence,
             method: 'gronsfeld',
-            keyLength
+            keyLength,
+            isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
+            dictionaryCoverage: this._validatePartialKey(plaintext)
         };
     }
 
@@ -653,22 +688,42 @@ export class PolyalphabeticSolver {
             // Try each cipher type - Porta FIRST (most commonly confused with Vigenère)
             const portaResult = this.solvePorta(ciphertext, keyLength);
             if (portaResult && portaResult.score > -Infinity) {
-                allResults.push({ ...portaResult, keyLength });
+                allResults.push({ 
+                    ...portaResult, 
+                    keyLength,
+                    isPolyalphabeticCandidate: (portaResult.isPolyalphabeticCandidate !== undefined) ? portaResult.isPolyalphabeticCandidate : (keyLength > 1),
+                    dictionaryCoverage: portaResult.dictionaryCoverage || this._validatePartialKey(portaResult.plaintext || '')
+                });
             }
             
             const beaufortResult = this.solveBeaufort(ciphertext, keyLength);
             if (beaufortResult && beaufortResult.score > -Infinity) {
-                allResults.push({ ...beaufortResult, keyLength });
+                allResults.push({ 
+                    ...beaufortResult, 
+                    keyLength,
+                    isPolyalphabeticCandidate: (beaufortResult.isPolyalphabeticCandidate !== undefined) ? beaufortResult.isPolyalphabeticCandidate : (keyLength > 1),
+                    dictionaryCoverage: beaufortResult.dictionaryCoverage || this._validatePartialKey(beaufortResult.plaintext || '')
+                });
             }
             
             const gronsfeldResult = this.solveGronsfeld(ciphertext, keyLength);
             if (gronsfeldResult && gronsfeldResult.score > -Infinity) {
-                allResults.push({ ...gronsfeldResult, keyLength });
+                allResults.push({ 
+                    ...gronsfeldResult, 
+                    keyLength,
+                    isPolyalphabeticCandidate: (gronsfeldResult.isPolyalphabeticCandidate !== undefined) ? gronsfeldResult.isPolyalphabeticCandidate : (keyLength > 1),
+                    dictionaryCoverage: gronsfeldResult.dictionaryCoverage || this._validatePartialKey(gronsfeldResult.plaintext || '')
+                });
             }
             
             const quagmireResult = this.solveQuagmire(ciphertext, keyLength);
             if (quagmireResult && quagmireResult.score > -Infinity) {
-                allResults.push({ ...quagmireResult, keyLength });
+                allResults.push({ 
+                    ...quagmireResult, 
+                    keyLength,
+                    isPolyalphabeticCandidate: (quagmireResult.isPolyalphabeticCandidate !== undefined) ? quagmireResult.isPolyalphabeticCandidate : (keyLength > 1),
+                    dictionaryCoverage: quagmireResult.dictionaryCoverage || this._validatePartialKey(quagmireResult.plaintext || '')
+                });
             }
         }
 
@@ -698,6 +753,12 @@ export class PolyalphabeticSolver {
         if (!bestResult.method) {
             bestResult.method = 'unknown';
         }
+        
+        // CRITICAL: Mark as polyalphabetic candidate (keyLength > 1)
+        // PolyalphabeticSolver always uses keyLength >= 2 (from Kasiski or defaults)
+        const keyLength = bestResult.keyLength || 0;
+        bestResult.isPolyalphabeticCandidate = keyLength > 1;
+        bestResult.dictionaryCoverage = bestResult.score; // Use score as dict coverage proxy
         
         return bestResult;
     }

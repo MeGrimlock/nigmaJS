@@ -24,9 +24,13 @@ import { TextUtils } from './text-utils.js';
 import { DictionaryValidator } from '../language/dictionary-validator.js';
 import { Kasiski } from '../analysis/kasiski.js';
 import { CipherIdentifier } from '../analysis/identifier.js';
+import { PeriodicAnalysis } from '../analysis/periodic-analysis.js';
+import { TranspositionDetector } from '../analysis/transposition-detector.js';
 import { HillClimb } from '../search/hillclimb.js';
 import { SimulatedAnnealing } from '../search/simulated-annealing.js';
 import { Scorer } from '../search/scorer.js';
+import { normalizeCiphertext, groupText, formatTextLines, segmentText, CipherText, ALPHABETS } from './text-preprocessor.js';
+import { segmentText as wordSegmentText, segmentTextWithConfidence } from '../language/word-segmenter.js';
 
 /** 
  * Nigma Class, is a super class that uses all available methods in this library, it imports everything so that it can any method can be called from here.
@@ -113,9 +117,26 @@ export default class Nigma {
 	static DictionaryValidator = DictionaryValidator;
     static Kasiski = Kasiski;
     static CipherIdentifier = CipherIdentifier;
+    static PeriodicAnalysis = PeriodicAnalysis;
+    static TranspositionDetector = TranspositionDetector;
     static HillClimb = HillClimb;
     static SimulatedAnnealing = SimulatedAnnealing;
     static Scorer = Scorer;
+    // Text preprocessing and normalization
+    static normalizeCiphertext = normalizeCiphertext;
+    static groupText = groupText;
+    static formatTextLines = formatTextLines;
+    static segmentText = wordSegmentText;
+    static segmentTextWithConfidence = segmentTextWithConfidence;
+    static CipherText = CipherText;
+    static ALPHABETS = ALPHABETS;
+    
+    // Version information (injected by webpack DefinePlugin)
+    static version = typeof NIGMAJS_VERSION !== 'undefined' ? NIGMAJS_VERSION : 'unknown';
+    // Text preprocessing utilities
+    static normalizeCiphertext = normalizeCiphertext;
+    static groupText = groupText;
+    static formatTextLines = formatTextLines;
 
     /**
      * Performs basic statistical analysis on a text.
@@ -250,5 +271,5 @@ export default class Nigma {
 	};
 }
 
-export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, HillClimb, SimulatedAnnealing, Scorer, DictionaryValidator };
+export { BasicCipher, Columnar, Dictionary, Shift, Enigma, Polyalphabetic, LanguageAnalysis, HMMSolver, VigenereSolver, PolyalphabeticSolver, Orchestrator, Stats, Scorers, TextUtils, Kasiski, CipherIdentifier, PeriodicAnalysis, TranspositionDetector, HillClimb, SimulatedAnnealing, Scorer, DictionaryValidator, normalizeCiphertext, groupText, formatTextLines, wordSegmentText, segmentTextWithConfidence, CipherText, ALPHABETS };
 

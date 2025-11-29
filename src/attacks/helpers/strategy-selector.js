@@ -7,6 +7,8 @@ import { ROT47BruteForce } from '../strategies/rot47-brute-force.js';
 import { VigenereStrategy } from '../strategies/vigenere-strategy.js';
 import { SubstitutionStrategy } from '../strategies/substitution-strategy.js';
 import { PolyalphabeticStrategy } from '../strategies/polyalphabetic-strategy.js';
+import { RailFenceSolver } from '../strategies/railfence-solver.js';
+import { AmscoSolver } from '../strategies/amsco-solver.js';
 
 /**
  * Strategy Selector
@@ -185,7 +187,23 @@ export class StrategySelector {
                 break;
                 
             case 'transposition':
-                // For now, try substitution as fallback
+                // Try Rail Fence first (most common transposition cipher)
+                strategies.push({
+                    name: 'Rail Fence',
+                    execute: async (text) => {
+                        const solver = new RailFenceSolver(language);
+                        return await solver.solve(text);
+                    }
+                });
+                // Try Amsco (columnar transposition variant)
+                strategies.push({
+                    name: 'Amsco',
+                    execute: async (text) => {
+                        const solver = new AmscoSolver(language);
+                        return await solver.solve(text);
+                    }
+                });
+                // Fallback to substitution (in case it's actually a substitution cipher)
                 strategies.push({
                     name: 'Hill Climbing (Transposition Fallback)',
                     execute: async (text) => {
