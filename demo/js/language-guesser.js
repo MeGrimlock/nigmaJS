@@ -19,7 +19,7 @@ class FrequencyChart {
 
     initChart(ctx) {
         const langColor = this.getLanguageColor(this.language);
-        
+
         return new Chart(ctx, {
             type: 'bar',
             data: {
@@ -59,18 +59,18 @@ class FrequencyChart {
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { 
-                            color: '#94a3b8', 
-                            font: { size: 9 }, 
-                            maxRotation: 45, 
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { size: 9 },
+                            maxRotation: 45,
                             minRotation: 0,
-                            autoSkip: false 
+                            autoSkip: false
                         }
                     }
                 },
                 plugins: {
-                    legend: { 
-                        labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 11 } } 
+                    legend: {
+                        labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 11 } }
                     },
                     tooltip: {
                         mode: 'index',
@@ -90,7 +90,7 @@ class FrequencyChart {
     update(inputText, LanguageAnalysis) {
         // Determine N for N-gram
         const n = this.getNValue();
-        
+
         // Calculate frequencies
         let inputFreqs;
         if (n === 1) {
@@ -122,10 +122,10 @@ class FrequencyChart {
 
         const standardKeys = this.getTopKeys(this.standardData, 10);
         const inputKeys = this.getTopKeys(inputFreqs, 5);
-        
+
         // Use Set to merge and then take top 12 to avoid clutter
         const allKeys = Array.from(new Set([...standardKeys, ...inputKeys])).slice(0, 12);
-        
+
         return allKeys.sort((a, b) => {
             const stdA = this.standardData[a] || 0;
             const stdB = this.standardData[b] || 0;
@@ -138,7 +138,7 @@ class FrequencyChart {
     }
 
     getNValue() {
-        switch(this.type) {
+        switch (this.type) {
             case 'monograms': return 1;
             case 'bigrams': return 2;
             case 'trigrams': return 3;
@@ -155,7 +155,7 @@ class FrequencyChart {
     }
 
     getLanguageColor(lang) {
-        switch(lang) {
+        switch (lang) {
             case 'spanish': return { bg: 'rgba(245, 158, 11, 0.3)', border: 'rgba(245, 158, 11, 1)' }; // Orange
             case 'english': return { bg: 'rgba(59, 130, 246, 0.3)', border: 'rgba(59, 130, 246, 1)' }; // Blue
             case 'italian': return { bg: 'rgba(16, 185, 129, 0.3)', border: 'rgba(16, 185, 129, 1)' }; // Green
@@ -186,24 +186,24 @@ class MarkovVisualizer {
         // Ensure square canvas
         const dim = Math.min(canvas.width, canvas.height) || 300;
         // Adjust for high DPI if needed, but keep simple for now
-        
+
         this.cellSize = (dim - 40) / 26; // 40px padding for labels
         const offsetX = 30;
         const offsetY = 10;
 
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         // Draw Labels
         this.ctx.fillStyle = '#94a3b8';
         this.ctx.font = '10px monospace';
         this.ctx.textAlign = 'center';
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        
-        for(let i=0; i<26; i++) {
+
+        for (let i = 0; i < 26; i++) {
             // X-Axis (Next Letter)
-            this.ctx.fillText(chars[i], offsetX + i*this.cellSize + this.cellSize/2, offsetY + 26*this.cellSize + 15);
+            this.ctx.fillText(chars[i], offsetX + i * this.cellSize + this.cellSize / 2, offsetY + 26 * this.cellSize + 15);
             // Y-Axis (Current Letter)
-            this.ctx.fillText(chars[i], offsetX - 10, offsetY + i*this.cellSize + this.cellSize/1.5);
+            this.ctx.fillText(chars[i], offsetX - 10, offsetY + i * this.cellSize + this.cellSize / 1.5);
         }
 
         // Draw Cells
@@ -224,17 +224,17 @@ class MarkovVisualizer {
                 if (prob > 0) {
                     this.ctx.fillStyle = this.hexToRgba(this.color, alpha);
                     this.ctx.fillRect(
-                        offsetX + j * this.cellSize, 
-                        offsetY + i * this.cellSize, 
-                        this.cellSize - 1, 
+                        offsetX + j * this.cellSize,
+                        offsetY + i * this.cellSize,
+                        this.cellSize - 1,
                         this.cellSize - 1
                     );
                 } else {
                     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
                     this.ctx.fillRect(
-                        offsetX + j * this.cellSize, 
-                        offsetY + i * this.cellSize, 
-                        this.cellSize - 1, 
+                        offsetX + j * this.cellSize,
+                        offsetY + i * this.cellSize,
+                        this.cellSize - 1,
                         this.cellSize - 1
                     );
                 }
@@ -257,16 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const recommendationCard = document.getElementById('recommendationCard');
     const detectedLangEl = document.getElementById('detectedLang');
     const confidenceScoreEl = document.getElementById('confidenceScore');
-    
+
     // Tabs
     const btnFreq = document.getElementById('btnFreq');
     const btnMarkov = document.getElementById('btnMarkov');
-    
+
     // Markov Elements
     const markovLangSelect = document.getElementById('markovLangSelect');
     const markovInputCanvas = document.getElementById('markovInputChart');
     const markovStandardCanvas = document.getElementById('markovStandardChart');
-    
+
     // Wait for NigmaJS to load
     let checkCount = 0;
     const checkInterval = setInterval(() => {
@@ -302,7 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initializeApp() {
         const { LanguageAnalysis } = window.nigmajs;
-        const languages = Object.keys(LanguageAnalysis.languages); // ['spanish', 'english']
+
+        // Get supported languages from config or use a default list
+        const languages = ['english', 'spanish', 'french', 'german', 'italian', 'portuguese'];
         const types = ['monograms', 'bigrams', 'trigrams', 'quadgrams'];
 
         // --- Frequency Charts Init ---
@@ -322,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             languages.forEach(lang => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'chart-wrapper';
-                
+
                 // Canvas
                 const canvas = document.createElement('canvas');
                 wrapper.appendChild(canvas);
@@ -339,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Initialize Chart Instance
                 const standardData = getStandardData(lang, type, LanguageAnalysis);
                 const chartInstance = new FrequencyChart(canvas.getContext('2d'), lang, type, standardData);
-                
+
                 charts.push({
                     instance: chartInstance,
                     lang: lang,
@@ -376,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btnFreq.addEventListener('click', () => switchTab('freq'));
         btnMarkov.addEventListener('click', () => switchTab('markov'));
-        
+
         markovLangSelect.addEventListener('change', () => {
             const label = document.getElementById('markovLangLabel');
             label.textContent = capitalize(markovLangSelect.value);
@@ -402,10 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateMarkov(text) {
         if (markovContainer.style.display === 'none') return; // Optimize
-        
+
         const { LanguageAnalysis } = window.nigmajs;
         const langKey = markovLangSelect.value;
-        
+
         // 1. Input Matrix
         if (text) {
             const inputMatrix = LanguageAnalysis.getTransitionMatrix(text);
@@ -431,10 +433,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (candidates.length > 0) {
             const winner = candidates[0];
             const runnerUp = candidates[1];
-            
+
             recommendationCard.style.display = 'block';
             let resultText = capitalize(winner.language) + ' ' + getFlag(winner.language);
-            
+
             // If the difference between 1st and 2nd is small, show ambiguity
             if (runnerUp && (runnerUp.score - winner.score < 5)) {
                 resultText += ` (or possibly ${capitalize(runnerUp.language)} ${getFlag(runnerUp.language)})`;
@@ -442,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             detectedLangEl.textContent = resultText;
             confidenceScoreEl.textContent = winner.score.toFixed(2);
-            
+
             // Set color based on confidence
             if (winner.score < 50) confidenceScoreEl.style.color = '#10b981';
             else if (winner.score < 150) confidenceScoreEl.style.color = '#f59e0b';
@@ -451,14 +453,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- NEW: Show Advanced Stats (Phase 1) ---
             const statsContainer = document.getElementById('advancedStatsContainer');
             if (statsContainer) {
-                 const { Stats } = window.nigmajs;
-                 if (Stats) {
+                const { Stats } = window.nigmajs;
+                if (Stats) {
                     const ioc = Stats.indexOfCoincidence(text);
                     const entropy = Stats.entropy(text);
-                    
+
                     // Change flex direction to column to stack sections
                     statsContainer.style.flexDirection = 'column';
-                    
+
                     let contentHTML = `
                         <div style="display: flex; gap: 1.5rem;">
                             <div class="stat-item">
@@ -473,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     `;
-                    
+
                     // --- Probability Score (Phase 2) ---
                     const { Scorers } = window.nigmajs;
                     if (Scorers) {
@@ -486,13 +488,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             r.exp = Math.pow(10, r.score - maxScore);
                             sumExp += r.exp;
                         });
-                        
+
                         contentHTML += `
                             <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; width: 100%;">
                                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.75rem;">Probabilities:</div>
                                 <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
                         `;
-                        
+
                         // Show all probabilities > 0.1%, sorted
                         ranking.forEach(r => {
                             const prob = (r.exp / sumExp) * 100;
@@ -507,9 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         contentHTML += '</div></div>';
                     }
-                    
+
                     statsContainer.innerHTML = contentHTML;
-                 }
+                }
             }
 
         } else {
@@ -541,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getStandardData(lang, type, Analysis) {
         const langData = Analysis.languages[lang];
-        switch(type) {
+        switch (type) {
             case 'monograms': return langData.monograms;
             case 'bigrams': return langData.bigrams;
             case 'trigrams': return langData.trigrams;
