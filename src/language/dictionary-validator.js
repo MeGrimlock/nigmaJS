@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { TextUtils } from '../core/text-utils.js';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { LanguageAnalysis } from '../analysis/analysis-core.js';
 import { segmentText } from '../language/word-segmenter.js';
 
 // Flag to check if we're in browser environment
@@ -329,17 +329,6 @@ export class DictionaryValidator {
     }
 }
 
-/**
- * Helper function to get dictionary for a language (used by LanguageAnalysis)
- * This is added to LanguageAnalysis class via monkey-patching if not present.
- */
-if (!LanguageAnalysis.getDictionary) {
-    LanguageAnalysis.getDictionary = function(language) {
-        // Access private dictionaries object
-        // This is a workaround - ideally LanguageAnalysis should expose this method
-        // Note: This is now handled by LanguageAnalysis.getDictionary() directly
-        // Supported languages: english, spanish, italian, french, portuguese, german
-        return null;
-    };
-}
+// Note: LanguageAnalysis.getDictionary is now properly implemented in analysis-core.js
+// This monkey-patching is no longer needed and was causing null returns
 

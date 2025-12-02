@@ -22,8 +22,11 @@ describe('Orchestrator', () => {
             });
             
             verifyOrchestratorResult(result, {
-                minConfidence: 0 // Confidence may be low for short Caesar texts detected as Vigenère
+                minConfidence: 0.1 // More lenient for now while debugging
             });
+
+            // Should attempt Caesar detection
+            expect(result.method).toMatch(/caesar/i);
         }, 60000);
     });
     
@@ -40,8 +43,12 @@ describe('Orchestrator', () => {
             });
             
             verifyOrchestratorResult(result, {
-                requireScore: true // Vigenère is hard, so just check that we got a result
+                requireScore: true,
+                minConfidence: 0.1 // More lenient for now while debugging
             });
+
+            // Should attempt some form of decryption
+            expect(result.method).toBeDefined();
         }, 60000);
     });
     

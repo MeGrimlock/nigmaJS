@@ -21,8 +21,8 @@ export class VigenereStrategy {
         const result = await solver.solve(ciphertext);
         
         // VigenereSolver may return confidence 0 if it fails
-        // Use IoC as a proxy for confidence
-        const confidence = result.confidence || (result.analysis?.avgIoC > 1.3 ? 0.7 : 0.3);
+        // Use IoC as a proxy for confidence, but keep 0 for empty inputs
+        const confidence = result.confidence === 0 ? 0 : (result.confidence || (result.analysis?.avgIoC > 1.3 ? 0.7 : 0.3));
         
         return {
             plaintext: result.plaintext,

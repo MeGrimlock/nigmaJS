@@ -141,6 +141,25 @@ npm run test:run -- --suite all --coverage
 npm run test:run -- --suite phase2-english --verbose
 ```
 
+## Comprehensive Test Runner
+
+For running ALL attacks tests at once (recommended for CI/CD and full validation):
+
+```bash
+# Run all attacks tests (new comprehensive runner)
+node src/attacks/tests/run-all-tests.js
+
+# Or using npm script (if configured)
+npm run test:attacks
+```
+
+This runner includes:
+- **11 new solver tests** (Atbash, Caesar, Vigenere, Baconian, ROT47, etc.)
+- **Orchestrator integration tests**
+- **Phase 2 language-specific tests**
+- **Specialized algorithm tests**
+- **Benchmark and performance tests**
+
 ## Direct Jest Usage
 
 You can also run tests directly with Jest:

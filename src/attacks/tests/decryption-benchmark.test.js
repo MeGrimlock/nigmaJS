@@ -46,12 +46,12 @@ describe('Decryption Capability Benchmarks', () => {
     });
 
     // --- POLYALPHABETIC (VIGENERE SOLVER) ---
-    test('Should decrypt Vigenère using Friedman/Kasiski method', () => {
+    test('Should decrypt Vigenère using Friedman/Kasiski method', async () => {
         const key = "KEY";
         const cipher = new Polyalphabetic.Vigenere(CLEAN_PLAINTEXT, key);
         const ciphertext = cipher.encode();
         
-        const result = vigenereSolver.solve(ciphertext);
+        const result = await vigenereSolver.solve(ciphertext);
         
         console.log(`Vigenere Result (Found Key: ${result.key}): ${result.plaintext.substring(0, 50)}...`);
         

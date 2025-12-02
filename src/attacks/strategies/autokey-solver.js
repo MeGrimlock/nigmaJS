@@ -1,7 +1,7 @@
 import { default as Dictionary } from '../../ciphers/dictionary/dictionary.js';
 import { Scorer } from '../../search/scorer.js';
 import { TextUtils } from '../../core/text-utils.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
 
 /**
  * Autokey Cipher Solver
@@ -21,7 +21,48 @@ export class AutokeySolver {
      * @returns {Promise<Object>} Result with plaintext, method, confidence, score, key, etc.
      */
     async solve(ciphertext) {
-        const scorer = new Scorer(this.language, 4);
+        // Handle null input
+        if (ciphertext === null) {
+            return {
+                plaintext: '',
+                method: 'autokey',
+                confidence: 0,
+                score: -Infinity,
+                key: null
+            };
+        }
+
+        // Handle empty input
+        if (!ciphertext || ciphertext.length === 0) {
+            return {
+                plaintext: '',
+                method: 'autokey',
+                confidence: 0,
+                score: -Infinity,
+                key: null
+            };
+        }
+
+        let scorer;
+        try {
+            scorer = new Scorer(this.language, 4);
+        } catch (error) {
+            // Fallback to English if language not supported
+            try {
+                scorer = new Scorer('english', 4);
+            } catch (fallbackError) {
+                // If even English fails, return error result
+                return {
+                    plaintext: ciphertext,
+                    method: 'autokey',
+                    confidence: 0,
+                    score: -Infinity,
+                    key: null,
+                    error: 'Language model not available'
+                };
+            }
+        }
+
         const dict = LanguageAnalysis.getDictionary(this.language);
         
         let bestResult = {

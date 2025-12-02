@@ -1,0 +1,196 @@
+2025-11-30T21:18:30.493Z - initialize with correct language: started
+2025-11-30T21:18:30.497Z - initialize with correct language: passed
+2025-11-30T21:18:51.665Z - initialize with correct language: started
+2025-11-30T21:18:51.669Z - initialize with correct language: passed
+2025-11-30T21:18:51.675Z - load configuration properly: started
+2025-11-30T21:18:51.677Z - load configuration properly: passed
+2025-11-30T21:19:31.955Z - initialize with correct language: started
+2025-11-30T21:19:31.959Z - initialize with correct language: passed
+2025-11-30T21:19:31.968Z - load configuration properly: started
+2025-11-30T21:19:31.971Z - load configuration properly: passed
+2025-11-30T21:19:32.053Z - handle empty input: started
+2025-11-30T21:19:32.061Z - handle empty input: skipped - HMM not initialized
+2025-11-30T21:19:32.069Z - handle null input: started
+2025-11-30T21:19:32.076Z - handle null input: skipped - HMM not initialized
+2025-11-30T21:19:32.084Z - handle non-letter input: started
+2025-11-30T21:19:32.092Z - handle non-letter input: skipped - HMM not initialized
+2025-11-30T21:19:32.101Z - generator progress updates: started
+2025-11-30T21:19:32.108Z - generator progress updates: skipped - HMM not initialized
+2025-11-30T21:19:32.116Z - generator final result: started
+2025-11-30T21:19:32.123Z - generator final result: skipped - HMM not initialized
+2025-11-30T21:19:32.131Z - multi-language initialization: started
+2025-11-30T21:19:32.133Z - multi-language initialization: passed
+2025-11-30T21:19:32.140Z - supported languages from config: started
+2025-11-30T21:19:32.142Z - supported languages from config: passed
+2025-11-30T21:19:32.150Z - handle very short text: started
+2025-11-30T21:19:32.157Z - handle very short text: skipped - HMM not initialized
+2025-11-30T21:19:32.166Z - mixed case and punctuation: started
+2025-11-30T21:19:32.174Z - mixed case and punctuation: skipped - HMM not initialized
+2025-11-30T21:19:32.183Z - repeated characters: started
+2025-11-30T21:19:32.191Z - repeated characters: skipped - HMM not initialized
+2025-11-30T21:19:32.203Z - result structure validation: started
+2025-11-30T21:19:32.211Z - result structure validation: skipped - HMM not initialized
+2025-11-30T21:20:31.227Z - HMM initialization: started
+2025-11-30T21:20:31.277Z - HMM initialization: failed - Error: Cannot read properties of undefined (reading 'A')
+2025-11-30T21:20:31.296Z - initialize with correct language: started
+2025-11-30T21:20:31.300Z - initialize with correct language: passed
+2025-11-30T21:20:31.310Z - load configuration properly: started
+2025-11-30T21:20:31.312Z - load configuration properly: passed
+2025-11-30T21:20:31.387Z - handle empty input: started
+2025-11-30T21:20:31.394Z - handle empty input: skipped - HMM not initialized
+2025-11-30T21:20:31.402Z - handle null input: started
+2025-11-30T21:20:31.408Z - handle null input: skipped - HMM not initialized
+2025-11-30T21:20:31.416Z - handle non-letter input: started
+2025-11-30T21:20:31.422Z - handle non-letter input: skipped - HMM not initialized
+2025-11-30T21:20:31.430Z - generator progress updates: started
+2025-11-30T21:20:31.437Z - generator progress updates: skipped - HMM not initialized
+2025-11-30T21:20:31.447Z - generator final result: started
+2025-11-30T21:20:31.455Z - generator final result: skipped - HMM not initialized
+2025-11-30T21:20:31.464Z - multi-language initialization: started
+2025-11-30T21:20:31.465Z - multi-language initialization: passed
+2025-11-30T21:20:31.474Z - supported languages from config: started
+2025-11-30T21:20:31.476Z - supported languages from config: passed
+2025-11-30T21:20:31.485Z - handle very short text: started
+2025-11-30T21:20:31.493Z - handle very short text: skipped - HMM not initialized
+2025-11-30T21:20:31.501Z - mixed case and punctuation: started
+2025-11-30T21:20:31.509Z - mixed case and punctuation: skipped - HMM not initialized
+2025-11-30T21:20:31.518Z - repeated characters: started
+2025-11-30T21:20:31.525Z - repeated characters: skipped - HMM not initialized
+2025-11-30T21:20:31.534Z - result structure validation: started
+2025-11-30T21:20:31.542Z - result structure validation: skipped - HMM not initialized
+2025-11-30T21:48:17.633Z - HMM initialization: started
+2025-11-30T21:48:17.695Z - HMM initialization: failed - Error: Cannot read properties of undefined (reading 'A')
+2025-11-30T21:48:17.718Z - initialize with correct language: started
+2025-11-30T21:48:17.722Z - initialize with correct language: passed
+2025-11-30T21:48:17.733Z - load configuration properly: started
+2025-11-30T21:48:17.736Z - load configuration properly: passed
+2025-11-30T21:48:17.847Z - handle empty input: started
+2025-11-30T21:48:17.857Z - handle empty input: skipped - HMM not initialized
+2025-11-30T21:48:17.866Z - handle null input: started
+2025-11-30T21:48:17.874Z - handle null input: skipped - HMM not initialized
+2025-11-30T21:48:17.883Z - handle non-letter input: started
+2025-11-30T21:48:17.893Z - handle non-letter input: skipped - HMM not initialized
+2025-11-30T21:48:17.902Z - generator progress updates: started
+2025-11-30T21:48:17.911Z - generator progress updates: skipped - HMM not initialized
+2025-11-30T21:48:17.922Z - generator final result: started
+2025-11-30T21:48:17.932Z - generator final result: skipped - HMM not initialized
+2025-11-30T21:48:17.943Z - multi-language initialization: started
+2025-11-30T21:48:17.947Z - multi-language initialization: passed
+2025-11-30T21:48:17.963Z - supported languages from config: started
+2025-11-30T21:48:17.966Z - supported languages from config: passed
+2025-11-30T21:48:17.976Z - handle very short text: started
+2025-11-30T21:48:17.984Z - handle very short text: skipped - HMM not initialized
+2025-11-30T21:48:17.993Z - mixed case and punctuation: started
+2025-11-30T21:48:18.001Z - mixed case and punctuation: skipped - HMM not initialized
+2025-11-30T21:48:18.009Z - repeated characters: started
+2025-11-30T21:48:18.018Z - repeated characters: skipped - HMM not initialized
+2025-11-30T21:48:18.026Z - result structure validation: started
+2025-11-30T21:48:18.032Z - result structure validation: skipped - HMM not initialized
+2025-12-01T11:37:55.658Z - HMM initialization: started
+2025-12-01T11:37:55.699Z - HMM initialization: mock mode
+2025-12-01T11:37:55.712Z - initialize with correct language: started
+2025-12-01T11:37:55.715Z - initialize with correct language: passed
+2025-12-01T11:37:55.723Z - load configuration properly: started
+2025-12-01T11:37:55.724Z - load configuration properly: passed
+2025-12-01T11:39:21.985Z - HMM initialization: started
+2025-12-01T11:39:22.031Z - HMM initialization: mock mode
+2025-12-01T11:39:22.046Z - initialize with correct language: started
+2025-12-01T11:39:22.050Z - initialize with correct language: passed
+2025-12-01T11:39:22.057Z - load configuration properly: started
+2025-12-01T11:39:22.059Z - load configuration properly: passed
+2025-12-01T11:40:10.749Z - HMM initialization: started
+2025-12-01T11:40:10.794Z - HMM initialization: mock mode
+2025-12-01T11:40:10.810Z - initialize with correct language: started
+2025-12-01T11:40:10.815Z - initialize with correct language: passed
+2025-12-01T11:40:10.822Z - load configuration properly: started
+2025-12-01T11:40:10.824Z - load configuration properly: passed
+2025-12-01T11:45:21.347Z - HMM initialization: started
+2025-12-01T11:45:21.393Z - HMM initialization: mock mode
+2025-12-01T11:45:21.406Z - initialize with correct language: started
+2025-12-01T11:45:21.409Z - initialize with correct language: passed
+2025-12-01T11:45:21.417Z - load configuration properly: started
+2025-12-01T11:45:21.419Z - load configuration properly: passed
+2025-12-01T11:47:12.220Z - HMM initialization: started
+2025-12-01T11:47:12.381Z - HMM initialization: mock mode
+2025-12-01T11:47:12.420Z - initialize with correct language: started
+2025-12-01T11:47:12.434Z - initialize with correct language: passed
+2025-12-01T11:47:12.444Z - load configuration properly: started
+2025-12-01T11:47:12.446Z - load configuration properly: passed
+2025-12-01T12:21:24.835Z - HMM initialization: started
+2025-12-01T12:21:24.924Z - HMM initialization: mock mode
+2025-12-01T12:21:24.940Z - initialize with correct language: started
+2025-12-01T12:21:24.945Z - initialize with correct language: passed
+2025-12-01T12:21:24.959Z - load configuration properly: started
+2025-12-01T12:21:24.961Z - load configuration properly: passed
+2025-12-01T12:26:44.325Z - HMM initialization: started
+2025-12-01T12:26:44.428Z - HMM initialization: mock mode
+2025-12-01T12:26:44.475Z - initialize with correct language: started
+2025-12-01T12:26:44.479Z - initialize with correct language: passed
+2025-12-01T12:26:44.489Z - load configuration properly: started
+2025-12-01T12:26:44.492Z - load configuration properly: passed
+2025-12-01T12:32:19.195Z - HMM initialization: started
+2025-12-01T12:32:19.542Z - HMM initialization: mock mode
+2025-12-01T12:32:19.618Z - initialize with correct language: started
+2025-12-01T12:32:19.621Z - initialize with correct language: passed
+2025-12-01T12:32:19.653Z - load configuration properly: started
+2025-12-01T12:32:19.663Z - load configuration properly: passed
+2025-12-01T12:37:28.909Z - HMM initialization: started
+2025-12-01T12:37:29.008Z - HMM initialization: mock mode
+2025-12-01T12:37:29.045Z - initialize with correct language: started
+2025-12-01T12:37:29.051Z - initialize with correct language: passed
+2025-12-01T12:37:29.067Z - load configuration properly: started
+2025-12-01T12:37:29.070Z - load configuration properly: passed
+2025-12-01T12:41:14.033Z - HMM initialization: started
+2025-12-01T12:41:14.245Z - HMM initialization: mock mode
+2025-12-01T12:41:14.264Z - initialize with correct language: started
+2025-12-01T12:41:14.267Z - initialize with correct language: passed
+2025-12-01T12:41:14.306Z - load configuration properly: started
+2025-12-01T12:41:14.308Z - load configuration properly: passed
+2025-12-01T12:48:29.318Z - HMM initialization: started
+2025-12-01T12:48:29.429Z - HMM initialization: mock mode
+2025-12-01T12:48:29.451Z - initialize with correct language: started
+2025-12-01T12:48:29.455Z - initialize with correct language: passed
+2025-12-01T12:48:29.485Z - load configuration properly: started
+2025-12-01T12:48:29.487Z - load configuration properly: passed
+2025-12-01T13:00:38.230Z - HMM initialization: started
+2025-12-01T13:00:38.418Z - HMM initialization: mock mode
+2025-12-01T13:00:38.471Z - initialize with correct language: started
+2025-12-01T13:00:38.476Z - initialize with correct language: passed
+2025-12-01T13:00:38.497Z - load configuration properly: started
+2025-12-01T13:00:38.502Z - load configuration properly: passed
+2025-12-01T13:03:33.673Z - HMM initialization: started
+2025-12-01T13:03:33.773Z - HMM initialization: mock mode
+2025-12-01T13:03:33.801Z - initialize with correct language: started
+2025-12-01T13:03:33.804Z - initialize with correct language: passed
+2025-12-01T13:03:33.820Z - load configuration properly: started
+2025-12-01T13:03:33.823Z - load configuration properly: passed
+2025-12-01T13:59:52.904Z - HMM initialization: started
+2025-12-01T13:59:53.245Z - HMM initialization: mock mode
+2025-12-01T13:59:53.326Z - initialize with correct language: started
+2025-12-01T13:59:53.352Z - initialize with correct language: passed
+2025-12-01T13:59:53.392Z - load configuration properly: started
+2025-12-01T13:59:53.400Z - load configuration properly: passed
+2025-12-01T14:02:26.977Z - HMM initialization: started
+2025-12-01T14:02:27.104Z - HMM initialization: mock mode
+2025-12-01T14:02:27.147Z - initialize with correct language: started
+2025-12-01T14:02:27.167Z - initialize with correct language: passed
+2025-12-01T14:02:27.178Z - load configuration properly: started
+2025-12-01T14:02:27.181Z - load configuration properly: passed
+2025-12-01T16:19:37.900Z - HMM initialization: started
+2025-12-01T16:19:38.082Z - HMM initialization: mock mode
+2025-12-01T16:19:38.149Z - initialize with correct language: started
+2025-12-01T16:19:38.157Z - initialize with correct language: passed
+2025-12-01T16:19:38.167Z - load configuration properly: started
+2025-12-01T16:19:38.170Z - load configuration properly: passed
+2025-12-01T18:22:58.103Z - HMM initialization: started
+2025-12-01T18:22:58.221Z - HMM initialization: mock mode
+2025-12-01T18:22:58.265Z - initialize with correct language: started
+2025-12-01T18:22:58.280Z - initialize with correct language: passed
+2025-12-01T18:22:58.309Z - load configuration properly: started
+2025-12-01T18:22:58.313Z - load configuration properly: passed
+2025-12-01T18:31:16.759Z - HMM initialization: started
+2025-12-01T18:31:17.078Z - HMM initialization: mock mode
+2025-12-01T18:31:17.135Z - initialize with correct language: started
+2025-12-01T18:31:17.152Z - initialize with correct language: passed
+2025-12-01T18:31:17.191Z - load configuration properly: started
+2025-12-01T18:31:17.207Z - load configuration properly: passed

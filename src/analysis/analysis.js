@@ -187,5 +187,12 @@ const Analysis = {
 };
 
 // Export por compatibilidad
-export { Analysis };
+export { Analysis, LanguageAnalysis };
+
+// Exportar frecuencias específicas para compatibilidad
+export const spanishLetterFrequencies = spanishData.monograms || spanishData.letterFrequencies;
+export const spanishBigramFrequencies = spanishData.bigrams || spanishData.bigramFrequencies;
+export const spanishTrigramFrequencies = spanishData.trigrams || spanishData.trigramFrequencies;
+export const spanishQuadgramFrequencies = spanishData.quadgrams || spanishData.quadgramFrequencies;
+
 export default Analysis;

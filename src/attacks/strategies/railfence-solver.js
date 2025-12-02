@@ -1,7 +1,8 @@
 import Columnar from '../../ciphers/columnar/columnar.js';
 import { Scorers } from '../../language/scorers.js';
 import { TextUtils } from '../../core/text-utils.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
+import { AdaptiveFrequencyAnalysis } from '../../analysis/adaptive-frequency-analysis.js';
 
 /**
  * Rail Fence Cipher Solver
@@ -22,6 +23,18 @@ export class RailFenceSolver {
      * @returns {Promise<Object>} Result with plaintext, method, confidence, score, rails, etc.
      */
     async solve(ciphertext) {
+        // Handle null/undefined input
+        if (!ciphertext) {
+            return {
+                plaintext: ciphertext,
+                method: 'railfence',
+                confidence: 0,
+                score: -Infinity,
+                rails: null,
+                isTranspositionCandidate: true
+            };
+        }
+
         const dict = LanguageAnalysis.getDictionary(this.language);
         
         let bestResult = {
@@ -63,8 +76,21 @@ export class RailFenceSolver {
                     }
                 }
                 
-                // Combined score: n-gram (70%) + dictionary (30%)
-                const combinedScore = (ngramScore * 0.7) + (wordCoverage * 0.3);
+                // Adaptive Frequency Analysis validation (our latest tool)
+                let adaptiveBonus = 0;
+                try {
+                    const adaptiveAnalysis = AdaptiveFrequencyAnalysis.analyze(cleanText, this.language);
+                    // For Rail Fence (transposition), patterns can vary, but penalize clear monoalphabetic
+                    if (adaptiveAnalysis.family === 'monoalphabetic-substitution') {
+                        adaptiveBonus = -0.2; // Slight penalty for monoalphabetic (unexpected for transposition)
+                    }
+                    // Transposition ciphers can show various patterns, no strong bonus/penalty
+                } catch (error) {
+                    // Adaptive analysis failed, continue without bonus
+                }
+
+                // Combined score: n-gram (70%) + dictionary (30%) + adaptive bonus
+                const combinedScore = (ngramScore * 0.7) + (wordCoverage * 0.3) + adaptiveBonus;
                 
                 if (combinedScore > bestResult.score) {
                     let confidence = 0.5;

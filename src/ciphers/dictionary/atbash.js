@@ -12,48 +12,23 @@ import { default as BasicCipher } from '../../core/basicCipher.js';
 export default class atbash extends BasicCipher {
 	constructor(message, encoded = false, debug = false) {
 
+		// Atbash cipher: A↔Z, B↔Y, C↔X, etc.
 		const alphabet = {
-			'4': 'a',
-			'3': 'b',
-			'2': 'c',
-			'1': 'd',
-			'0': 'e',
-			z: 'f',
-			y: 'g',
-			x: 'h',
-			w: 'i',
-			v: 'j',
-			u: 'k',
-			t: 'l',
-			s: 'm',
-			r: 'n',
-			q: 'o',
-			p: 'p',
-			o: 'q',
-			n: 'r',
-			m: 's',
-			l: 't',
-			k: 'u',
-			j: 'v',
-			i: 'w',
-			h: 'x',
-			g: 'y',
-			f: 'z',
-			e: '0',
-			d: '1',
-			c: '2',
-			b: '3',
-			a: '4',
-			'!': '5',
-			'?': '6',
-			',': '7',
-			'.': '8',
-			' ': '9',
-			'9': ' ',
-			'8': '.',
-			'7': ',',
-			'6': '?',
-			'5': '!'
+			// Uppercase letters
+			'A': 'Z', 'B': 'Y', 'C': 'X', 'D': 'W', 'E': 'V',
+			'F': 'U', 'G': 'T', 'H': 'S', 'I': 'R', 'J': 'Q',
+			'K': 'P', 'L': 'O', 'M': 'N',
+			'N': 'M', 'O': 'L', 'P': 'K', 'Q': 'J', 'R': 'I',
+			'S': 'H', 'T': 'G', 'U': 'F', 'V': 'E', 'W': 'D',
+			'X': 'C', 'Y': 'B', 'Z': 'A',
+
+			// Lowercase letters
+			'a': 'z', 'b': 'y', 'c': 'x', 'd': 'w', 'e': 'v',
+			'f': 'u', 'g': 't', 'h': 's', 'i': 'r', 'j': 'q',
+			'k': 'p', 'l': 'o', 'm': 'n',
+			'n': 'm', 'o': 'l', 'p': 'k', 'q': 'j', 'r': 'i',
+			's': 'h', 't': 'g', 'u': 'f', 'v': 'e', 'w': 'd',
+			'x': 'c', 'y': 'b', 'z': 'a'
 		};
 
 		super(message, encoded, 'atbash', '', alphabet, debug);

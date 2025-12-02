@@ -1,7 +1,7 @@
 import Columnar from '../../ciphers/columnar/columnar.js';
 import { Scorers } from '../../language/scorers.js';
 import { TextUtils } from '../../core/text-utils.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
 
 /**
  * Amsco Cipher Solver

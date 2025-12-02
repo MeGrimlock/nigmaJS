@@ -1,67 +1,105 @@
-import fs from 'fs';
-import path from 'path';
-import yaml from 'js-yaml';
+// Dynamic imports for Node.js compatibility
+let fs, path, yaml;
+try {
+    if (typeof require !== 'undefined') {
+        fs = require('fs');
+        path = require('path');
+        yaml = require('js-yaml');
+    }
+} catch (e) {
+    // Browser environment - modules not available
+}
 
 /**
- * Configuration Loader
- * 
- * Loads and provides access to configuration values from YAML files.
- * This allows dynamic tuning of thresholds and values without code changes.
+ * Configuration Loader - Browser Compatible
+ *
+ * Provides configuration values with browser-compatible defaults.
+ * In the browser, we use embedded defaults instead of loading YAML files.
  */
 class ConfigLoader {
     constructor() {
         this.config = null;
-        this.configPath = null;
+        this.isBrowser = typeof window !== 'undefined';
     }
 
     /**
-     * Loads configuration from YAML file.
-     * @param {string} configPath - Path to YAML config file (relative to project root or absolute)
+     * Loads configuration - browser-safe version
+     * @param {string} configPath - Not used in browser
      * @returns {Object} Configuration object
      */
     loadConfig(configPath = null) {
-        if (this.config && !configPath) {
+        if (this.config) {
             return this.config; // Return cached config
         }
 
-        // Default config path
-        if (!configPath) {
-            // Try multiple possible locations (relative to process.cwd())
-            const possiblePaths = [
-                path.join(process.cwd(), 'config', 'detection-thresholds.yaml'),
-                path.join(process.cwd(), 'src', 'config', 'detection-thresholds.yaml'),
-                path.resolve(__dirname || process.cwd(), 'config', 'detection-thresholds.yaml'),
-                path.resolve(__dirname || process.cwd(), '../../config', 'detection-thresholds.yaml'),
-                path.resolve(__dirname || process.cwd(), '../../../config', 'detection-thresholds.yaml')
-            ];
-
-            for (const p of possiblePaths) {
-                try {
-                    if (fs.existsSync(p)) {
-                        configPath = p;
-                        break;
-                    }
-                } catch (e) {
-                    // Continue to next path
-                }
-            }
-
-            if (!configPath) {
-                console.warn('[ConfigLoader] Config file not found, using defaults');
-                return this.getDefaultConfig();
-            }
-        }
-
-        try {
-            const fileContents = fs.readFileSync(configPath, 'utf8');
-            this.config = yaml.load(fileContents);
-            this.configPath = configPath;
-            console.log(`[ConfigLoader] Loaded config from: ${configPath}`);
+        if (this.isBrowser) {
+            console.log('[ConfigLoader] Using browser-compatible embedded config');
+            this.config = this.getDefaultConfig();
             return this.config;
-        } catch (error) {
-            console.warn(`[ConfigLoader] Failed to load config from ${configPath}:`, error.message);
-            return this.getDefaultConfig();
         }
+
+        // Node.js environment - try to load from files (legacy support)
+        if (!this.isBrowser && fs && path && yaml) {
+            try {
+                const configDir = path.join(process.cwd(), 'config');
+                const configFiles = [];
+
+                const expectedFiles = ['detection-thresholds.yaml', 'attacks-config.yaml'];
+
+                if (fs.existsSync(configDir)) {
+                    for (const filename of expectedFiles) {
+                        const filePath = path.join(configDir, filename);
+                        if (fs.existsSync(filePath)) {
+                            configFiles.push(filePath);
+                        }
+                    }
+                }
+
+                if (configFiles.length > 0) {
+                    let mergedConfig = {};
+                    for (const filePath of configFiles) {
+                        const fileContents = fs.readFileSync(filePath, 'utf8');
+                        const fileConfig = yaml.load(fileContents) || {};
+                        mergedConfig = this.deepMerge(mergedConfig, fileConfig);
+                    }
+                    this.config = mergedConfig;
+                    return this.config;
+                }
+            } catch (error) {
+                console.warn('[ConfigLoader] File loading failed, using defaults:', error.message);
+            }
+        }
+
+        this.config = this.getDefaultConfig();
+        return this.config;
+    }
+
+    /**
+     * Browser-compatible file finder (returns empty array)
+     * @returns {Array<string>} Always empty in browser
+     */
+    findConfigFiles() {
+        return []; // No file loading in browser
+    }
+
+    /**
+     * Deep merges two objects.
+     * @param {Object} target - Target object
+     * @param {Object} source - Source object
+     * @returns {Object} Merged object
+     */
+    deepMerge(target, source) {
+        const result = { ...target };
+
+        for (const key in source) {
+            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                result[key] = this.deepMerge(result[key] || {}, source[key]);
+            } else {
+                result[key] = source[key];
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -214,6 +252,262 @@ class ConfigLoader {
                 weight: 0.3,
                 min_count: 1,
                 bonus_per_word: 20
+            },
+
+            // Attacks Module Default Configuration
+            attacks: {
+                supported_languages: ['english', 'spanish', 'french', 'german', 'italian', 'portuguese'],
+                timeouts: {
+                    max_total_time: 120000,
+                    max_solver_time: 30000,
+                    max_orchestrator_time: 60000
+                },
+                limits: {
+                    max_text_length: 10000,
+                    max_dictionary_words: 50000,
+                    max_candidates: 100
+                }
+            },
+
+            orchestrator: {
+                language_detection: {
+                    enabled: true,
+                    max_languages: 3,
+                    confidence_threshold: 0.6
+                },
+                strategy_selection: {
+                    max_strategies: 5,
+                    parallel_execution: true,
+                    early_termination: true
+                },
+                result_aggregation: {
+                    min_confidence_threshold: 0.7,
+                    max_results: 3,
+                    include_alternatives: true
+                }
+            },
+
+            caesar_brute_force: {
+                scoring: {
+                    ngram_order: 4,
+                    use_dictionary: true,
+                    dictionary_weight: 0.3
+                },
+                limits: {
+                    min_text_length: 3,
+                    max_shift_range: 26
+                },
+                thresholds: {
+                    confidence_threshold: 0.8,
+                    word_coverage_threshold: 0.4
+                }
+            },
+
+            vigenere_solver: {
+                key_length_detection: {
+                    max_key_length: 20,
+                    min_key_length: 2,
+                    candidates_per_length: 5,
+                    ioc_target: 1.73
+                },
+                key_finding: {
+                    hill_climb_iterations: 1000,
+                    dictionary_validation: true,
+                    segment_validation: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.75,
+                    min_ngram_score: -3.0
+                }
+            },
+
+            atbash_solver: {
+                scoring: {
+                    ngram_order: 4,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.8,
+                    score_threshold: -2.5
+                }
+            },
+
+            baconian_solver: {
+                pattern_detection: {
+                    min_text_length: 5,
+                    max_pattern_length: 100
+                },
+                scoring: {
+                    ngram_order: 3,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.6,
+                    word_coverage_threshold: 0.3
+                }
+            },
+
+            rot47_brute_force: {
+                character_ranges: {
+                    ascii_start: 33,
+                    ascii_end: 126,
+                    range_size: 94
+                },
+                scoring: {
+                    ngram_order: 3,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.7,
+                    ascii_coverage_threshold: 0.8
+                }
+            },
+
+            polyalphabetic_solvers: {
+                key_validation: {
+                    min_key_length: 2,
+                    max_key_length: 20,
+                    dictionary_check: true
+                },
+                scoring: {
+                    ngram_order: 4,
+                    use_dictionary: true,
+                    partial_key_scoring: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.75,
+                    key_validation_threshold: 0.5
+                }
+            },
+
+            railfence_solver: {
+                rails: {
+                    min_rails: 2,
+                    max_rails: 10
+                },
+                scoring: {
+                    ngram_order: 3,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.7
+                }
+            },
+
+            amsco_solver: {
+                period_detection: {
+                    min_period: 2,
+                    max_period: 20
+                },
+                scoring: {
+                    ngram_order: 3,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.6
+                }
+            },
+
+            autokey_solver: {
+                key_search: {
+                    max_key_candidates: 100,
+                    progressive_key: true
+                },
+                scoring: {
+                    ngram_order: 4,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.7
+                }
+            },
+
+            polybius_solver: {
+                alphabet_detection: {
+                    standard_alphabet: "ABCDEFGHIKLMNOPQRSTUVWXYZ",
+                    detect_custom: true
+                },
+                scoring: {
+                    ngram_order: 3,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.6
+                }
+            },
+
+            hmm_solver: {
+                model_training: {
+                    max_iterations: 100,
+                    convergence_threshold: 0.001,
+                    use_fast_path: true
+                },
+                language_model: {
+                    ngram_order: 3,
+                    smoothing_factor: 0.1
+                },
+                thresholds: {
+                    confidence_threshold: 0.75,
+                    fast_path_threshold: 0.8
+                }
+            },
+
+            substitution_strategy: {
+                hill_climbing: {
+                    max_iterations: 2000,
+                    restart_count: 10,
+                    temperature_schedule: "exponential"
+                },
+                scoring: {
+                    ngram_order: 4,
+                    use_dictionary: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.8,
+                    improvement_threshold: 0.01
+                }
+            },
+
+            vigenere_strategy: {
+                key_length_detection: {
+                    max_key_length: 15,
+                    statistical_methods: true,
+                    dictionary_methods: true
+                },
+                key_finding: {
+                    hill_climb_iterations: 1000,
+                    dictionary_validation: true
+                },
+                thresholds: {
+                    confidence_threshold: 0.75
+                }
+            },
+
+            benchmarking: {
+                enabled: true,
+                metrics: {
+                    collect_solver_times: true,
+                    collect_confidence_scores: true,
+                    collect_failure_reasons: true
+                },
+                reporting: {
+                    summary_report: true,
+                    detailed_report: false,
+                    export_format: "json"
+                }
+            },
+
+            debug: {
+                enabled: false,
+                log_level: "warn",
+                log_solver_progress: false,
+                log_orchestrator_steps: false
+            },
+
+            test_config: {
+                default_timeout: 30000,
+                stress_test_enabled: false,
+                benchmark_tests: true
             }
         };
     }
@@ -225,22 +519,31 @@ class ConfigLoader {
      * @returns {*} Configuration value or default
      */
     get(path, defaultValue = null) {
-        if (!this.config) {
-            this.loadConfig();
-        }
+        try {
+            if (!this.config) {
+                this.loadConfig();
+            }
 
-        const keys = path.split('.');
-        let value = this.config;
-
-        for (const key of keys) {
-            if (value && typeof value === 'object' && key in value) {
-                value = value[key];
-            } else {
+            if (!path || typeof path !== 'string') {
                 return defaultValue;
             }
-        }
 
-        return value !== undefined ? value : defaultValue;
+            const keys = path.split('.');
+            let value = this.config;
+
+            for (const key of keys) {
+                if (value && typeof value === 'object' && !Array.isArray(value) && key in value) {
+                    value = value[key];
+                } else {
+                    return defaultValue;
+                }
+            }
+
+            return value !== undefined ? value : defaultValue;
+        } catch (error) {
+            console.warn(`[ConfigLoader] Error getting config path "${path}":`, error.message);
+            return defaultValue;
+        }
     }
 
     /**
@@ -262,11 +565,18 @@ class ConfigLoader {
     }
 
     /**
-     * Reloads configuration from file.
+     * Reloads configuration from file (no-op in browser).
      */
     reload() {
-        this.config = null;
-        this.loadConfig(this.configPath);
+        if (this.isBrowser) {
+            // In browser, just reset to defaults
+            this.config = null;
+            this.loadConfig();
+        } else {
+            // In Node.js, try to reload from files
+            this.config = null;
+            this.loadConfig(this.configPath);
+        }
     }
 }
 

@@ -3,7 +3,7 @@ import { TextUtils } from '../../core/text-utils.js';
 import { Stats } from '../../analysis/stats.js';
 import { Kasiski } from '../../analysis/kasiski.js';
 import { Scorers } from '../../language/scorers.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
 import Polyalphabetic from '../../ciphers/polyalphabetic/polyalphabetic.js';
 import { segmentText } from '../../language/word-segmenter.js';
 
@@ -258,7 +258,7 @@ export class PolyalphabeticSolver {
                             isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
                             dictionaryCoverage: this._validatePartialKey(plaintext)  // Add dictionary coverage
                         };
-                        console.log(`[Porta] Found better key: ${testKey}, score=${score.toFixed(2)}, confidence=${confidence.toFixed(2)}`);
+                        // Found better key
                     }
                 } catch (error) {
                     console.warn(`[Porta] Error with key ${testKey}:`, error);
@@ -383,7 +383,7 @@ export class PolyalphabeticSolver {
             return scoreDiff;
         });
         
-        console.log(`[PolyalphabeticSolver] Quagmire results: ${allResults.map(r => `${r.method}(${r.score.toFixed(2)}, key=${r.key})`).join(', ')}`);
+        // Quagmire analysis completed
         return allResults[0];
     }
 
@@ -683,7 +683,7 @@ export class PolyalphabeticSolver {
 
         for (const keyLengthObj of probableKeyLengths) {
             const keyLength = keyLengthObj.length || keyLengthObj.keyLength;
-            console.log(`[PolyalphabeticSolver] Trying key length ${keyLength}...`);
+            // Trying key length
             
             // Try each cipher type - Porta FIRST (most commonly confused with Vigenère)
             const portaResult = this.solvePorta(ciphertext, keyLength);
@@ -731,10 +731,7 @@ export class PolyalphabeticSolver {
         allResults.sort((a, b) => b.score - a.score);
         
         // Log top 3 results for debugging
-        console.log('[PolyalphabeticSolver] Top 3 results:');
-        allResults.slice(0, 3).forEach((r, i) => {
-            console.log(`  ${i + 1}. ${r.method} (keyLength=${r.keyLength}): score=${r.score.toFixed(2)}, confidence=${r.confidence.toFixed(2)}, key=${r.key}`);
-        });
+        // Analysis completed
 
         // Ensure we always return a valid result with method defined
         if (allResults.length === 0) {

@@ -61,6 +61,35 @@ export class StrategySelector {
                         }
                     });
                 }
+
+                // CRITICAL FIX: If detected as Caesar but has Kasiski evidence or suggested key lengths > 1,
+                // also try Vigenère strategies (many Caesar detections are actually weak Vigenère detections)
+                const hasKasiskiEvidence = stats && (stats.hasRepetitions || (stats.suggestedKeyLengths && stats.suggestedKeyLengths.length > 0));
+                const hasPolyalphabeticEvidence = stats && stats.suggestedKeyLengths &&
+                    stats.suggestedKeyLengths.some(kl => kl && kl.keyLength > 1 && kl.score > 0.05);
+
+                if (hasKasiskiEvidence || hasPolyalphabeticEvidence) {
+                    console.log(`[StrategySelector] Caesar detection but found polyalphabetic evidence, also trying Vigenère strategies`);
+                    // Try Vigenère solver first
+                    strategies.push({
+                        name: 'Vigenère Solver (Fallback from Caesar)',
+                        execute: async (text) => {
+                            const solver = new VigenereStrategy(language);
+                            const suggestedKeyLength = stats.suggestedKeyLengths && stats.suggestedKeyLengths[0] ?
+                                stats.suggestedKeyLengths[0].keyLength : undefined;
+                            return await solver.solve(text, suggestedKeyLength);
+                        }
+                    });
+                    // Try Autokey as well
+                    strategies.push({
+                        name: 'Autokey (Fallback from Caesar)',
+                        execute: async (text) => {
+                            const solver = new AutokeySolver(language);
+                            return await solver.solve(text);
+                        }
+                    });
+                }
+
                 // Then try standard Caesar brute force (letters only)
                 strategies.push({
                     name: 'Brute Force (Caesar/ROT13)',

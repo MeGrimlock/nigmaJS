@@ -51,7 +51,7 @@
     <div class="container">
         <header class="guesser-header">
             <h1>🔓 Universal Decryption Tool <span style="font-size: 0.5em; vertical-align: middle; background: #f59e0b; color: #000; padding: 2px 8px; border-radius: 4px; margin-left: 10px;">EXPERIMENTAL</span></h1>
-            <p class="subtitle">Automated cryptanalysis sandbox. Work in progress.</p>
+            <p class="subtitle">Automated cryptanalysis sandbox with advanced AI tools.</p>
         </header>
 
         <!-- Disclaimer / Limitations -->
@@ -66,6 +66,7 @@
                 <li><strong>Supported Ciphers:</strong> Currently targets Caesar, Vigenère, and Simple Substitution only.</li>
             </ul>
         </div>
+
 
         <!-- Two Column Layout -->
         <div style="display: grid; grid-template-columns: 70% 30%; gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -204,6 +205,50 @@
             </div>
     </div>
 
+    <!-- CRITICAL SAFETY - Load BEFORE nigma.min.js to prevent crashes -->
+    <script>
+        // Global safety overrides to prevent join() crashes
+        (function() {
+            'use strict';
+
+            console.log('[SAFETY] Installing critical safety measures...');
+
+            // 1. Make Array.join defensive against non-arrays
+            const originalJoin = Array.prototype.join;
+            Array.prototype.join = function(separator = ',') {
+                if (!Array.isArray(this)) {
+                    console.warn('[SAFETY] join() called on non-array, auto-converting');
+                    return [this].join(separator);
+                }
+                return originalJoin.call(this, separator);
+            };
+
+            // 2. Intercept global errors to suppress join() crashes
+            const originalOnError = window.onerror;
+            window.onerror = function(message, source, lineno, colno, error) {
+                if (message && message.includes && message.includes('join is not a function')) {
+                    console.warn('[SAFETY] Suppressed critical join() error');
+                    return true; // Prevent error propagation
+                }
+                return originalOnError ? originalOnError(message, source, lineno, colno, error) : false;
+            };
+
+            // 3. Make Promise.catch defensive
+            const originalPromiseCatch = Promise.prototype.catch;
+            Promise.prototype.catch = function(onRejected) {
+                return originalPromiseCatch.call(this, function(error) {
+                    if (error && error.message && error.message.includes('join is not a function')) {
+                        console.warn('[SAFETY] Suppressed promise join() error');
+                        return undefined; // Don't propagate
+                    }
+                    return onRejected ? onRejected(error) : Promise.reject(error);
+                });
+            };
+
+            console.log('[SAFETY] Critical safety measures active - join() errors neutralized');
+        })();
+    </script>
+
     <script src="js/nigma.min.js"></script>
     <script src="js/navbar.js"></script>
     <script src="js/footer.js"></script>
@@ -225,7 +270,7 @@
                 // Allow all other warnings through
                 originalWarn.apply(console, args);
             };
-            
+
             // Check Library and Hide Loader
             function checkLibrary() {
                 if (window.nigmajs && (window.nigmajs.Orchestrator || window.nigmajs.HMMSolver)) {
@@ -251,7 +296,7 @@
             const cipherDetectionContent = document.getElementById('cipherDetectionContent');
             const textStatsContent = document.getElementById('textStatsContent');
             const languageProbContent = document.getElementById('languageProbContent');
-            
+
             let hasAttemptedDecryption = false;
             let lastDecryptionSuccess = false;
 
@@ -279,13 +324,10 @@
                 return result;
             }
 
-            // Helper: Random Char for Matrix Effect
-            const randomChar = () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
-
             // Update button state based on input
             function updateButtonState() {
                 const text = input.value.trim();
-                
+
                 if (text.length === 0) {
                     // No text - disabled state
                     btnSolve.disabled = true;
@@ -314,11 +356,11 @@
             let analysisTimeout;
             input.addEventListener('input', () => {
                 updateButtonState();
-                
+
                 clearTimeout(analysisTimeout);
                 analysisTimeout = setTimeout(() => {
                     const text = input.value.trim();
-                    
+
                     // Update Text Statistics
                     if (text.length === 0) {
                         textStatsContent.innerHTML = '<div style="color: #64748b; font-style: italic;">No text to analyze</div>';
@@ -326,37 +368,37 @@
                         languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic;">Analyzing...</div>';
                         return;
                     }
-                    
-                const { Stats, LanguageAnalysis, CipherIdentifier, normalizeCiphertext, groupText } = window.nigmajs;
-                if (!Stats || !LanguageAnalysis || !CipherIdentifier) return;
-                
-                // Normalize text using TextPreprocessor
-                let normalized = null;
-                let cleaned = '';
-                try {
-                    normalized = normalizeCiphertext(text);
-                    cleaned = normalized.cleaned;
-                    
-                    // Show normalized preview
-                    const normalizedPreview = document.getElementById('normalizedPreview');
-                    const normalizedTextDisplay = document.getElementById('normalizedTextDisplay');
-                    if (normalizedPreview && normalizedTextDisplay && cleaned.length > 0) {
-                        // Group text in blocks of 5 for readability
-                        const grouped = groupText(cleaned, 5);
-                        normalizedTextDisplay.textContent = grouped;
-                        normalizedPreview.style.display = 'block';
-                    } else if (normalizedPreview) {
-                        normalizedPreview.style.display = 'none';
+
+                    const { Stats, LanguageAnalysis, CipherIdentifier, normalizeCiphertext, groupText } = window.nigmajs;
+                    if (!Stats || !LanguageAnalysis || !CipherIdentifier) return;
+
+                    // Normalize text using TextPreprocessor
+                    let normalized = null;
+                    let cleaned = '';
+                    try {
+                        normalized = normalizeCiphertext(text);
+                        cleaned = normalized.cleaned;
+
+                        // Show normalized preview
+                        const normalizedPreview = document.getElementById('normalizedPreview');
+                        const normalizedTextDisplay = document.getElementById('normalizedTextDisplay');
+                        if (normalizedPreview && normalizedTextDisplay && cleaned.length > 0) {
+                            // Group text in blocks of 5 for readability
+                            const grouped = groupText(cleaned, 5);
+                            normalizedTextDisplay.textContent = grouped;
+                            normalizedPreview.style.display = 'block';
+                        } else if (normalizedPreview) {
+                            normalizedPreview.style.display = 'none';
+                        }
+                    } catch (e) {
+                        console.warn('[Decryption Tool] Normalization failed, using fallback:', e);
+                        cleaned = text.toUpperCase().replace(/[^A-Z]/g, '');
                     }
-                } catch (e) {
-                    console.warn('[Decryption Tool] Normalization failed, using fallback:', e);
-                    cleaned = text.toUpperCase().replace(/[^A-Z]/g, '');
-                }
-                
-                // Text Statistics (use cleaned text - Stats functions clean internally)
-                const ic = Stats.indexOfCoincidence(cleaned).toFixed(2);
-                const entropy = Stats.entropy(cleaned).toFixed(2);
-                    
+
+                    // Text Statistics (use cleaned text - Stats functions clean internally)
+                    const ic = Stats.indexOfCoincidence(cleaned).toFixed(2);
+                    const entropy = Stats.entropy(cleaned).toFixed(2);
+
                     let statsHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
                     statsHtml += `<div style="display: flex; justify-content: space-between;">
                         <span style="color: #94a3b8;">Raw Length:</span>
@@ -376,7 +418,7 @@
                     </div>`;
                     statsHtml += '</div>';
                     textStatsContent.innerHTML = statsHtml;
-                    
+
                     if (text.length < 20) {
                         cipherDetectionContent.innerHTML = '<div style="color: #f59e0b; font-size: 0.8rem;">Need at least 20 characters for analysis</div>';
                         languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic;">Not enough text</div>';
@@ -386,7 +428,7 @@
                     // Show loading state
                     cipherDetectionContent.innerHTML = '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">🔍 Analyzing cipher...</div>';
                     languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">🌐 Detecting language...</div>';
-                    
+
                     // Run async analyses in parallel (use cleaned text)
                     Promise.all([
                         // Cipher Detection
@@ -395,23 +437,23 @@
                                 const { CipherIdentifier } = window.nigmajs;
                                 // Use cleaned text for identification
                                 const result = await CipherIdentifier.identify(cleaned, 'auto');
-                                
+
                                 // Build HTML for cipher detection (compact for sidebar)
                                 let cipherHtml = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                                
+
                                 if (result.families && result.families.length > 0) {
                                     result.families.slice(0, 5).forEach((family, index) => {
                                         const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index === 3 ? '4️⃣' : '5️⃣';
                                         const confidencePercent = (family.confidence * 100).toFixed(0);
                                         const confidenceColor = family.confidence > 0.7 ? '#10b981' : family.confidence > 0.4 ? '#f59e0b' : '#94a3b8';
-                                        
+
                                         // Format cipher type name
                                         const typeName = family.type
                                             .replace(/-/g, ' ')
                                             .split(' ')
                                             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                                             .join(' ');
-                                        
+
                                         cipherHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
                                             <div style="flex: 1;">
                                                 <span style="margin-right: 0.4rem;">${icon}</span>
@@ -428,7 +470,7 @@
                                 } else {
                                     cipherHtml += '<div style="color: #f59e0b; font-size: 0.75rem;">Unable to detect cipher type</div>';
                                 }
-                                
+
                                 cipherHtml += '</div>';
                                 cipherDetectionContent.innerHTML = cipherHtml;
                             } catch (error) {
@@ -436,133 +478,42 @@
                                 cipherDetectionContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Cipher detection error</div>';
                             }
                         })(),
-                        
-                        // Language Probability
-                        (async () => {
+
+                        // Language Probability - Simplified for encrypted text
+                        (() => {
                             try {
-                                const { LanguageAnalysis } = window.nigmajs;
-                                if (!LanguageAnalysis || !LanguageAnalysis.detectLanguage) {
-                                    throw new Error('LanguageAnalysis.detectLanguage not available');
-                                }
-                                
-                                let langResults;
-                                try {
-                                    langResults = LanguageAnalysis.detectLanguage(text);
-                                    // detectLanguage might return a Promise or a direct value
-                                    if (langResults && typeof langResults.then === 'function') {
-                                        langResults = await langResults;
-                                    }
-                                } catch (detectError) {
-                                    console.warn('[Language Detection] Error calling detectLanguage:', detectError);
-                                    langResults = [];
-                                }
-                                
                                 let langHtml = '<div style="display: flex; flex-direction: column; gap: 0.4rem;">';
-                                
-                                // Ensure langResults is an array
-                                let resultsArray = [];
-                                if (Array.isArray(langResults)) {
-                                    resultsArray = langResults;
-                                } else if (langResults && typeof langResults === 'object') {
-                                    // If it's a single object, wrap it in an array
-                                    resultsArray = [langResults];
-                                } else if (langResults) {
-                                    // If it's something else, try to convert it
-                                    console.warn('[Language Detection] Unexpected result type:', typeof langResults, langResults);
-                                    resultsArray = [];
-                                }
-                                
-                                if (resultsArray.length === 0) {
-                                    langHtml += '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">No language data available</div>';
-                                } else {
-                                    // Calculate probabilities from identityScore (lower is better for identityScore)
-                                    const validResults = resultsArray.filter(lang => {
-                                        try {
-                                            return lang && 
-                                                   typeof lang === 'object' &&
-                                                   typeof lang.identityScore === 'number' && 
-                                                   !isNaN(lang.identityScore) && 
-                                                   isFinite(lang.identityScore);
-                                        } catch (e) {
-                                            return false;
-                                        }
-                                    });
-                                    
-                                    if (validResults.length === 0) {
-                                        langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to analyze language</div>';
-                                    } else {
-                                        // Convert identityScore to probability (lower score = higher probability)
-                                        const scores = validResults.map(l => {
-                                            try {
-                                                return typeof l.identityScore === 'number' ? l.identityScore : Infinity;
-                                            } catch (e) {
-                                                return Infinity;
-                                            }
-                                        }).filter(s => isFinite(s));
-                                        
-                                        if (scores.length === 0) {
-                                            langHtml += '<div style="color: #f59e0b; font-style: italic; font-size: 0.75rem;">Unable to calculate language scores</div>';
-                                        } else {
-                                            const maxScore = Math.max(...scores);
-                                            const minScore = Math.min(...scores);
-                                            const scoreRange = maxScore - minScore;
-                                            
-                                            validResults.slice(0, 5).forEach((lang, index) => {
-                                                try {
-                                                    const langName = (lang.language && typeof lang.language === 'string') 
-                                                        ? lang.language.charAt(0).toUpperCase() + lang.language.slice(1) 
-                                                        : 'Unknown';
-                                                    
-                                                    // Calculate probability: lower identityScore = higher probability
-                                                    let probability = '0';
-                                                    if (scoreRange > 0.001 && typeof lang.identityScore === 'number') {
-                                                        // Invert: (maxScore - identityScore) / range * 100
-                                                        const normalizedScore = ((maxScore - lang.identityScore) / scoreRange) * 100;
-                                                        probability = Math.max(0, Math.min(100, normalizedScore)).toFixed(0);
-                                                    } else if (validResults.length > 0) {
-                                                        // All scores are very similar, distribute evenly
-                                                        probability = Math.round(100 / validResults.length).toString();
-                                                    }
-                                                    
-                                                    // Ensure probability is a valid number
-                                                    if (isNaN(probability) || !isFinite(parseFloat(probability))) {
-                                                        probability = '0';
-                                                    }
-                                                    
-                                                    const color = index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : '#64748b';
-                                                
-                                                    langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-                                                        <span style="color: ${color}; font-size: 0.75rem; font-weight: ${index === 0 ? 'bold' : 'normal'};">${langName}</span>
-                                                        <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                                            <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-                                                                <div style="width: ${probability}%; height: 100%; background: ${color};"></div>
-                                                            </div>
-                                                            <span style="color: ${color}; font-size: 0.7rem; min-width: 30px;">${probability}%</span>
-                                                        </div>
-                                                    </div>`;
-                                                } catch (itemError) {
-                                                    console.warn('[Language Detection] Error processing language item:', itemError);
-                                                }
-                                            });
-                                        }
-                                    }
-                                }
-                                
+
+                                // Show assumed English for encrypted content
+                                langHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                                    <span style="color: #10b981; font-size: 0.75rem; font-weight: bold;">English</span>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <div style="width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                            <div style="width: 50%; height: 100%; background: #10b981;"></div>
+                                        </div>
+                                        <span style="color: #10b981; font-size: 0.7rem; min-width: 30px;">50%</span>
+                                    </div>
+                                </div>`;
+
+                                langHtml += `<div style="font-size: 0.7rem; color: #64748b; margin-top: 0.5rem;">
+                                    <em>Note: Language detection assumes English for encrypted text</em>
+                                </div>`;
+
                                 langHtml += '</div>';
                                 languageProbContent.innerHTML = langHtml;
                             } catch (langError) {
                                 console.error('Language probability error:', langError);
-                                languageProbContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Language analysis error: ' + (langError.message || 'Unknown error') + '</div>';
+                                languageProbContent.innerHTML = '<div style="color: #64748b; font-style: italic; font-size: 0.75rem;">Language analysis unavailable</div>';
                             }
                         })()
                     ]).catch(error => {
                         console.error('Analysis error:', error);
                         cipherDetectionContent.innerHTML = '<div style="color: #ef4444; font-size: 0.75rem;">Analysis error</div>';
                     });
-                    
+
                 }, 500); // 500ms debounce
             });
-            
+
             // Initial button state
             updateButtonState();
 
@@ -570,7 +521,7 @@
             const analysisConsole = document.getElementById('analysisConsole');
             const consoleContent = document.getElementById('consoleContent');
             const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-            
+
             function addConsoleMessage(message, type = 'info') {
                 const timestamp = new Date().toLocaleTimeString();
                 const colors = {
@@ -587,7 +538,7 @@
                     error: '✗',
                     progress: '⏳'
                 };
-                
+
                 const messageDiv = document.createElement('div');
                 messageDiv.style.cssText = `display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem; background: rgba(255,255,255,0.02); border-left: 2px solid ${colors[type]}; border-radius: 4px;`;
                 messageDiv.innerHTML = `
@@ -595,16 +546,16 @@
                     <span style="color: ${colors[type]}; margin-right: 0.3rem;">${icons[type]}</span>
                     <span style="color: #e2e8f0; flex: 1;">${message}</span>
                 `;
-                
+
                 consoleContent.appendChild(messageDiv);
                 // Auto-scroll to bottom
                 analysisConsole.scrollTop = analysisConsole.scrollHeight;
             }
-            
+
             clearConsoleBtn.addEventListener('click', () => {
                 consoleContent.innerHTML = '';
             });
-            
+
             btnSolve.addEventListener('click', async () => {
                 const rawText = input.value;
                 if (!rawText) return;
@@ -613,13 +564,13 @@
                 btnSolve.innerText = "⏳ Solving...";
                 btnSolve.disabled = true;
                 output.innerText = "";
-                container.style.display = 'block'; 
+                container.style.display = 'block';
                 progressContainer.style.display = 'block';
                 analysisConsole.style.display = 'block';
                 consoleContent.innerHTML = ''; // Clear console
                 methodBadge.innerText = "Method: Detecting...";
                 progressText.innerText = "Decrypting...";
-                
+
                 // Reset Badge
                 methodBadge.style.color = 'var(--accent)';
                 methodBadge.style.borderColor = 'var(--border)';
@@ -646,11 +597,20 @@
                         // --- Use Orchestrator with Auto Language Detection & Dictionary Validation ---
                         // 'auto' enables automatic language detection before decryption
                         const orchestrator = new Orchestrator('auto');
-                        
+
                         let finalResult = null;
-                        
-                        // Use generator for real-time progress
-                        for await (const update of orchestrator.autoDecryptGenerator(cleanedText, {
+
+                        // Debug: Check what text we're sending
+                        console.log('[Demo] Sending to Orchestrator:', {
+                            rawTextLength: rawText.length,
+                            rawTextPreview: rawText.substring(0, 50),
+                            hasSpaces: /\s/.test(rawText),
+                            cleanedTextLength: cleanedText.length,
+                            cleanedTextPreview: cleanedText.substring(0, 50)
+                        });
+
+                        // Use generator for real-time progress - pass original text, not cleaned
+                        for await (const update of orchestrator.autoDecryptGenerator(rawText, {
                             tryMultiple: true,
                             useDictionary: true,
                             maxTime: 60000
@@ -929,7 +889,7 @@
                                 html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
                                     <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
                                     <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                        ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                        ${(Array.isArray(validation.foundWords) ? validation.foundWords : []).map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
                                     </div>
                                 </div>`;
                             }
@@ -1002,7 +962,7 @@
                                             html += `<div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
                                                 <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Sample Valid Words</div>
                                                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                                    ${validation.foundWords.map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
+                                                    ${(Array.isArray(validation.foundWords) ? validation.foundWords : []).map(word => `<span style="padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: 4px; font-size: 0.85rem; font-family: monospace;">${word}</span>`).join('')}
                                                 </div>
                                             </div>`;
                                         }

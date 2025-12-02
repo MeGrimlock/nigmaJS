@@ -1,7 +1,8 @@
 import { default as Dictionary } from '../../ciphers/dictionary/dictionary.js';
 import { Scorer } from '../../search/scorer.js';
 import { TextUtils } from '../../core/text-utils.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
+import { AdaptiveFrequencyAnalysis } from '../../analysis/adaptive-frequency-analysis.js';
 
 /**
  * Polybius Square Cipher Solver
@@ -22,6 +23,17 @@ export class PolybiusSolver {
      * @returns {Promise<Object>} Result with plaintext, method, confidence, score, key, etc.
      */
     async solve(ciphertext) {
+        // Handle null/undefined input
+        if (!ciphertext) {
+            return {
+                plaintext: ciphertext,
+                method: 'polybius',
+                confidence: 0,
+                score: -Infinity,
+                key: null
+            };
+        }
+
         // Check if text contains number pairs (11-55 pattern)
         const numberPairs = ciphertext.match(/\d{2}/g);
         if (!numberPairs || numberPairs.length < 5) {
@@ -75,7 +87,21 @@ export class PolybiusSolver {
                     }
                 }
                 
-                const combinedScore = score + (wordCoverage * 50);
+                // Adaptive Frequency Analysis validation (our latest tool)
+                let adaptiveBonus = 0;
+                try {
+                    const adaptiveAnalysis = AdaptiveFrequencyAnalysis.analyze(cleanText, this.language);
+                    // For Polybius, we expect monoalphabetic patterns after correct decryption
+                    if (adaptiveAnalysis.family === 'monoalphabetic-substitution') {
+                        adaptiveBonus = 30; // 30 points bonus for confirmed monoalphabetic
+                    } else if (adaptiveAnalysis.isPolyalphabetic) {
+                        adaptiveBonus = -40; // 40 points penalty for polyalphabetic
+                    }
+                } catch (error) {
+                    // Adaptive analysis failed, continue without bonus
+                }
+
+                const combinedScore = score + (wordCoverage * 50) + adaptiveBonus;
                 
                 if (combinedScore > bestResult.score) {
                     let confidence = 0.5;

@@ -1,0 +1,338 @@
+# Attacks Module Configuration
+# This file contains tunable parameters for cryptographic attack algorithms
+# Modify these values to adjust solver sensitivity, timeouts, and performance
+
+# Global Attack Settings
+attacks:
+  # Supported languages for attacks
+  supported_languages: ['english', 'spanish', 'french', 'german', 'italian', 'portuguese', 'russian']
+
+  # Global timeouts and limits
+  timeouts:
+    max_total_time: 120000    # Maximum total attack time (ms) - 2 minutes
+    max_solver_time: 30000    # Maximum time per individual solver (ms) - 30 seconds
+    max_orchestrator_time: 60000  # Maximum orchestrator execution time (ms) - 1 minute
+
+  # Resource limits
+  limits:
+    max_text_length: 10000    # Maximum text length to process
+    max_dictionary_words: 50000  # Maximum dictionary size to load
+    max_candidates: 100       # Maximum candidates to evaluate per solver
+
+# Orchestrator Configuration
+orchestrator:
+  # Language detection settings
+  language_detection:
+    enabled: true
+    max_languages: 3          # Maximum languages to try simultaneously
+    confidence_threshold: 0.6 # Minimum confidence for language inclusion
+
+  # Strategy selection
+  strategy_selection:
+    max_strategies: 5         # Maximum strategies to try per cipher type
+    parallel_execution: true  # Whether to run strategies in parallel
+    early_termination: true   # Stop when confidence exceeds threshold
+
+  # Result aggregation
+  result_aggregation:
+    min_confidence_threshold: 0.7    # Minimum confidence for result acceptance
+    max_results: 3                   # Maximum results to return
+    include_alternatives: true       # Include alternative interpretations
+
+# Individual Solver Configurations
+
+# Caesar Brute Force Solver
+caesar_brute_force:
+  scoring:
+    ngram_order: 4           # N-gram order for scoring (3=trigrams, 4=quadgrams)
+    use_dictionary: true     # Whether to use dictionary validation
+    dictionary_weight: 0.3   # Weight of dictionary score in final score
+
+  limits:
+    min_text_length: 3       # Minimum text length to attempt solving
+    max_shift_range: 26      # Maximum shift range to try (usually 26)
+
+  thresholds:
+    confidence_threshold: 0.8     # Minimum confidence for successful solve
+    word_coverage_threshold: 0.4  # Minimum word coverage required
+
+# Vigenere Solver
+vigenere_solver:
+  key_length_detection:
+    max_key_length: 20       # Maximum key length to test
+    min_key_length: 2        # Minimum key length to test
+    candidates_per_length: 5 # Candidates to try per key length
+    ioc_target: 1.73         # Target Index of Coincidence for English
+
+  key_finding:
+    hill_climb_iterations: 1000   # Maximum hill climbing iterations
+    dictionary_validation: true   # Use dictionary for key validation
+    segment_validation: true      # Use word segmentation validation
+    adaptive_frequency_boost: 0.1 # Boost for adaptive frequency analysis
+
+  scoring:
+    ngram_weight: 0.6       # Weight for N-gram scoring
+    dictionary_weight: 0.3  # Weight for dictionary validation
+    adaptive_weight: 0.1    # Weight for adaptive frequency analysis
+    key_length_boost: 0.1   # Boost for correct key length detection
+
+  thresholds:
+    confidence_threshold: 0.7     # Minimum confidence for successful solve (reduced)
+    min_ngram_score: -3.0         # Minimum acceptable N-gram score
+    high_confidence_threshold: 0.8 # Threshold for very high confidence
+
+# Atbash Solver
+atbash_solver:
+  scoring:
+    ngram_order: 4           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.8     # Minimum confidence for Atbash detection
+    score_threshold: -2.5         # Minimum N-gram score threshold
+
+# Baconian Solver
+baconian_solver:
+  pattern_detection:
+    min_text_length: 5       # Minimum text length for pattern detection
+    max_pattern_length: 100  # Maximum pattern length to analyze
+
+  scoring:
+    ngram_order: 3           # N-gram order for plaintext scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.6     # Minimum confidence for successful solve
+    word_coverage_threshold: 0.3  # Minimum word coverage required
+
+# ROT47 Brute Force Solver
+rot47_brute_force:
+  character_ranges:
+    ascii_start: 33          # ASCII start for ROT47 (!)
+    ascii_end: 126           # ASCII end for ROT47 (~)
+    range_size: 94           # Total characters in range
+
+  scoring:
+    ngram_order: 3           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.7     # Minimum confidence for successful solve
+    ascii_coverage_threshold: 0.8 # Minimum ASCII character coverage
+
+# Polyalphabetic Solvers (Beaufort, Porta, Gronsfeld, etc.)
+polyalphabetic_solvers:
+  key_validation:
+    min_key_length: 2        # Minimum key length
+    max_key_length: 20       # Maximum key length
+    dictionary_check: true   # Validate keys against dictionary
+
+  scoring:
+    ngram_order: 4           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+    partial_key_scoring: true # Score partial key attempts
+
+  thresholds:
+    confidence_threshold: 0.75    # Minimum confidence for successful solve
+    key_validation_threshold: 0.5 # Minimum key validation score
+
+# Railfence Solver
+railfence_solver:
+  rails:
+    min_rails: 2             # Minimum number of rails to try
+    max_rails: 10            # Maximum number of rails to try
+
+  scoring:
+    ngram_order: 3           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.7     # Minimum confidence for successful solve
+
+# Amsco Solver
+amsco_solver:
+  period_detection:
+    min_period: 2            # Minimum transposition period
+    max_period: 20           # Maximum transposition period
+
+  scoring:
+    ngram_order: 3           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.6     # Minimum confidence for successful solve
+
+# Autokey Solver
+autokey_solver:
+  key_search:
+    max_key_candidates: 100  # Maximum key candidates to try
+    progressive_key: true    # Use progressive key extension
+
+  scoring:
+    ngram_order: 4           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.7     # Minimum confidence for successful solve
+
+# Polybius Solver
+polybius_solver:
+  alphabet_detection:
+    standard_alphabet: "ABCDEFGHIKLMNOPQRSTUVWXYZ"  # Standard Polybius alphabet
+    detect_custom: true      # Attempt to detect custom alphabets
+
+  scoring:
+    ngram_order: 3           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.6     # Minimum confidence for successful solve
+
+# HMM Solver
+hmm_solver:
+  model_training:
+    max_iterations: 100      # Maximum EM iterations
+    convergence_threshold: 0.001  # Convergence threshold for EM
+    use_fast_path: true      # Use dictionary-based fast path
+    min_text_length_for_smart_init: 50  # Minimum text length for smart initialization
+    noise_std_dev: 0.1       # Standard deviation for initialization noise
+    permutation_weight: 0.9  # Weight for permutation matrix in initialization
+    sigma_value: 0.01        # Covariance value for emission model
+    frequency_init_noise_std_dev: 0.15    # Noise for frequency-based initialization
+    frequency_init_permutation_weight: 0.85  # Weight for frequency-based permutation
+
+  language_model:
+    ngram_order: 3           # N-gram order for language model
+    smoothing_factor: 0.1    # Add-k smoothing factor
+
+  confidence_calculation:
+    vocab_score_thresholds:
+      excellent: 0.85         # Threshold for excellent vocab score
+      high: 0.6              # Threshold for high vocab score
+      medium: 0.4            # Threshold for medium vocab score
+      low: 0.0               # Threshold for low vocab score
+    confidence_levels:
+      excellent: 1.0          # Confidence level for excellent scores
+      high: 0.9              # Confidence level for high scores
+      medium: 0.6            # Confidence level for medium scores
+      low: 0.2               # Confidence level for low scores
+      very_low: 0.1          # Confidence level for very low scores
+
+  thresholds:
+    confidence_threshold: 0.75    # Minimum confidence for successful solve
+    fast_path_threshold: 0.8      # Confidence threshold for fast path
+
+# Advanced Periodic Analysis (Fase 1)
+advanced_periodic_analysis:
+  kasiski:
+    ngram_lengths: [3, 4, 5]     # N-gram lengths to analyze
+    max_key_length: 25           # Maximum key length to consider
+    consensus_threshold: 0.2     # Minimum consensus score for periodicity (reduced)
+    strong_consensus_ratio: 1.3  # Ratio threshold for strong consensus (reduced)
+
+  autocorrelation:
+    max_shift: 25                 # Maximum shift for autocorrelation
+    significance_threshold: 2.0  # Z-score threshold for significance
+    window_size_ratio: 0.33       # Text portion to use as window size
+    window_step_ratio: 0.25       # Step size as ratio of window size
+
+  entropy_analysis:
+    min_column_length: 5          # Minimum column length for entropy calculation
+    expected_entropy: 4.7         # Expected entropy for English text
+    variance_threshold: 0.4       # Maximum normalized variance for polyalphabetic (increased)
+    deviation_threshold: 1.2      # Maximum entropy deviation (increased)
+
+  composite_detection:
+    min_text_length: 30           # Minimum text length for analysis
+    short_text_penalty: 0.8       # Confidence multiplier for short texts (< 60 chars)
+    method_agreement_bonus: 1.2   # Bonus when multiple methods agree
+    confidence_threshold: 0.3     # Minimum confidence for polyalphabetic detection (reduced)
+
+  scoring_weights:
+    kasiski: 0.4                  # Weight for Kasiski method
+    autocorrelation: 0.4          # Weight for autocorrelation method
+    entropy: 0.2                  # Weight for entropy method
+
+# Adaptive Frequency Analysis (Fase 2)
+adaptive_frequency_analysis:
+  min_text_length: 10             # Minimum text length for analysis (reduced)
+  confidence_thresholds:
+    high: 0.8                     # High confidence threshold (increased)
+    medium: 0.6                   # Medium confidence threshold (increased)
+    low: 0.4                      # Low confidence threshold (increased)
+
+  scoring_weights:
+    monoalphabetic: 1.2           # Weight for monoalphabetic analysis (increased)
+    polyalphabetic: 0.8           # Weight for polyalphabetic analysis (decreased)
+    transposition: 0.9            # Weight for transposition analysis
+    dictionary_based: 0.7         # Weight for dictionary-based analysis (increased)
+
+  polyalphabetic_detection:
+    min_period: 2                 # Minimum suspected period
+    max_period: 25                # Maximum suspected period (increased)
+    uniformity_threshold: 0.7     # Minimum uniformity for polyalphabetic (increased)
+    peak_ratio_threshold: 0.4     # Maximum peak ratio for polyalphabetic (increased)
+
+  boost_multipliers:
+    polyalphabetic_hint: 1.2      # Boost when polyalphabetic hinted (reduced)
+    monoalphabetic_penalty: 0.9   # Penalty when monoalphabetic detected (increased)
+    transposition_hint: 1.4       # Boost when transposition hinted (reduced)
+
+  language_support:
+    default_language: "english"   # Default language for analysis
+    supported_languages: ["english", "spanish", "french", "german", "italian", "portuguese"]
+
+# Substitution Strategy
+substitution_strategy:
+  hill_climbing:
+    max_iterations: 2000     # Maximum hill climbing iterations
+    restart_count: 10        # Number of random restarts
+    temperature_schedule: "exponential"  # Cooling schedule type
+
+  scoring:
+    ngram_order: 4           # N-gram order for scoring
+    use_dictionary: true     # Whether to use dictionary validation
+
+  thresholds:
+    confidence_threshold: 0.8     # Minimum confidence for successful solve
+    improvement_threshold: 0.01   # Minimum improvement per iteration
+
+# Vigenere Strategy
+vigenere_strategy:
+  key_length_detection:
+    max_key_length: 15       # Maximum key length to test
+    statistical_methods: true # Use statistical key length detection
+    dictionary_methods: true  # Use dictionary-based key length detection
+
+  key_finding:
+    hill_climb_iterations: 1000   # Maximum iterations per key position
+    dictionary_validation: true   # Use dictionary for validation
+
+  thresholds:
+    confidence_threshold: 0.75    # Minimum confidence for successful solve
+
+# Performance and Benchmarking
+benchmarking:
+  enabled: true
+  metrics:
+    collect_solver_times: true    # Collect execution times per solver
+    collect_confidence_scores: true  # Collect confidence score distributions
+    collect_failure_reasons: true     # Track reasons for solver failures
+
+  reporting:
+    summary_report: true       # Generate summary reports
+    detailed_report: false     # Generate detailed per-solver reports
+    export_format: "json"      # Export format for benchmark data
+
+# Debug and Logging
+debug:
+  enabled: false               # Global debug flag
+  log_level: "warn"            # Log level (error, warn, info, debug)
+  log_solver_progress: false   # Log detailed solver progress
+  log_orchestrator_steps: false # Log orchestrator decision steps
+
+# Test Configuration
+test_config:
+  default_timeout: 30000       # Default test timeout (ms)
+  stress_test_enabled: false   # Enable stress testing with large texts
+  benchmark_tests: true        # Include benchmark tests in regular test suite

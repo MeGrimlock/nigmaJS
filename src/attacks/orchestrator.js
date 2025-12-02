@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { CipherIdentifier } from '../analysis/identifier.js';
-import { LanguageAnalysis } from '../analysis/analysis.js';
+import { LanguageAnalysis } from '../analysis/analysis-core.js';
 import { configLoader } from '../config/config-loader.js';
 import { StrategySelector } from './helpers/strategy-selector.js';
 import { LanguageHandler } from './helpers/language-handler.js';
@@ -427,6 +427,20 @@ export class Orchestrator {
 
         // Validación final de diccionario
         finalResult = await this._finalDictionaryValidation(finalResult, useDictionary);
+
+        // Validación adicional: registrar métricas pero no rechazar por ahora (debugging)
+        if (finalResult.dictionaryValidation && finalResult.dictionaryValidation.metrics) {
+            const metrics = finalResult.dictionaryValidation.metrics;
+            const charCoverage = metrics.charCoverage || 0;
+            const wordCoverage = metrics.wordCoverage || 0;
+
+            log(`[Orchestrator] Dictionary metrics: charCoverage=${charCoverage}%, wordCoverage=${wordCoverage}%, validWords=${metrics.validWords}/${metrics.totalWords}`);
+
+            // Por ahora solo registrar, no rechazar
+            if (charCoverage < 30 || wordCoverage < 20) {
+                warn(`[Orchestrator] Poor quality metrics detected (but not rejecting): charCoverage=${charCoverage}%, wordCoverage=${wordCoverage}%`);
+            }
+        }
 
         return finalResult;
     }

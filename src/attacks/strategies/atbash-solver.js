@@ -1,7 +1,7 @@
 import { default as Dictionary } from '../../ciphers/dictionary/dictionary.js';
 import { Scorer } from '../../search/scorer.js';
 import { TextUtils } from '../../core/text-utils.js';
-import { LanguageAnalysis } from '../../analysis/analysis.js';
+import { LanguageAnalysis } from '../../analysis/analysis-core.js';
 
 /**
  * Atbash Cipher Solver
@@ -21,9 +21,48 @@ export class AtbashSolver {
      */
     async solve(ciphertext) {
         try {
+            // Handle null/undefined input
+            if (!ciphertext) {
+                return {
+                    plaintext: '',
+                    method: 'atbash',
+                    key: null,
+                    confidence: 0,
+                    score: -Infinity,
+                    wordCoverage: 0
+                };
+            }
+
+            // Handle edge cases
+            const cleanInput = TextUtils.onlyLetters(ciphertext);
+            if (!cleanInput || cleanInput.length === 0) {
+                return {
+                    plaintext: ciphertext,
+                    method: 'atbash',
+                    key: null,
+                    confidence: 0,
+                    score: -Infinity,
+                    wordCoverage: 0
+                };
+            }
+
             // Atbash is self-reciprocal, so we can just decode it
-            const atbash = new Dictionary.Atbash(ciphertext, true); // encoded = true
-            const plaintext = atbash.decode();
+            // Implement Atbash decoding directly to maintain original layout
+            let plaintext = '';
+            for (const char of ciphertext) {
+                const upperChar = char.toUpperCase();
+                if (upperChar >= 'A' && upperChar <= 'Z') {
+                    // A->Z, B->Y, C->X, ..., Z->A
+                    const code = upperChar.charCodeAt(0);
+                    const atbashCode = 'Z'.charCodeAt(0) - (code - 'A'.charCodeAt(0));
+                    const atbashChar = String.fromCharCode(atbashCode);
+                    // Preserve original case
+                    plaintext += char === upperChar ? atbashChar : atbashChar.toLowerCase();
+                } else {
+                    // Keep non-letters as-is
+                    plaintext += char;
+                }
+            }
             
             // Score with n-grams
             const scorer = new Scorer(this.language, 4); // Use quadgrams
@@ -61,7 +100,7 @@ export class AtbashSolver {
                 confidence = 0.90;
             } else if (wordCoverage > 0.50) {
                 confidence = 0.85;
-            } else if (score > -3) {
+            } else if (score > -7) {
                 // Good quadgram score even without dictionary
                 confidence = 0.90;
             } else if (score > -4) {

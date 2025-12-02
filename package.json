@@ -1,6 +1,6 @@
 {
   "name": "nigmajs",
-  "version": "3.1.85",
+  "version": "3.1.91",
   "description": "Module for solving and creating ciphers and codes",
   "main": "./build/js/nigma.min.js",
   "exports": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test:run": "node src/attacks/tests/run-tests.js",
+    "test:attacks": "jest --testPathPattern=src/attacks/tests --verbose --no-coverage",
     "test:analysis": "jest --testPathPattern=src/analysis/tests --verbose --no-coverage",
     "build:prod": "node scripts/update-version.js && webpack --mode production --progress && copy build\\js\\nigma.min.js demo\\js\\",
     "build:dev": "webpack --mode development --progress",

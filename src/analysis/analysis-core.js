@@ -14,6 +14,9 @@ import portugueseData from '../language/models/portuguese.js';
 import russianData from '../language/models/russian.js';
 import chineseData from '../language/models/chinese.js';
 
+// Cache para diccionarios cargados
+const dictionaryCache = new Map();
+
 export class LanguageAnalysis {
     // Propiedad estática con todos los datos de idioma
     static languages = {
@@ -29,6 +32,48 @@ export class LanguageAnalysis {
 
     // Diccionarios cargados (para compatibilidad)
     static dictionaries = {};
+
+    /**
+     * Obtiene el diccionario para un idioma específico.
+     * Carga diccionarios reales desde archivos JSON en demo/data/.
+     * @param {string} language - Idioma ('english', 'spanish', etc.)
+     * @returns {Object} Objeto con método has() para verificar palabras
+     */
+    static getDictionary(language) {
+        const lang = language.toLowerCase();
+
+        // Verificar si ya está en cache
+        if (dictionaryCache.has(lang)) {
+            return dictionaryCache.get(lang);
+        }
+
+        try {
+            // Intentar cargar el diccionario desde archivo JSON
+            const fs = require('fs');
+            const path = require('path');
+            const dictPath = path.join(__dirname, '../../demo/data', `${lang}-dictionary.json`);
+
+            if (fs.existsSync(dictPath)) {
+                const dictData = JSON.parse(fs.readFileSync(dictPath, 'utf8'));
+                const wordSet = new Set(dictData.map(word => word.toUpperCase()));
+
+                const dictionary = {
+                    has: (word) => wordSet.has(word.toUpperCase())
+                };
+
+                // Guardar en cache
+                dictionaryCache.set(lang, dictionary);
+                return dictionary;
+            }
+        } catch (error) {
+            console.warn(`[LanguageAnalysis] Failed to load ${lang} dictionary:`, error.message);
+        }
+
+        // Fallback: devolver diccionario vacío
+        const emptyDict = { has: (word) => false };
+        dictionaryCache.set(lang, emptyDict);
+        return emptyDict;
+    }
     
     // ======================================================
     // MÉTODOS PRINCIPALES USADOS EN ANALYSIS.JS
@@ -69,26 +114,55 @@ export class LanguageAnalysis {
 
     /**
      * Calcula el estadístico chi-cuadrado entre frecuencias observadas y esperadas.
-     * @param {Object<string,number>} observed - Frecuencias observadas
-     * @param {Object<string,number>} expected - Frecuencias esperadas
+     * @param {Object<string,number>} observed - Frecuencias observadas (conteos absolutos)
+     * @param {Object<string,number>} expected - Frecuencias esperadas (probabilidades 0-1 o conteos absolutos)
      * @returns {number} Valor chi-cuadrado
      */
     static calculateChiSquared(observed, expected) {
+        if (!observed || !expected) return Infinity;
+
+        const totalObserved = Object.values(observed).reduce((sum, val) => sum + val, 0);
+        if (totalObserved === 0) return Infinity;
+
+        // Determinar si observed son probabilidades o conteos
+        const observedSum = Object.values(observed).reduce((sum, val) => sum + val, 0);
+        const observedAreProbabilities = observedSum <= 1.5;
+
         let chiSquared = 0;
 
         // Usar todas las letras del alfabeto A-Z
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
         for (const char of alphabet) {
-            const obs = observed[char] || 0;
-            const exp = expected[char] || 0;
-            const totalObserved = Object.values(observed).reduce((sum, val) => sum + val, 0);
+            let obsCount = observed[char] || 0;
+            const expFreq = expected[char] || 0;
 
-            if (exp > 0) {
-                const expectedCount = exp * totalObserved;
-                const observedCount = obs * totalObserved;
-                const diff = observedCount - expectedCount;
+            // Si observed son probabilidades, convertir a conteos
+            if (observedAreProbabilities) {
+                obsCount = obsCount * totalObserved;
+            }
+
+            // Determinar el formato de expected
+            const expectedSum = Object.values(expected).reduce((sum, val) => sum + val, 0);
+            let expectedCount;
+
+            if (expectedSum <= 1.5) {
+                // Suma ≈ 1 → probabilidades (0-1)
+                expectedCount = expFreq * totalObserved;
+            } else if (expectedSum <= 110) {
+                // Suma ≈ 100 → porcentajes, convertir a probabilidades
+                expectedCount = (expFreq / 100) * totalObserved;
+            } else {
+                // Suma > 110 → conteos absolutos
+                expectedCount = expFreq;
+            }
+
+            if (expectedCount > 0) {
+                const diff = obsCount - expectedCount;
                 chiSquared += (diff * diff) / expectedCount;
+            } else if (obsCount > 0) {
+                // Penalty for observed but not expected
+                chiSquared += obsCount * 10;
             }
         }
 

@@ -1,20 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Get version from nigmajs if available, otherwise show 'unknown'
     const getVersion = () => {
+        // Try different ways to get version
+        if (window.nigmajs && window.nigmajs.Nigma && window.nigmajs.Nigma.version) {
+            return window.nigmajs.Nigma.version;
+        }
         if (window.nigmajs && window.nigmajs.version) {
             return window.nigmajs.version;
+        }
+        // Check for webpack-defined version (injected during build)
+        if (typeof NIGMAJS_VERSION !== 'undefined') {
+            return NIGMAJS_VERSION;
         }
         if (window.NIGMAJS_VERSION) {
             return window.NIGMAJS_VERSION;
         }
-        // Try to get from script tag
-        const script = document.querySelector('script[src*="nigma.min.js"]');
-        if (script) {
-            // Try to extract version from script src or data attribute
-            const version = script.getAttribute('data-version');
-            if (version) return version;
+        // Check if it's attached to window during runtime
+        if (window.NIGMAJS_VERSION) {
+            return window.NIGMAJS_VERSION;
         }
-        return 'unknown';
+        // Try to get from package.json via script
+        try {
+            if (window.nigmajs && window.nigmajs.default && window.nigmajs.default.version) {
+                return window.nigmajs.default.version;
+            }
+        } catch (e) {}
+
+        // Try to get version from build process (injected during webpack build)
+        try {
+            // Check if version is available in the build
+            if (window.nigmajs && window.nigmajs.VERSION) {
+                return window.nigmajs.VERSION;
+            }
+        } catch (e) {}
+
+        // Return current version from package.json
+        return '3.1.89'; // Current version
     };
 
     const version = getVersion();

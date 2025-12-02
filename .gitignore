@@ -3,3 +3,8 @@ node_modules/
 .vscode/
 coverage
 
+# Development scripts and debug files
+scripts/debug/
+scripts/tests/
+scripts/validate/
+

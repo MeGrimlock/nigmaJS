@@ -1,6 +1,8 @@
 import { Stats } from './stats.js';
 import { Kasiski } from './kasiski.js';
 import { PeriodicAnalysis } from './periodic-analysis.js';
+import { AdvancedPeriodicAnalysis } from './advanced-periodic-analysis.js';
+import { AdaptiveFrequencyAnalysis } from './adaptive-frequency-analysis.js';
 import { TranspositionDetector } from './transposition-detector.js';
 import { TextUtils } from '../core/text-utils.js';
 import { LanguageAnalysis } from './analysis-core.js';
@@ -108,17 +110,76 @@ export class CipherIdentifier {
                 ? (entry.keyLength ?? entry.length ?? entry.len ?? null)
                 : null;
 
-        // Calculate periodic analysis (IC periodic + auto-correlation)
-        // This helps distinguish monoalphabetic vs polyalphabetic ciphers
+        // Calculate advanced periodic analysis (multi-method polyalphabetic detection)
+        // This helps distinguish monoalphabetic vs polyalphabetic ciphers with higher accuracy
         let periodicAnalysis = null;
-        if (length >= 20) {
+        if (length >= 30) { // Require longer text for advanced analysis
             try {
-                periodicAnalysis = PeriodicAnalysis.analyze(cleaned, {
-                    maxPeriod: Math.min(20, Math.floor(length / 4)),
-                    maxShift: Math.min(20, length - 1)
+                periodicAnalysis = AdvancedPeriodicAnalysis.analyze(cleaned, {
+                    maxPeriod: Math.min(25, Math.floor(length / 3)),
+                    maxShift: Math.min(25, length - 5)
                 });
+                // Add compatibility properties expected by existing code
+                periodicAnalysis.recommendation = periodicAnalysis.recommendation || 'unclear';
+                periodicAnalysis.polyalphabeticScore = periodicAnalysis.confidence || 0;
+
+                // Ensure periodicIC is always an array
+                if (!Array.isArray(periodicAnalysis.periodicIC)) {
+                    periodicAnalysis.periodicIC = [];
+                }
+
+                // Ensure autoCorrelation is always an object with peaks array
+                if (!periodicAnalysis.autoCorrelation || typeof periodicAnalysis.autoCorrelation !== 'object') {
+                    periodicAnalysis.autoCorrelation = { peaks: [] };
+                }
+                if (!Array.isArray(periodicAnalysis.autoCorrelation.peaks)) {
+                    periodicAnalysis.autoCorrelation.peaks = [];
+                }
+
+                // Ensure methods object exists and has proper structure
+                if (!periodicAnalysis.methods) {
+                    periodicAnalysis.methods = {};
+                }
             } catch (error) {
-                console.warn('[CipherIdentifier] Periodic analysis failed:', error);
+                console.warn('[CipherIdentifier] Advanced periodic analysis failed:', error);
+                // Fallback to basic analysis
+                try {
+                    periodicAnalysis = PeriodicAnalysis.analyze(cleaned, {
+                        maxPeriod: Math.min(20, Math.floor(length / 4)),
+                        maxShift: Math.min(20, length - 1)
+                    });
+
+                    // Ensure fallback result has proper structure
+                    if (periodicAnalysis) {
+                        periodicAnalysis.recommendation = periodicAnalysis.recommendation || 'unclear';
+                        periodicAnalysis.polyalphabeticScore = periodicAnalysis.polyalphabeticScore || 0;
+                        periodicAnalysis.confidence = periodicAnalysis.confidence || 0;
+                        periodicAnalysis.isPolyalphabetic = periodicAnalysis.isPolyalphabetic || false;
+
+                        // Ensure arrays exist
+                        if (!Array.isArray(periodicAnalysis.periodicIC)) {
+                            periodicAnalysis.periodicIC = [];
+                        }
+                        if (!periodicAnalysis.autoCorrelation || typeof periodicAnalysis.autoCorrelation !== 'object') {
+                            periodicAnalysis.autoCorrelation = { peaks: [] };
+                        }
+                        if (!Array.isArray(periodicAnalysis.autoCorrelation.peaks)) {
+                            periodicAnalysis.autoCorrelation.peaks = [];
+                        }
+                    }
+                } catch (fallbackError) {
+                    console.warn('[CipherIdentifier] Fallback periodic analysis also failed:', fallbackError);
+                    // Create minimal fallback structure
+                    periodicAnalysis = {
+                        recommendation: 'error',
+                        polyalphabeticScore: 0,
+                        confidence: 0,
+                        isPolyalphabetic: false,
+                        periodicIC: [],
+                        autoCorrelation: { peaks: [] },
+                        methods: {}
+                    };
+                }
             }
         }
 
@@ -130,6 +191,24 @@ export class CipherIdentifier {
                 transpositionAnalysis = TranspositionDetector.analyze(cleaned, language);
             } catch (error) {
                 console.warn('[CipherIdentifier] Transposition analysis failed:', error);
+            }
+        }
+
+        // Calculate adaptive frequency analysis (context-aware frequency patterns)
+        // This provides cipher-type-specific scoring and improves classification accuracy
+        let frequencyAnalysis = null;
+        if (length >= 30) {
+            try {
+                const cipherHints = {
+                    isPolyalphabetic: periodicAnalysis?.isPolyalphabetic || false,
+                    detectedPeriod: periodicAnalysis?.detectedPeriod || null,
+                    suggestedKeyLength: periodicAnalysis?.detectedPeriod || null,
+                    isTransposition: transpositionAnalysis?.isTransposition || false
+                };
+
+                frequencyAnalysis = AdaptiveFrequencyAnalysis.analyze(cleaned, cipherHints, language);
+            } catch (error) {
+                console.warn('[CipherIdentifier] Adaptive frequency analysis failed:', error);
             }
         }
 
@@ -172,6 +251,19 @@ export class CipherIdentifier {
         const isShortText = length < configLoader.get('cipher_identifier.text_categories.short_threshold', 50);
         const isMediumText = length >= 50 && length < 150;
         const isLongText = length >= 150;
+
+        // Ensure periodicAnalysis has valid structure to prevent join() errors
+        if (!periodicAnalysis) {
+            periodicAnalysis = {
+                recommendation: 'no_analysis',
+                polyalphabeticScore: 0,
+                confidence: 0,
+                isPolyalphabetic: false,
+                periodicIC: [],
+                autoCorrelation: { peaks: [] },
+                methods: {}
+            };
+        }
 
         // ========================================================================
         // PRIORITY: Execute Caesar Test FIRST (before other heuristics)
@@ -281,24 +373,26 @@ export class CipherIdentifier {
             scores['caesar-shift'] += 0.1; // Slight hint it's monoalphabetic (but not Caesar)
         } else {
             // --- Heuristic 1: Index of Coincidence ---
+            // IC values: plaintext ~0.065, monoalphabetic ~0.065, polyalphabetic ~0.038, random ~0.038
             let highICThreshold, mediumICThreshold;
             if (isShortText) {
-                highICThreshold = 1.2;
-                mediumICThreshold = 0.8;
+                highICThreshold = 0.055;  // High IC suggests monoalphabetic (preserves language frequencies)
+                mediumICThreshold = 0.045; // Medium IC suggests polyalphabetic or random
             } else if (isMediumText) {
-                highICThreshold = 1.4;
-                mediumICThreshold = 1.1;
+                highICThreshold = 0.060;
+                mediumICThreshold = 0.045;
             } else if (isLongText) {
-                highICThreshold = 1.5;
-                mediumICThreshold = 1.2;
+                highICThreshold = 0.065;
+                mediumICThreshold = 0.042;
             } else {
-                highICThreshold = 1.5;
-                mediumICThreshold = 1.2;
+                highICThreshold = 0.065;
+                mediumICThreshold = 0.042;
             }
 
             if (caesarTestSucceeded) {
                 // Caesar test already boosted monoalphabetic; don't double-count
             } else if (ic >= highICThreshold) {
+                // High IC suggests monoalphabetic cipher (preserves language frequencies)
                 scores['monoalphabetic-substitution'] += 0.8;
                 scores['caesar-shift'] += 0.6;
                 scores['transposition'] += 0.7;
@@ -381,6 +475,23 @@ export class CipherIdentifier {
             }
         }
 
+        // Use adaptive frequency analysis to provide additional evidence
+        let frequencyBoost = { monoalphabetic: 0, polyalphabetic: 0, transposition: 0 };
+        if (frequencyAnalysis && frequencyAnalysis.confidence > 0.3) {
+            const bestType = frequencyAnalysis.bestType.type;
+            const typeConfidence = frequencyAnalysis.bestType.confidence;
+
+            if (bestType === 'monoalphabetic' && typeConfidence > 0.5) {
+                frequencyBoost.monoalphabetic = 0.3;
+                frequencyBoost.polyalphabetic = -0.2;
+            } else if (bestType === 'polyalphabetic' && typeConfidence > 0.5) {
+                frequencyBoost.polyalphabetic = 0.3;
+                frequencyBoost.monoalphabetic = -0.2;
+            } else if (bestType === 'transposition' && typeConfidence > 0.4) {
+                frequencyBoost.transposition = 0.25;
+            }
+        }
+
         if (!caesarTestSucceeded && reliableKasiskiGlobal && !highIC) {
             const topKeyLengthEntry = getTopKeyLength();
             const topKeyLengthValue = getKeyLengthValue(topKeyLengthEntry);
@@ -388,17 +499,17 @@ export class CipherIdentifier {
             // CRITICAL: Never accept keyLength=1 as evidence for vigenere-like
             if (topKeyLengthEntry && topKeyLengthValue > 1) {
                 if (topKeyLengthEntry.score > 0.3) {
-                    scores['vigenere-like'] += 1.2 + periodicBoost;
-                    scores['monoalphabetic-substitution'] -= 0.5;
+                    scores['vigenere-like'] += 1.2 + periodicBoost + frequencyBoost.polyalphabetic;
+                    scores['monoalphabetic-substitution'] -= 0.5 + frequencyBoost.monoalphabetic;
                     scores['caesar-shift'] -= 0.5;
                 } else if (topKeyLengthEntry.score > 0.1) {
-                    scores['vigenere-like'] += 0.6 + periodicBoost;
+                    scores['vigenere-like'] += 0.6 + periodicBoost + frequencyBoost.polyalphabetic;
                 }
             } else if (topKeyLengthEntry && topKeyLengthValue === 1) {
                 // keyLength=1 detected → this is NOT polyalphabetic, it's monoalphabetic
-                scores['monoalphabetic-substitution'] += 0.5;
+                scores['monoalphabetic-substitution'] += 0.5 + frequencyBoost.monoalphabetic;
                 scores['caesar-shift'] += 0.4;
-                scores['vigenere-like'] -= 0.3; // Penalty for false polyalphabetic signal
+                scores['vigenere-like'] -= 0.3 + frequencyBoost.polyalphabetic; // Penalty for false polyalphabetic signal
             }
         } else {
             if (caesarTestSucceeded) {
@@ -411,26 +522,26 @@ export class CipherIdentifier {
                 // Use periodic analysis when Kasiski is weak or unavailable
                 if (periodicAnalysis && periodicAnalysis.polyalphabeticScore > 0.6) {
                     // Periodic analysis strongly suggests polyalphabetic
-                    scores['vigenere-like'] += 0.5 + periodicBoost;
-                    scores['monoalphabetic-substitution'] += 0.2;
+                    scores['vigenere-like'] += 0.5 + periodicBoost + frequencyBoost.polyalphabetic;
+                    scores['monoalphabetic-substitution'] += 0.2 - frequencyBoost.monoalphabetic;
                 } else if (
                     periodicAnalysis &&
                     periodicAnalysis.polyalphabeticScore < 0.4
                 ) {
                     // Periodic analysis suggests monoalphabetic
-                    scores['monoalphabetic-substitution'] += 0.4;
+                    scores['monoalphabetic-substitution'] += 0.4 + frequencyBoost.monoalphabetic;
                     scores['caesar-shift'] += 0.3;
-                    scores['vigenere-like'] += 0.1;
+                    scores['vigenere-like'] += 0.1 - frequencyBoost.polyalphabetic;
                 } else {
                     // Fall back to original logic
                     if (isShortText) {
                         if (hasWeakPeriodicity) {
-                            scores['vigenere-like'] += 0.4;
-                            scores['caesar-shift'] += 0.3;
-                            scores['monoalphabetic-substitution'] += 0.3;
+                            scores['vigenere-like'] += 0.4 + frequencyBoost.polyalphabetic;
+                            scores['caesar-shift'] += 0.3 - frequencyBoost.monoalphabetic;
+                            scores['monoalphabetic-substitution'] += 0.3 + frequencyBoost.monoalphabetic;
                         } else {
-                            scores['caesar-shift'] += 0.6;
-                            scores['monoalphabetic-substitution'] += 0.5;
+                            scores['caesar-shift'] += 0.6 - frequencyBoost.polyalphabetic;
+                            scores['monoalphabetic-substitution'] += 0.5 + frequencyBoost.monoalphabetic;
                         }
                     } else {
                         scores['monoalphabetic-substitution'] += 0.5;
