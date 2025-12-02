@@ -158,7 +158,7 @@ class ConfigLoader {
             ic_analysis: {
                 tolerance: {
                     very_short: Infinity,
-                    short: 0.8,
+                    short: 0.6881599015328204,
                     medium: 0.5,
                     long: 0.3
                 },
@@ -189,28 +189,77 @@ class ConfigLoader {
                 },
                 supported_languages: ['english', 'spanish', 'french', 'german', 'italian', 'portuguese', 'russian', 'chinese']
             },
+            // Language-specific cipher identification parameters
+            // Optimized via Genetic Algorithm for each language
+            cipher_identifier_by_language: {
+                english: {
+                    caesar_test: {
+                        primary_threshold: {
+                            score: 0.8242247046591749,
+                            improvement: 0.18551096570624753
+                        },
+                        secondary_threshold: {
+                            score: 0.4872059889598983,
+                            improvement: 0.08
+                        },
+                        minimum_threshold: {
+                            score: 0.3,
+                            improvement: 0.05
+                        },
+                        primary_multiplier: 2.2,
+                        secondary_multiplier: 1.5,
+                        vigenere_penalty: 2.1926582806256496,
+                        transposition_penalty: 1.8,
+                        monoalphabetic_boost: 1.5194079184753928
+                    }
+                },
+                spanish: {
+                    caesar_test: {
+                        // TODO: Run optimizer with Spanish dataset to get optimal values
+                        // For now, using English values as baseline
+                        primary_threshold: {
+                            score: 0.82,
+                            improvement: 0.19
+                        },
+                        secondary_threshold: {
+                            score: 0.49,
+                            improvement: 0.08
+                        },
+                        minimum_threshold: {
+                            score: 0.3,
+                            improvement: 0.05
+                        },
+                        primary_multiplier: 2.2,
+                        secondary_multiplier: 1.5,
+                        vigenere_penalty: 2.2,
+                        transposition_penalty: 1.8,
+                        monoalphabetic_boost: 1.5
+                    }
+                },
+                // Fallback groups for unsupported languages
+                _fallback_latin: 'spanish',  // French, Italian, Portuguese → Spanish params
+                _fallback_default: 'english' // All others → English params
+            },
+            // Legacy: Global defaults (used if language-specific not found)
             cipher_identifier: {
                 caesar_test: {
-                    // Thresholds for detecting Caesar cipher
                     primary_threshold: {
-                        score: 0.6,
-                        improvement: 0.15
+                        score: 0.82,
+                        improvement: 0.19
                     },
                     secondary_threshold: {
-                        score: 0.4,
+                        score: 0.49,
                         improvement: 0.08
                     },
                     minimum_threshold: {
                         score: 0.3,
                         improvement: 0.05
                     },
-                    // Score multipliers
                     primary_multiplier: 2.2,
                     secondary_multiplier: 1.5,
-                    // Score penalties for other cipher types
-                    vigenere_penalty: 1.8,
+                    vigenere_penalty: 2.2,
                     transposition_penalty: 1.8,
-                    monoalphabetic_boost: 1.3
+                    monoalphabetic_boost: 1.5
                 },
                 text_categories: {
                     short_threshold: 50
@@ -513,6 +562,47 @@ class ConfigLoader {
     }
 
     /**
+     * Gets language-specific cipher identifier configuration with intelligent fallback.
+     * @param {string} language - Language code (e.g., 'english', 'spanish', 'french')
+     * @param {string} configSection - Section to retrieve (e.g., 'caesar_test')
+     * @returns {Object} Language-specific configuration
+     */
+    getLanguageSpecificConfig(language, configSection = 'caesar_test') {
+        if (!this.config) {
+            this.loadConfig();
+        }
+
+        const byLanguage = this.config.cipher_identifier_by_language || {};
+
+        // Direct match
+        if (byLanguage[language] && byLanguage[language][configSection]) {
+            return byLanguage[language][configSection];
+        }
+
+        // Fallback for Latin-based languages
+        const latinLanguages = ['french', 'italian', 'portuguese', 'catalan', 'romanian'];
+        if (latinLanguages.includes(language)) {
+            const fallbackLang = byLanguage._fallback_latin || 'spanish';
+            if (byLanguage[fallbackLang] && byLanguage[fallbackLang][configSection]) {
+                return byLanguage[fallbackLang][configSection];
+            }
+        }
+
+        // Default fallback
+        const defaultLang = byLanguage._fallback_default || 'english';
+        if (byLanguage[defaultLang] && byLanguage[defaultLang][configSection]) {
+            return byLanguage[defaultLang][configSection];
+        }
+
+        // Ultimate fallback: global cipher_identifier config
+        if (this.config.cipher_identifier && this.config.cipher_identifier[configSection]) {
+            return this.config.cipher_identifier[configSection];
+        }
+
+        return {};
+    }
+
+    /**
      * Gets a configuration value using dot notation (e.g., 'language_detection.text_length.very_short').
      * @param {string} path - Dot-notation path to config value
      * @param {*} defaultValue - Default value if path not found
@@ -557,7 +647,7 @@ class ConfigLoader {
         }
 
         const thresholds = this.get('language_detection.text_length', {});
-        
+
         if (length < (thresholds.very_short || 50)) return 'very_short';
         if (length < (thresholds.short || 100)) return 'short';
         if (length < (thresholds.medium || 200)) return 'medium';

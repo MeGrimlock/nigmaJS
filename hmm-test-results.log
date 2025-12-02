@@ -194,3 +194,15 @@
 2025-12-01T18:31:17.152Z - initialize with correct language: passed
 2025-12-01T18:31:17.191Z - load configuration properly: started
 2025-12-01T18:31:17.207Z - load configuration properly: passed
+2025-12-02T01:07:56.084Z - HMM initialization: started
+2025-12-02T01:07:56.379Z - HMM initialization: mock mode
+2025-12-02T01:07:56.443Z - initialize with correct language: started
+2025-12-02T01:07:56.446Z - initialize with correct language: passed
+2025-12-02T01:07:56.460Z - load configuration properly: started
+2025-12-02T01:07:56.463Z - load configuration properly: passed
+2025-12-02T02:05:18.128Z - HMM initialization: started
+2025-12-02T02:05:18.253Z - HMM initialization: mock mode
+2025-12-02T02:05:18.303Z - initialize with correct language: started
+2025-12-02T02:05:18.312Z - initialize with correct language: passed
+2025-12-02T02:05:18.340Z - load configuration properly: started
+2025-12-02T02:05:18.344Z - load configuration properly: passed

@@ -14,8 +14,8 @@ import { TextUtils } from '../core/text-utils.js';
 
 // Debug flag: set to false to disable verbose logging (useful for tests)
 const DEBUG = process.env.NIGMAJS_DEBUG !== 'false' && process.env.NODE_ENV !== 'test';
-const log = DEBUG ? console.log.bind(console) : () => {};
-const warn = DEBUG ? console.warn.bind(console) : () => {};
+const log = DEBUG ? console.log.bind(console) : () => { };
+const warn = DEBUG ? console.warn.bind(console) : () => { };
 
 /**
  * Orchestrator: Intelligent attack coordinator for classical ciphers.
@@ -287,6 +287,21 @@ export class Orchestrator {
                             result,
                             detectedLanguageFromPlaintext
                         );
+
+                        // CRITICAL: Reject gibberish results (< 15% valid words)
+                        if (!ResultValidator.isAcceptableResult(validatedResult)) {
+                            const wordCoveragePercent = ((validatedResult.wordCoverage || 0) * 100).toFixed(1);
+                            console.error(
+                                `[Orchestrator] 🚫 REJECTING GIBBERISH: [${tryLanguage}] ${strategy.name} ` +
+                                `wordCoverage=${wordCoveragePercent}% (< 15% threshold). Trying next strategy...`
+                            );
+                            warn(
+                                `[Orchestrator] [${tryLanguage}] ${strategy.name} produced gibberish: ` +
+                                `wordCoverage=${wordCoveragePercent}% ` +
+                                `(< 15% threshold). Skipping and trying next strategy.`
+                            );
+                            continue; // Skip to next strategy
+                        }
 
                         const enriched = {
                             ...validatedResult,
@@ -655,6 +670,22 @@ export class Orchestrator {
                             result,
                             detectedLanguageFromPlaintext
                         );
+
+                        // CRITICAL: Reject gibberish results (< 15% valid words)
+                        if (!ResultValidator.isAcceptableResult(validatedResult)) {
+                            const wordCoveragePercent = ((validatedResult.wordCoverage || 0) * 100).toFixed(1);
+                            const msg = `[Orchestrator] 🚫 REJECTING GIBBERISH: [${tryLanguage}] ${strategy.name} wordCoverage=${wordCoveragePercent}% (< 15% threshold).`;
+                            console.error(msg);
+
+                            yield {
+                                stage: 'strategy-rejected',
+                                message: `🚫 Rejected gibberish: ${strategy.name} (${wordCoveragePercent}% words)`,
+                                method: strategy.name,
+                                language: tryLanguage,
+                                progress: strategyProgress + 2
+                            };
+                            continue;
+                        }
 
                         const enriched = {
                             ...validatedResult,

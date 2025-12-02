@@ -28,7 +28,7 @@ export class CipherIdentifier {
                 text = String(text);
             }
         }
-    
+
         // --- Early Detection: Check for special ciphers before main analysis ---
         // Polybius Square: Contains number pairs (11-55)
         // This must be checked BEFORE IC calculation because Polybius uses numbers, not letters
@@ -43,7 +43,7 @@ export class CipherIdentifier {
                 isPolybius = true;
             }
         }
-    
+
         const cleaned = TextUtils.onlyLetters(text);
         const length = cleaned.length;
 
@@ -325,7 +325,7 @@ export class CipherIdentifier {
 
                     const normalizationFactor =
                         length < 50 ? 100 :
-                        (length < 200 ? 60 : 40);
+                            (length < 200 ? 60 : 40);
 
                     shiftScore = 1 / (1 + chiSquared / normalizationFactor);
                 }
@@ -342,19 +342,22 @@ export class CipherIdentifier {
 
             const improvement = bestShiftScore - baselineScore;
 
-            if (bestShift !== 0 && ((bestShiftScore > configLoader.get('cipher_identifier.caesar_test.primary_threshold.score', 0.6) && improvement > configLoader.get('cipher_identifier.caesar_test.primary_threshold.improvement', 0.15)) ||
-                                   (bestShiftScore > configLoader.get('cipher_identifier.caesar_test.secondary_threshold.score', 0.4) && improvement > configLoader.get('cipher_identifier.caesar_test.secondary_threshold.improvement', 0.08)))) {
+            // Get language-specific parameters for Caesar test
+            const caesarConfig = configLoader.getLanguageSpecificConfig(language, 'caesar_test');
+
+            if (bestShift !== 0 && ((bestShiftScore > caesarConfig.primary_threshold.score && improvement > caesarConfig.primary_threshold.improvement) ||
+                (bestShiftScore > caesarConfig.secondary_threshold.score && improvement > caesarConfig.secondary_threshold.improvement))) {
                 caesarTestSucceeded = true;
-                caesarTestScore = bestShiftScore * configLoader.get('cipher_identifier.caesar_test.primary_multiplier', 2.2);
+                caesarTestScore = bestShiftScore * caesarConfig.primary_multiplier;
 
                 scores['caesar-shift'] += caesarTestScore;
-                scores['monoalphabetic-substitution'] += caesarTestScore * configLoader.get('cipher_identifier.caesar_test.monoalphabetic_boost', 1.3);
+                scores['monoalphabetic-substitution'] += caesarTestScore * caesarConfig.monoalphabetic_boost;
 
-                scores['vigenere-like'] -= caesarTestScore * configLoader.get('cipher_identifier.caesar_test.vigenere_penalty', 1.8);
-                scores['transposition'] -= caesarTestScore * configLoader.get('cipher_identifier.caesar_test.transposition_penalty', 1.8);
-            } else if (bestShift !== 0 && bestShiftScore > configLoader.get('cipher_identifier.caesar_test.minimum_threshold.score', 0.3) && improvement > configLoader.get('cipher_identifier.caesar_test.minimum_threshold.improvement', 0.05)) {
+                scores['vigenere-like'] -= caesarTestScore * caesarConfig.vigenere_penalty;
+                scores['transposition'] -= caesarTestScore * caesarConfig.transposition_penalty;
+            } else if (bestShift !== 0 && bestShiftScore > caesarConfig.minimum_threshold.score && improvement > caesarConfig.minimum_threshold.improvement) {
                 caesarTestSucceeded = true;
-                caesarTestScore = bestShiftScore * 1.5;
+                caesarTestScore = bestShiftScore * caesarConfig.secondary_multiplier;
 
                 scores['monoalphabetic-substitution'] += caesarTestScore * 1.2;
                 scores['caesar-shift'] += caesarTestScore;

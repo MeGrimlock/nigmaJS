@@ -58,16 +58,16 @@ export class PolyalphabeticSolver {
     _validatePartialKey(text) {
         const dict = LanguageAnalysis.getDictionary(this.language);
         if (!dict) return 0; // No dictionary available
-        
+
         // Check if original text has spaces
         const hasSpacesInOriginal = /\s/.test(text);
-        
+
         // Extract words from text
         let words = text.toUpperCase()
             .split(/\s+/)
             .map(w => TextUtils.onlyLetters(w))
             .filter(w => w.length >= 3); // Only consider words >= 3 chars
-        
+
         // Only use word segmentation if original text has NO spaces
         if (!hasSpacesInOriginal && words.length > 0 && words[0].length > 10) {
             try {
@@ -83,9 +83,9 @@ export class PolyalphabeticSolver {
                 // Segmentation failed, continue with original words
             }
         }
-        
+
         if (words.length === 0) return 0;
-        
+
         // Count valid words
         let validWords = 0;
         for (const word of words) {
@@ -93,7 +93,7 @@ export class PolyalphabeticSolver {
                 validWords++;
             }
         }
-        
+
         // Return percentage of valid words
         return validWords / words.length;
     }
@@ -108,14 +108,14 @@ export class PolyalphabeticSolver {
     _scoreWithDictionary(cleanText, fullText) {
         // N-gram score (normalized [0, 1], primary metric)
         const ngramScore = Scorers.scoreTextNormalized(cleanText, this.language, { useFallback: true });
-        
+
         // Dictionary validation score (0-1, secondary metric)
         const dictScore = this._validatePartialKey(fullText);
-        
+
         // Combine: 70% N-gram (more reliable, especially for short texts) + 30% dictionary
         // Both are [0, 1], so final score is also [0, 1]
         const combinedScore = (ngramScore * 0.7) + (dictScore * 0.3);
-        
+
         // Return normalized score for comparability
         return combinedScore;
     }
@@ -133,72 +133,86 @@ export class PolyalphabeticSolver {
      */
     solveBeaufort(ciphertext, keyLength) {
         const cleanText = TextUtils.onlyLetters(ciphertext);
-        if (cleanText.length < 50) {
+        if (cleanText.length < 20) {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0 };
         }
 
-        // Strategy: Build key iteratively, testing full decryption at each step
-        let bestKey = '';
-        let bestScore = -Infinity;
-        let bestPlaintext = '';
-
-        // Build key one character at a time
-        for (let pos = 0; pos < keyLength; pos++) {
-            let bestChar = 'A';
-            let bestPosScore = -Infinity;
-
-            // Try all 26 letters for this position
-            for (let shift = 0; shift < 26; shift++) {
-                const testKey = bestKey + String.fromCharCode(shift + 65) + 'A'.repeat(keyLength - pos - 1);
-                
-                // Decrypt with test key
-                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
-                const testPlaintext = beaufort.decode();
-                
-                // Score using hybrid method (N-gram + dictionary)
-                const score = this._scoreWithDictionary(testPlaintext, testPlaintext);
-                
-                if (score > bestPosScore) {
-                    bestPosScore = score;
-                    bestChar = String.fromCharCode(shift + 65);
+        // Strategy 1: Try common keys first (fast path)
+        const commonKeys = ['KEY', 'ABC', 'THE', 'AND', 'TEST', 'PASS', 'CIPHER', 'SECRET', 'CRYPTO', 'ENIGMA'];
+        for (const testKey of commonKeys) {
+            if (testKey.length === keyLength) {
+                try {
+                    const beaufort = new Polyalphabetic.Beaufort(ciphertext, testKey);
+                    const testPlaintext = beaufort.decode();
+                    // Quick check using dictionary coverage
+                    const coverage = this._validatePartialKey(testPlaintext);
+                    if (coverage > 0.6) {
+                        const score = this._scoreWithDictionary(TextUtils.onlyLetters(testPlaintext), testPlaintext);
+                        return {
+                            plaintext: testPlaintext,
+                            key: testKey,
+                            score,
+                            confidence: 0.95,
+                            method: 'beaufort',
+                            keyLength,
+                            isPolyalphabeticCandidate: true,
+                            dictionaryCoverage: coverage
+                        };
+                    }
+                } catch (e) {
+                    // Ignore
                 }
             }
-
-            bestKey += bestChar;
         }
 
-        // Final refinement: Try small variations around the found key
-        for (let i = 0; i < keyLength; i++) {
-            const originalChar = bestKey[i];
-            const originalCharCode = originalChar.charCodeAt(0) - 65;
+        // Strategy 2: Column-based Frequency Analysis (Friedman)
+        // This is much more robust than iterative building for Polyalphabetic ciphers
+        const columns = Array(keyLength).fill('');
+        for (let i = 0; i < cleanText.length; i++) {
+            columns[i % keyLength] += cleanText[i];
+        }
 
-            for (let delta = -2; delta <= 2; delta++) {
-                if (delta === 0) continue;
-                const newCharCode = (originalCharCode + delta + 26) % 26;
-                const newChar = String.fromCharCode(newCharCode + 65);
-                const testKey = bestKey.substring(0, i) + newChar + bestKey.substring(i + 1);
+        let bestKey = '';
+        const targetFreqs = this.getTargetFrequencies();
 
-                const beaufort = new Polyalphabetic.Beaufort(cleanText, testKey);
-                const testPlaintext = beaufort.decode();
-                // Score using hybrid method (N-gram + dictionary)
-                const score = this._scoreWithDictionary(testPlaintext, testPlaintext);
+        for (const column of columns) {
+            let bestChar = 'A';
+            let bestScore = -Infinity;
+
+            // Try all 26 key letters for this column
+            for (let k = 0; k < 26; k++) {
+                const keyChar = String.fromCharCode(k + 65);
+                const keyVal = k;
+
+                // Decrypt column: P = (K - C) mod 26
+                let decryptedColumn = '';
+                for (let i = 0; i < column.length; i++) {
+                    const cVal = column.charCodeAt(i) - 65;
+                    const pVal = (keyVal - cVal + 26) % 26;
+                    decryptedColumn += String.fromCharCode(pVal + 65);
+                }
+
+                // Score using Chi-squared against English frequencies
+                const score = this.scoreFrequency(decryptedColumn, targetFreqs);
 
                 if (score > bestScore) {
                     bestScore = score;
-                    bestKey = testKey;
-                    bestPlaintext = testPlaintext;
+                    bestChar = keyChar;
                 }
             }
+            bestKey += bestChar;
         }
 
         // Final decryption with best key
         const beaufort = new Polyalphabetic.Beaufort(ciphertext, bestKey);
         const finalPlaintext = beaufort.decode();
+
         // Score using hybrid method (N-gram + dictionary)
-        const finalScore = this._scoreWithDictionary(finalPlaintext, finalPlaintext);
+        const cleanPlaintext = TextUtils.onlyLetters(finalPlaintext);
+        const finalScore = this._scoreWithDictionary(cleanPlaintext, finalPlaintext);
         const ic = Stats.indexOfCoincidence(finalPlaintext);
 
-        // Confidence based on IC (should be ~1.73 for English plaintext)
+        // Confidence based on IC
         const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
 
         return {
@@ -208,7 +222,7 @@ export class PolyalphabeticSolver {
             confidence,
             method: 'beaufort',
             keyLength,
-            isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
+            isPolyalphabeticCandidate: keyLength > 1,
             dictionaryCoverage: this._validatePartialKey(finalPlaintext)
         };
     }
@@ -230,9 +244,9 @@ export class PolyalphabeticSolver {
         // Strategy 1: Try common short keys first (faster)
         // IMPORTANT: Include 'KEY' as first option since it's very common
         const commonKeys = ['KEY', 'THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WAY', 'WHO', 'BOY', 'DID', 'ITS', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE'];
-        
+
         let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'porta', keyLength };
-        
+
         // Try common keys of the right length
         for (const testKey of commonKeys) {
             if (testKey.length === keyLength) {
@@ -240,20 +254,20 @@ export class PolyalphabeticSolver {
                     // Porta cipher works on the full ciphertext (preserves punctuation)
                     const porta = new Polyalphabetic.Porta(ciphertext, testKey);
                     const plaintext = porta.decode();
-                    
+
                     // Score using hybrid method (N-gram + dictionary)
                     const cleanPlaintext = TextUtils.onlyLetters(plaintext);
                     const score = this._scoreWithDictionary(cleanPlaintext, plaintext);
-                    
+
                     if (score > bestResult.score) {
                         const ic = Stats.indexOfCoincidence(plaintext);
                         const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
-                        bestResult = { 
+                        bestResult = {
                             plaintext,  // Keep full text with punctuation
-                            key: testKey, 
-                            score, 
-                            confidence, 
-                            method: 'porta', 
+                            key: testKey,
+                            score,
+                            confidence,
+                            method: 'porta',
                             keyLength,
                             isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
                             dictionaryCoverage: this._validatePartialKey(plaintext)  // Add dictionary coverage
@@ -274,7 +288,7 @@ export class PolyalphabeticSolver {
             for (let i = 0; i < keyLength; i++) {
                 columns.push('');
             }
-            
+
             for (let i = 0; i < cleanText.length; i++) {
                 columns[i % keyLength] += cleanText[i];
             }
@@ -294,7 +308,7 @@ export class PolyalphabeticSolver {
                     // Use hybrid scoring (N-gram + dictionary)
                     const cleanDecrypted = TextUtils.onlyLetters(decrypted);
                     const score = this._scoreWithDictionary(cleanDecrypted, decrypted);
-                    
+
                     if (score > bestScore) {
                         bestScore = score;
                         bestKeyChar = keyChar;
@@ -310,17 +324,17 @@ export class PolyalphabeticSolver {
             // Score using hybrid method (N-gram + dictionary)
             const cleanPlaintext = TextUtils.onlyLetters(plaintext);
             const hybridScore = this._scoreWithDictionary(cleanPlaintext, plaintext);
-            
+
             // Only use this result if it's better than common keys
             if (hybridScore > bestResult.score) {
                 const ic = Stats.indexOfCoincidence(plaintext);
                 const confidence = Math.max(0, Math.min(1, 1 - Math.abs(ic - 1.73) / 1.73));
-                bestResult = { 
-                    plaintext, 
-                    key, 
-                    score: hybridScore, 
-                    confidence, 
-                    method: 'porta', 
+                bestResult = {
+                    plaintext,
+                    key,
+                    score: hybridScore,
+                    confidence,
+                    method: 'porta',
                     keyLength,
                     isPolyalphabeticCandidate: keyLength > 1,  // Mark as polyalphabetic if keyLength > 1
                     dictionaryCoverage: this._validatePartialKey(plaintext)  // Add dictionary coverage
@@ -354,7 +368,7 @@ export class PolyalphabeticSolver {
         // Return the best result
         const allResults = [quagmire1Result, quagmire2Result, quagmire3Result, quagmire4Result]
             .filter(r => r && r.score > -Infinity && r.method !== 'none');
-        
+
         if (allResults.length === 0) {
             return { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'none' };
         }
@@ -382,7 +396,7 @@ export class PolyalphabeticSolver {
             }
             return scoreDiff;
         });
-        
+
         // Quagmire analysis completed
         return allResults[0];
     }
@@ -454,7 +468,7 @@ export class PolyalphabeticSolver {
 
         const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA'];
         const commonIndicators = ['A', 'B', 'C', 'D', 'E', 'KEY', 'ABC'];
-        
+
         let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire2' };
 
         for (const keyword of commonKeywords) {
@@ -501,7 +515,7 @@ export class PolyalphabeticSolver {
         const commonKeywords = ['KEY', 'SECRET', 'CIPHER', 'CODE', 'CRYPTO', 'ENIGMA', 'AUTOMOBILE'];
         // For Quagmire 3, try KEY first (most common), then others
         const commonIndicators = ['KEY', 'A', 'B', 'C', 'ABC'];
-        
+
         let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire3' };
 
         for (const keyword of commonKeywords) {
@@ -549,7 +563,7 @@ export class PolyalphabeticSolver {
         // For Quagmire 4, try ABC first (most common), then KEY, then others
         const commonIndicators = ['ABC', 'KEY', 'A', 'B', 'C'];
         const commonCipherAlphabets = ['', 'ZYXWVUTSRQPONMLKJIHGFEDCBA']; // Empty = use keyword-based
-        
+
         let bestResult = { plaintext: '', key: '', score: -Infinity, confidence: 0, method: 'quagmire4' };
 
         for (const keyword of commonKeywords) {
@@ -603,7 +617,7 @@ export class PolyalphabeticSolver {
         for (let i = 0; i < keyLength; i++) {
             columns.push('');
         }
-        
+
         for (let i = 0; i < cleanText.length; i++) {
             columns[i % keyLength] += cleanText[i];
         }
@@ -665,61 +679,64 @@ export class PolyalphabeticSolver {
      */
     solve(ciphertext) {
         const cleanText = TextUtils.onlyLetters(ciphertext);
-        
+
         // Use Kasiski to find probable key lengths
         const kasiskiResult = Kasiski.examine(cleanText);
         let probableKeyLengths = kasiskiResult.suggestedKeyLengths.slice(0, 3); // Top 3
 
-        if (probableKeyLengths.length === 0) {
-            // No repetitions found, might be monoalphabetic or very short key
-            probableKeyLengths = [
-                { length: 3, score: 1 },
-                { length: 4, score: 1 },
-                { length: 5, score: 1 }
-            ];
+        // For short texts (< 200 chars) or if no results, ensure we try small key lengths (2-5)
+        // Kasiski can be unreliable for short texts
+        if (cleanText.length < 200 || probableKeyLengths.length === 0) {
+            const existingLengths = new Set(probableKeyLengths.map(k => k.length || k.keyLength));
+            // Add lengths 2, 3, 4, 5 if not present
+            [2, 3, 4, 5].forEach(len => {
+                if (!existingLengths.has(len)) {
+                    probableKeyLengths.push({ length: len, score: 0.5 });
+                }
+            });
         }
 
-        let allResults = [];
+        const allResults = [];
 
         for (const keyLengthObj of probableKeyLengths) {
             const keyLength = keyLengthObj.length || keyLengthObj.keyLength;
             // Trying key length
-            
+
             // Try each cipher type - Porta FIRST (most commonly confused with Vigenère)
             const portaResult = this.solvePorta(ciphertext, keyLength);
             if (portaResult && portaResult.score > -Infinity) {
-                allResults.push({ 
-                    ...portaResult, 
+                allResults.push({
+                    ...portaResult,
                     keyLength,
                     isPolyalphabeticCandidate: (portaResult.isPolyalphabeticCandidate !== undefined) ? portaResult.isPolyalphabeticCandidate : (keyLength > 1),
                     dictionaryCoverage: portaResult.dictionaryCoverage || this._validatePartialKey(portaResult.plaintext || '')
                 });
             }
-            
+
             const beaufortResult = this.solveBeaufort(ciphertext, keyLength);
             if (beaufortResult && beaufortResult.score > -Infinity) {
-                allResults.push({ 
-                    ...beaufortResult, 
+                allResults.push({
+                    ...beaufortResult,
                     keyLength,
                     isPolyalphabeticCandidate: (beaufortResult.isPolyalphabeticCandidate !== undefined) ? beaufortResult.isPolyalphabeticCandidate : (keyLength > 1),
                     dictionaryCoverage: beaufortResult.dictionaryCoverage || this._validatePartialKey(beaufortResult.plaintext || '')
                 });
             }
-            
+
             const gronsfeldResult = this.solveGronsfeld(ciphertext, keyLength);
             if (gronsfeldResult && gronsfeldResult.score > -Infinity) {
-                allResults.push({ 
-                    ...gronsfeldResult, 
+                allResults.push({
+                    ...gronsfeldResult,
                     keyLength,
                     isPolyalphabeticCandidate: (gronsfeldResult.isPolyalphabeticCandidate !== undefined) ? gronsfeldResult.isPolyalphabeticCandidate : (keyLength > 1),
                     dictionaryCoverage: gronsfeldResult.dictionaryCoverage || this._validatePartialKey(gronsfeldResult.plaintext || '')
                 });
             }
-            
+
             const quagmireResult = this.solveQuagmire(ciphertext, keyLength);
             if (quagmireResult && quagmireResult.score > -Infinity) {
-                allResults.push({ 
-                    ...quagmireResult, 
+                allResults.push({
+                    ...quagmireResult,
                     keyLength,
                     isPolyalphabeticCandidate: (quagmireResult.isPolyalphabeticCandidate !== undefined) ? quagmireResult.isPolyalphabeticCandidate : (keyLength > 1),
                     dictionaryCoverage: quagmireResult.dictionaryCoverage || this._validatePartialKey(quagmireResult.plaintext || '')
@@ -729,34 +746,34 @@ export class PolyalphabeticSolver {
 
         // Sort by score (higher is better for N-gram scoring)
         allResults.sort((a, b) => b.score - a.score);
-        
+
         // Log top 3 results for debugging
         // Analysis completed
 
         // Ensure we always return a valid result with method defined
         if (allResults.length === 0) {
-            return { 
-                plaintext: '', 
-                key: '', 
-                score: -Infinity, 
-                confidence: 0, 
+            return {
+                plaintext: '',
+                key: '',
+                score: -Infinity,
+                confidence: 0,
                 method: 'none',
                 keyLength: probableKeyLengths[0]?.length || probableKeyLengths[0]?.keyLength || 0
             };
         }
-        
+
         const bestResult = allResults[0];
         // Ensure method is always defined
         if (!bestResult.method) {
             bestResult.method = 'unknown';
         }
-        
+
         // CRITICAL: Mark as polyalphabetic candidate (keyLength > 1)
         // PolyalphabeticSolver always uses keyLength >= 2 (from Kasiski or defaults)
         const keyLength = bestResult.keyLength || 0;
         bestResult.isPolyalphabeticCandidate = keyLength > 1;
         bestResult.dictionaryCoverage = bestResult.score; // Use score as dict coverage proxy
-        
+
         return bestResult;
     }
 

@@ -1,0 +1,8 @@
+{
+  "cipher_identifier.caesar_test.primary_threshold.score": 0.5674076615441399,
+  "cipher_identifier.caesar_test.primary_threshold.improvement": 0.12334109767741915,
+  "cipher_identifier.caesar_test.secondary_threshold.score": 0.6348885433717145,
+  "cipher_identifier.caesar_test.vigenere_penalty": 1.2030798240558298,
+  "cipher_identifier.caesar_test.monoalphabetic_boost": 1.358500668976279,
+  "ic_analysis.tolerance.short": 0.6588429209052941
+}

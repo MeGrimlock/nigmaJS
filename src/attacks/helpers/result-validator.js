@@ -17,20 +17,20 @@ export class ResultValidator {
         if (!result || !result.plaintext) {
             return result;
         }
-        
+
         try {
             const validator = new DictionaryValidator(language);
             const validation = await validator.validate(result.plaintext);
             const wordCoverage = parseFloat(validation.metrics.wordCoverage) / 100;
             const dictConfidence = validation.confidence;
-            
+
             // Add validation info to result
             result.wordCoverage = wordCoverage;
             result.dictConfidence = dictConfidence;
-            
+
             // Calculate combined score: confidence + dictionary validation
             result.combinedScore = result.confidence + (wordCoverage * 0.5) + (dictConfidence * 0.3);
-            
+
             return result;
         } catch (error) {
             // Dictionary validation failed, return result without validation
@@ -40,7 +40,7 @@ export class ResultValidator {
             return result;
         }
     }
-    
+
     /**
      * Validates multiple results and returns best one.
      * @param {Array<Object>} results - Array of result objects
@@ -51,38 +51,55 @@ export class ResultValidator {
         if (!results || results.length === 0) {
             return null;
         }
-        
+
         // Validate all results
         const validatedResults = await Promise.all(
             results.map(r => this.validateResult(r, r.language || language))
         );
-        
+
         // Sort by combined score (higher is better)
         validatedResults.sort((a, b) => (b.combinedScore || -Infinity) - (a.combinedScore || -Infinity));
-        
+
         return validatedResults[0];
     }
-    
+
     /**
      * Checks if a result is excellent (should stop early).
      * @param {Object} result - Result object
      * @returns {boolean} True if result is excellent
      */
     static isExcellentResult(result) {
-        return result && 
-               result.confidence > 0.85 && 
-               (result.wordCoverage || 0) > 0.50;
+        return result &&
+            result.confidence > 0.85 &&
+            (result.wordCoverage || 0) > 0.50;
     }
-    
+
+
+    /**
+     * Checks if a result meets MINIMUM quality standards (not gibberish).
+     * This is used to reject obviously bad results and continue trying other strategies.
+     * @param {Object} result - Result object
+     * @returns {boolean} True if result is acceptable (not gibberish)
+     */
+    static isAcceptableResult(result) {
+        if (!result) return false;
+
+        // Minimum threshold: at least 15% valid words OR very high confidence (>90%)
+        const minWordCoverage = (result.wordCoverage || 0) > 0.15;
+        const veryHighConfidence = result.confidence > 0.90;
+
+        return minWordCoverage || veryHighConfidence;
+    }
+
     /**
      * Checks if a result is good (should stop language iteration).
      * @param {Object} result - Result object
      * @returns {boolean} True if result is good
      */
     static isGoodResult(result) {
-        return result && 
-               result.confidence > 0.80 && 
-               (result.wordCoverage || 0) > 0.40;
+        return result &&
+            result.confidence > 0.70 &&  // Lowered from 0.80 to be more lenient
+            (result.wordCoverage || 0) > 0.30;  // Lowered from 0.40
     }
 }
 
