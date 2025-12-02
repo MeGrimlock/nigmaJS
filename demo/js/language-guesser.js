@@ -104,7 +104,8 @@ class FrequencyChart {
 
         // Map Data
         const standardData = labels.map(l => this.standardData[l] || 0);
-        const inputData = labels.map(l => inputFreqs[l] || 0);
+        // Convert input frequencies from 0-1 to percentage (0-100) to match standard data
+        const inputData = labels.map(l => (inputFreqs[l] || 0) * 100);
 
         // Update Chart
         this.chart.data.labels = labels;
@@ -543,13 +544,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getStandardData(lang, type, Analysis) {
         const langData = Analysis.languages[lang];
-        switch (type) {
-            case 'monograms': return langData.monograms;
-            case 'bigrams': return langData.bigrams;
-            case 'trigrams': return langData.trigrams;
-            case 'quadgrams': return langData.quadgrams;
-            default: return {};
+        if (!langData) {
+            console.warn(`[Language Guesser] No data found for language: ${lang}`);
+            return {};
         }
+
+        let data;
+        switch (type) {
+            case 'monograms': data = langData.monograms; break;
+            case 'bigrams': data = langData.bigrams; break;
+            case 'trigrams': data = langData.trigrams; break;
+            case 'quadgrams': data = langData.quadgrams; break;
+            default: data = {};
+        }
+
+        if (!data || Object.keys(data).length === 0) {
+            console.warn(`[Language Guesser] No ${type} data for ${lang}`);
+            return {};
+        }
+
+        return data;
     }
 
     function capitalize(str) {
